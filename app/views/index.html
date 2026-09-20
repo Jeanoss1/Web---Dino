@@ -1,0 +1,433 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_standard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-container":"#612400","secondary-fixed-dim":"#ffb693","on-error-container":"#93000a","surface-variant":"#b8efd3","tertiary-fixed-dim":"#7fd8ae","on-tertiary-fixed":"#002114","on-secondary-fixed":"#351000","error-container":"#ffdad6","tertiary-fixed":"#9bf5c9","outline-variant":"#bbcac0","primary-fixed":"#75fac5","primary-container":"#2dbe8d","background":"#e7fff1","surface-container-low":"#ccffe5","inverse-surface":"#003827","inverse-primary":"#56ddaa","on-secondary":"#ffffff","on-primary-fixed-variant":"#005139","on-tertiary-container":"#00472f","secondary-container":"#ff7a30","outline":"#6c7a72","error":"#ba1a1a","surface-container-highest":"#b8efd3","primary":"#006c4d","surface":"#e7fff1","on-primary-container":"#004731","surface-bright":"#e7fff1","secondary-fixed":"#ffdbcc","surface-container":"#c3fadf","on-error":"#ffffff","surface-dim":"#afe6cb","surface-tint":"#006c4d","on-surface":"#002115","secondary":"#a04100","on-secondary-fixed-variant":"#7a2f00","primary-fixed-dim":"#56ddaa","surface-container-lowest":"#ffffff","on-background":"#002115","on-tertiary-fixed-variant":"#005137","tertiary":"#006c4a","surface-container-high":"#bdf4d9","tertiary-container":"#61b991","on-surface-variant":"#3d4a43","inverse-on-surface":"#c6fde1","on-primary":"#ffffff","on-primary-fixed":"#002115","on-tertiary":"#ffffff"},borderRadius:{DEFAULT:"1rem",lg:"2rem",xl:"3rem",full:"9999px"},spacing:{"space-xl":"2.5rem","margin-desktop":"2.5rem",gutter:"1rem","space-xs":"0.25rem","space-sm":"0.5rem",margin:"1rem","gutter-desktop":"1.5rem","space-lg":"1.5rem","space-md":"1rem"},fontFamily:{"headline-lg":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"display-lg-mobile":["Plus Jakarta Sans"],"label-lg":["Plus Jakarta Sans"],"title-md":["Plus Jakarta Sans"],"display-lg":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"]},fontSize:{"headline-lg":["32px",{lineHeight:"40px",fontWeight:"700"}],"headline-md":["24px",{lineHeight:"32px",fontWeight:"700"}],"body-lg":["16px",{lineHeight:"24px",fontWeight:"400"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}],"headline-lg-mobile":["26px",{lineHeight:"34px",fontWeight:"700"}],"display-lg-mobile":["34px",{lineHeight:"42px",fontWeight:"800"}],"label-lg":["14px",{lineHeight:"18px",fontWeight:"700"}],"title-md":["18px",{lineHeight:"26px",fontWeight:"600"}],"display-lg":["48px",{lineHeight:"56px",fontWeight:"800"}],"label-md":["12px",{lineHeight:"16px",fontWeight:"700"}],"label-sm":["11px",{lineHeight:"14px",fontWeight:"800"}],"headline-sm":["20px",{lineHeight:"28px",fontWeight:"700"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface"><header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_4px_16px_rgba(13,69,50,0.07)]"><div class="h-20 max-w-7xl mx-auto px-margin lg:px-margin-desktop flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="Logo_dino.jpg" class="h-20 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}"><span class="font-headline-sm text-headline-sm text-primary tracking-tight"></span></div><nav class="hidden md:flex items-center gap-space-md bg-surface-container-lowest/80 px-space-md py-space-xs rounded-full shadow-[0_2px_8px_rgba(13,69,50,0.04)]" data-active-classes="bg-surface-container-high text-on-surface font-bold rounded-full"><a aria-current="page" class="px-space-md py-space-xs transition-all bg-surface-container-high text-on-surface font-bold rounded-full" data-path="inicio" href="/">Inicio</a><a class="font-label-lg text-label-lg px-space-md py-space-xs rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" data-path="nosotros" href="/#nosotros">Nosotros</a><a class="font-label-lg text-label-lg px-space-md py-space-xs rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" data-path="sedes" href="/#sedes">Sedes</a></nav><div class="flex items-center gap-space-sm"><a class="hidden sm:inline-flex items-center justify-center font-label-lg text-label-lg text-primary px-space-lg py-space-sm rounded-full hover:bg-surface-container-low hover:text-on-surface transition-all min-h-[48px]" data-path="login" href="{{ url_for('auth.iniciar_sesion') }}">Iniciar Sesión</a><a class="inline-flex items-center justify-center font-label-lg text-label-lg bg-secondary-container text-on-secondary px-space-lg py-space-sm rounded-full shadow-[0_4px_12px_rgba(255,122,48,0.25)] hover:bg-secondary transition-all min-h-[48px]" data-path="registro" href="{{ url_for('auth.registro') }}">Registrarse</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-space-xs"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-surface"><div class="flex flex-col w-full">
+<section class="relative w-full overflow-hidden -mt-20 pt-24 pb-16 lg:pb-24 bg-gradient-to-b from-surface-container-low via-surface to-background">
+<div class="absolute inset-0 pointer-events-none opacity-40">
+<div class="absolute -top-12 -left-20 w-96 h-96 rounded-full bg-primary-container/20 blur-3xl"></div>
+<div class="absolute top-1/3 -right-24 w-[30rem] h-[30rem] rounded-full bg-secondary-container/15 blur-3xl"></div>
+<div class="absolute bottom-10 left-1/3 w-80 h-80 rounded-full bg-tertiary-fixed/40 blur-2xl"></div>
+</div>
+<div class="relative max-w-7xl mx-auto px-margin lg:px-margin-desktop">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter-desktop items-center">
+<div class="lg:col-span-7 flex flex-col items-start gap-space-md z-10">
+<div class="inline-flex items-center gap-space-xs bg-surface-container-highest/70 px-space-md py-space-xs rounded-full shadow-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">pets</span>
+<span class="font-label-md text-label-md text-on-surface uppercase tracking-wider">Aventura Infantil Premium</span>
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+<span class="font-label-sm text-label-sm text-secondary font-extrabold">Edades 2 a 12 años</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-on-surface tracking-tight leading-none">
+            ¡Diversión <span class="text-primary underline decoration-primary-container decoration-wavy decoration-2">Jurásica</span> sobre Ruedas para los Pequeños Exploradores!
+          </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+            Alquiler y paseos en dinosaurios mecánicos móviles, carritos temáticos y zonas sensoriales de excavación en los mejores centros comerciales del país. ¡Una experiencia rugiente e inolvidable!
+          </p>
+<div class="flex flex-wrap items-center gap-space-md pt-space-xs w-full sm:w-auto">
+<a class="inline-flex items-center justify-center gap-space-xs font-label-lg text-label-lg bg-secondary-container text-on-secondary px-space-xl py-space-md rounded-full shadow-[0_10px_24px_rgba(255,122,48,0.35)] hover:bg-secondary transition-all hover:scale-105 active:scale-95 min-h-[48px]" data-path="registro" href="{{ url_for('auth.registro') }}">
+<span class="material-symbols-outlined text-[22px]">confirmation_number</span>
+              Crear Cuenta y Reservar Pases
+            </a>
+<a class="inline-flex items-center justify-center gap-space-xs font-label-lg text-label-lg bg-surface-container-lowest text-primary px-space-lg py-space-md rounded-full shadow-[0_4px_16px_rgba(13,69,50,0.08)] hover:bg-surface-container transition-all hover:scale-105 min-h-[48px]" href="#sedes">
+<span class="material-symbols-outlined text-[20px]">explore</span>
+              Ver Nuestras Sedes
+            </a>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm pt-space-md w-full">
+<div class="flex items-center gap-space-xs bg-surface-container-lowest/90 px-space-sm py-space-xs rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+<span class="font-label-sm text-label-sm text-on-surface leading-tight">+15 Dinos Mecánicos Conducibles</span>
+</div>
+<div class="flex items-center gap-space-xs bg-surface-container-lowest/90 px-space-sm py-space-xs rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="font-label-sm text-label-sm text-on-surface leading-tight">100% Seguros y Monitoreados</span>
+</div>
+<div class="flex items-center gap-space-xs bg-surface-container-lowest/90 px-space-sm py-space-xs rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="font-label-sm text-label-sm text-on-surface leading-tight">Boleta Electrónica Instantánea</span>
+</div>
+<div class="flex items-center gap-space-xs bg-surface-container-lowest/90 px-space-sm py-space-xs rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-secondary-container text-[20px]" style="font-variation-settings: 'FILL' 1;">family_restroom</span>
+<span class="font-label-sm text-label-sm text-on-surface leading-tight">Descuentos para Hermanitos</span>
+</div>
+</div>
+</div>
+<div class="lg:col-span-5 relative mt-space-lg lg:mt-0">
+<div class="relative w-full aspect-[4/3] rounded-xl overflow-hidden shadow-[0_16px_36px_rgba(13,69,50,0.18)]">
+<img class="w-full h-full object-cover" data-alt="Happy young boy and girl riding a plush ride-on motorized T-Rex mechanical dinosaur inside a vibrant, well-lit modern shopping mall indoor park track with soft green jungle theme decor, sunny ambient lighting, laughing children with friendly park operator in mint uniform supervising safely" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6FOkl3cAI9_ZOMcjoyUcKOIIkOtIA4MGmElUwbo_YWSiGlwxg38RktPM2rCo7vQI71mNFloFD9ZRPKvI1ydJvtb7rVIUHZ-iuc38NeVgelM_LGNqCmN85_2GLR7rPrI1im0mW0BP9dpQppVBqpanzxikn5XoMAYPPj3eEELHq0IN6LdV0NU1mXmnHQtiD50Vm-ehptQJQKvmNCaBGNXFrVPSVwC2yJhOdOttJ32kV1dCiDXNEiFyw9w">
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 via-transparent to-transparent"></div>
+<div class="absolute top-space-md left-space-md bg-surface-container-lowest/90 backdrop-blur-md px-space-md py-space-xs rounded-full flex items-center gap-space-xs shadow-md">
+<span class="flex h-3 w-3 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+</span>
+<span class="font-label-sm text-label-sm text-on-surface font-extrabold uppercase">Pistas Abiertas Hoy</span>
+</div>
+<div class="absolute bottom-space-md left-space-md right-space-md bg-surface-container-lowest/95 backdrop-blur-md p-space-md rounded-lg shadow-lg flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined text-[24px]">timer</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Tiempo Promedio de Espera</p>
+<p class="font-title-md text-title-md text-primary font-extrabold">&lt; 5 minutos por turno</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container text-on-surface px-space-sm py-space-xs rounded-full">Turnos de 15 y 30m</span>
+</div>
+</div>
+<div class="absolute -bottom-6 -left-6 hidden sm:flex items-center gap-space-xs bg-surface-container-lowest p-space-sm rounded-lg shadow-[0_10px_24px_rgba(13,69,50,0.12)] z-20">
+<div class="w-9 h-9 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary">
+<span class="material-symbols-outlined text-[20px]">award_star</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">+45,000 Paseos Seguros</p>
+<p class="font-body-md text-[12px] text-on-surface-variant">Calificación 4.9 ★ en familias</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-space-xl bg-surface-container-lowest">
+<div class="max-w-7xl mx-auto px-margin lg:px-margin-desktop">
+<div class="text-center max-w-3xl mx-auto mb-space-xl">
+<div class="inline-flex items-center gap-space-xs bg-surface-container px-space-md py-space-xs rounded-full mb-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px]">toys</span>
+<span class="font-label-md text-label-md text-on-surface uppercase">Atracciones Exclusivas</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Experiencias y Juegos Mecánicos</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-space-xs">Diseñados bajo estrictas normas de ergonomía y velocidad controlada para la tranquilidad de papá y mamá.</p>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-desktop lg:grid-cols-3">
+<div class="group bg-surface rounded-lg overflow-hidden shadow-[0_4px_16px_rgba(13,69,50,0.07)] hover:shadow-[0_10px_24px_rgba(13,69,50,0.12)] transition-all flex flex-col">
+<div class="h-44 w-full relative overflow-hidden">
+<img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" data-alt="Motorized plush mechanical ride-on dinosaur velociraptor in green emerald scales with padded seat and illuminated soft horns, in a modern themed safe family track inside mall" src="{{ url_for('static', filename='img/dinosaurio.png') }}">
+<div class="absolute top-space-xs left-space-xs bg-surface-container-lowest/90 px-space-sm py-space-xs rounded-full text-primary font-label-sm text-label-sm">
+              Más Popular
+            </div>
+</div>
+<div class="p-space-md flex-1 flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-full bg-primary-container/20 text-primary flex items-center justify-center mb-space-xs">
+<span class="material-symbols-outlined text-[22px]">pest_control</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Dinosaurios Mecánicos</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs">Dinos motorizados de peluche de alta densidad con control de velocidad para que los niños manejen como auténticos jinetes.</p>
+</div>
+<div class="pt-space-md flex items-center justify-between">
+<span class="font-label-md text-label-md text-primary font-bold">Desde S/ 15.00</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+</div>
+<div class="group bg-surface rounded-lg overflow-hidden shadow-[0_4px_16px_rgba(13,69,50,0.07)] hover:shadow-[0_10px_24px_rgba(13,69,50,0.12)] transition-all flex flex-col">
+<div class="h-44 w-full relative overflow-hidden">
+<img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" data-alt="Two seater electric themed Jurassic safari buggy mini kart for toddlers with oversized wheels, steering wheel, playful stickers and soft bumpers inside shopping mall center" src="{{ url_for('static', filename='img/carro.png') }}">
+<div class="absolute top-space-xs left-space-xs bg-surface-container-lowest/90 px-space-sm py-space-xs rounded-full text-secondary font-label-sm text-label-sm">
+              Para 2 Niños
+            </div>
+</div>
+<div class="p-space-md flex-1 flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-full bg-secondary-fixed/50 text-secondary flex items-center justify-center mb-space-xs">
+<span class="material-symbols-outlined text-[22px]">directions_car</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Carros Jurásicos</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs">Minicars eléctricos estilo todoterreno safari. Ideales para compartir paseos en pareja de hermanos o con amiguitos.</p>
+</div>
+<div class="pt-space-md flex items-center justify-between">
+<span class="font-label-md text-label-md text-primary font-bold">Desde S/ 20.00</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+</div>
+<div class="group bg-surface rounded-lg overflow-hidden shadow-[0_4px_16px_rgba(13,69,50,0.07)] hover:shadow-[0_10px_24px_rgba(13,69,50,0.12)] transition-all flex flex-col">
+<div class="h-44 w-full relative overflow-hidden">
+<img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" data-alt="Kids ride-on electric mini tricycle styled like an armored Triceratops with illuminated LED wheels and fun audio effects for young children riding smoothly in mall perimeter" src="{{ url_for('static', filename='img/moto.png') }}">
+<div class="absolute top-space-xs left-space-xs bg-surface-container-lowest/90 px-space-sm py-space-xs rounded-full text-primary font-label-sm text-label-sm">
+              Súper Ágil
+            </div>
+</div>
+<div class="p-space-md flex-1 flex flex-col justify-between">
+<div>
+<div class="w-10 h-10 rounded-full bg-primary-fixed/40 text-primary flex items-center justify-center mb-space-xs">
+<span class="material-symbols-outlined text-[22px]">two_wheeler</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Motos Dino</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs">Trimotos eléctricas con carcasa de triceratops y luces LED interactivas. Fáciles de girar y de respuesta suave al acelerador.</p>
+</div>
+<div class="pt-space-md flex items-center justify-between">
+<span class="font-label-md text-label-md text-primary font-bold">Desde S/ 15.00</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</section>
+<section class="py-space-xl bg-surface" id="nosotros">
+<div class="max-w-7xl mx-auto px-margin lg:px-margin-desktop">
+<div class="text-center max-w-3xl mx-auto mb-space-xl">
+<div class="inline-flex items-center gap-space-xs bg-surface-container-high px-space-md py-space-xs rounded-full mb-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px]">groups</span>
+<span class="font-label-md text-label-md text-on-surface uppercase">Sobre Nosotros</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Somos Dino Park</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-space-xs">Llevamos la diversión jurásica a los centros comerciales de Cajamarca con dinosaurios mecánicos, carros temáticos y zonas de excavación pensadas para que los pequeños exploradores disfruten y los papás estén tranquilos.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter-desktop">
+<div class="bg-surface-container-lowest rounded-lg p-space-lg shadow-[0_4px_16px_rgba(13,69,50,0.07)] flex flex-col gap-space-sm">
+<div class="w-12 h-12 rounded-full bg-primary-container/20 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[26px]">verified_user</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Diversión Segura</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Velocidad controlada, desinfección entre paseos y monitores capacitados en cada circuito.</p>
+</div>
+<div class="bg-surface-container-lowest rounded-lg p-space-lg shadow-[0_4px_16px_rgba(13,69,50,0.07)] flex flex-col gap-space-sm">
+<div class="w-12 h-12 rounded-full bg-secondary-fixed/50 text-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-[26px]">family_restroom</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Para Toda la Familia</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Atracciones para niños de 2 a 12 años, con descuentos para hermanitos y turnos de 15 y 30 minutos.</p>
+</div>
+<div class="bg-surface-container-lowest rounded-lg p-space-lg shadow-[0_4px_16px_rgba(13,69,50,0.07)] flex flex-col gap-space-sm">
+<div class="w-12 h-12 rounded-full bg-tertiary-fixed/60 text-tertiary flex items-center justify-center">
+<span class="material-symbols-outlined text-[26px]">pin_drop</span>
+</div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">Presentes en Cajamarca</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Nos encuentras en Real Plaza, nuestra sede principal, y en Mega Plaza, con más sedes en camino.</p>
+</div>
+</div>
+</div>
+</section>
+<section class="py-space-xl bg-surface" id="sedes">
+<div class="max-w-7xl mx-auto px-margin lg:px-margin-desktop">
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-space-xl">
+<div>
+<div class="inline-flex items-center gap-space-xs bg-surface-container-high px-space-md py-space-xs rounded-full mb-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px]">pin_drop</span>
+<span class="font-label-md text-label-md text-on-surface uppercase">Puntos de Operación Oficiales</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Nuestras Sedes Estratégicas</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl mt-space-xs">Ubicadas en los centros comerciales más concurridos, cómodos y seguros de la ciudad, con estacionamiento y patio de comidas cercano.</p>
+</div>
+<div class="mt-space-md md:mt-0 flex items-center gap-space-xs">
+<span class="font-label-lg text-label-lg text-primary">2 Sedes en Operación Continua</span>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter-desktop">
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_4px_16px_rgba(13,69,50,0.07)] hover:shadow-[0_10px_24px_rgba(13,69,50,0.12)] transition-all flex flex-col">
+<div class="relative h-60 w-full">
+<img class="w-full h-full object-cover" data-alt="Modern Real Plaza shopping mall atrium with vibrant green prehistoric Dino Park kids circuit, children riding animatronic rideable dinosaurs, parents smiling, polished clean mall floor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDk86kNjyshAfdsdCZWIKnEvCH1jkVVLWutrWtupj6fz5prikpHLJa5eAeJ6wSjNIdYOi45TFxOxcT4db9oD9as9nbejalEWGOQj0Skj_8pBihsKutspT_HkHS0OJ_bDzAneQR0wtUGxMDofE8R_jpiYuls7Fv1ZHTOC3qg7WI9mq3oj0TT_E7A3EgNaiLkq_ojuJ-_Pt6IF6hLUYa8jNOzxRYmg3-Ekt6PWztZGBRodiArlQa9od5BaQ">
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/75 via-transparent to-transparent"></div>
+<div class="absolute top-space-md left-space-md bg-secondary-container text-on-secondary px-space-md py-space-xs rounded-full font-label-md text-label-md shadow-sm">
+              Sede Principal Cajamarca
+            </div>
+<div class="absolute bottom-space-md left-space-md right-space-md text-on-primary">
+<h3 class="font-headline-md text-headline-md text-white font-extrabold">Sede Real Plaza</h3>
+<p class="font-body-md text-body-md text-surface-variant flex items-center gap-space-xs mt-1">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+                Real Plaza Cajamarca (Nivel 2, Explanada Jurásica)
+              </p>
+</div>
+</div>
+<div class="p-space-lg flex-1 flex flex-col justify-between gap-space-md">
+<div class="space-y-space-sm">
+<div class="flex items-center gap-space-sm text-on-surface">
+<span class="material-symbols-outlined text-primary text-[20px]">schedule</span>
+<span class="font-label-lg text-label-lg">Lunes a Domingo: 10:00 AM – 10:00 PM</span>
+</div>
+<div class="bg-surface-container p-space-md rounded-lg space-y-space-xs">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wide">Circuitos Disponibles en esta Sede:</p>
+<div class="flex flex-wrap gap-space-xs">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-surface-container-lowest text-on-surface px-space-sm py-1 rounded-full">
+<span class="material-symbols-outlined text-primary text-[14px]">check_circle</span>
+                    Pistas de conducción rápida
+                  </span>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-surface-container-lowest text-on-surface px-space-sm py-1 rounded-full">
+<span class="material-symbols-outlined text-primary text-[14px]">check_circle</span>
+                    Dinosaurios mecánicos XL
+                  </span>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-surface-container-lowest text-on-surface px-space-sm py-1 rounded-full">
+<span class="material-symbols-outlined text-primary text-[14px]">check_circle</span>
+                    Carros jurásicos
+                  </span>
+
+</div>
+</div>
+</div>
+<div class="pt-space-sm flex items-center justify-between">
+<div>
+<span class="font-body-md text-body-md text-on-surface-variant block">Pases individuales desde</span>
+<span class="font-headline-md text-headline-md text-secondary font-extrabold">S/ 15.00</span>
+</div>
+<a class="inline-flex items-center gap-space-xs font-label-lg text-label-lg bg-primary text-on-primary px-space-lg py-space-sm rounded-full shadow-md hover:bg-on-primary-container transition-all min-h-[48px]" data-path="sedes" href="/#sedes">
+<span class="">Ver Disponibilidad y Tarifas</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</a>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_4px_16px_rgba(13,69,50,0.07)] hover:shadow-[0_10px_24px_rgba(13,69,50,0.12)] transition-all flex flex-col">
+<div class="relative h-60 w-full">
+<img class="w-full h-full object-cover" data-alt="Expansive indoor Mega Plaza Norte center play zone with brightly painted safe track for kids driving dinosaur battery trikes, cheerful jungle decor, parents taking photos" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQSgclOs8StfTIIE8lPhTkVG9GXOEcpm9kdZkub6_2x0J_VQR2HevXIsP121UGDaCFFOs8IwPj9q3eR11CCdsZY_CN-72kZHfBFm2WiW7U1knzwpLYEW_jX_wOgFHkW1sKH2IHyYppCu9M14m80732LNj3l78Nt4K6mVXfBYhPaRiw1WnZp-F3Tidk4NYkknpEBHyQbXhWTkdhCZixROyxLbbqfv8X6bK2a5_nBgyFH5klvm0sItf_JA">
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/75 via-transparent to-transparent"></div>
+<div class="absolute top-space-md left-space-md bg-primary-container text-on-primary-container px-space-md py-space-xs rounded-full font-label-md text-label-md shadow-sm">
+              Circuito Extendido Cajamarca
+            </div>
+<div class="absolute bottom-space-md left-space-md right-space-md text-on-primary">
+<h3 class="font-headline-md text-headline-md text-white font-extrabold">Sede Mega Plaza</h3>
+<p class="font-body-md text-body-md text-surface-variant flex items-center gap-space-xs mt-1">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+                Mega Plaza Cajamarca (Primer Nivel, Zona Recreativa Central)
+              </p>
+</div>
+</div>
+<div class="p-space-lg flex-1 flex flex-col justify-between gap-space-md">
+<div class="space-y-space-sm">
+<div class="flex items-center gap-space-sm text-on-surface">
+<span class="material-symbols-outlined text-primary text-[20px]">schedule</span>
+<span class="font-label-lg text-label-lg">Lunes a Domingo: 10:00 AM – 10:00 PM</span>
+</div>
+<div class="bg-surface-container p-space-md rounded-lg space-y-space-xs">
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wide">Circuitos Disponibles en esta Sede:</p>
+<div class="flex flex-wrap gap-space-xs">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-surface-container-lowest text-on-surface px-space-sm py-1 rounded-full">
+<span class="material-symbols-outlined text-primary text-[14px]">check_circle</span>
+                    Circuito completo de motos dino
+                  </span>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-surface-container-lowest text-on-surface px-space-sm py-1 rounded-full">
+<span class="material-symbols-outlined text-primary text-[14px]">check_circle</span>
+                    Expedición jurásica guiada
+                  </span>
+
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-surface-container-lowest text-on-surface px-space-sm py-1 rounded-full">
+<span class="material-symbols-outlined text-primary text-[14px]">check_circle</span>
+                    Zona fotográfica T-Rex
+                  </span>
+</div>
+</div>
+</div>
+<div class="pt-space-sm flex items-center justify-between">
+<div>
+<span class="font-body-md text-body-md text-on-surface-variant block">Pases individuales desde</span>
+<span class="font-headline-md text-headline-md text-secondary font-extrabold">S/ 15.00</span>
+</div>
+<a class="inline-flex items-center gap-space-xs font-label-lg text-label-lg bg-primary text-on-primary px-space-lg py-space-sm rounded-full shadow-md hover:bg-on-primary-container transition-all min-h-[48px]" data-path="sedes" href="/#sedes">
+<span class="">Ver Disponibilidad y Tarifas</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-space-xl bg-surface-container-lowest">
+<div class="max-w-7xl mx-auto px-margin lg:px-margin-desktop">
+<div class="bg-surface-container-high rounded-xl p-space-lg lg:p-space-xl relative overflow-hidden">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-center">
+<div class="lg:col-span-8 flex flex-col gap-space-sm">
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-primary font-extrabold">¿Por qué las familias nos prefieren?</span>
+<h3 class="font-headline-lg text-headline-lg text-on-surface font-extrabold">Seguridad Certificada y Protocolos R.O.A.R.</h3>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Cada dino mecánico cuenta con sensor de frenado asistido, límite de velocidad infantil (4 km/h), desinfección continua entre paseos y chalecos reflectivos ajustables para los pequeños exploradores.</p>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-md pt-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary">speed</span>
+<span class="font-label-md text-label-md text-on-surface">Velocidad segura 4km/h</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary">sanitizer</span>
+<span class="font-label-md text-label-md text-on-surface">Desinfección de asientos</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary">support_agent</span>
+<span class="font-label-md text-label-md text-on-surface">Monitores en circuito</span>
+</div>
+</div>
+</div>
+<div class="lg:col-span-4 flex justify-center lg:justify-end">
+<div class="bg-surface-container-lowest p-space-lg rounded-lg shadow-md flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-secondary-container text-5xl mb-2" style="font-variation-settings: 'FILL' 1;">security</span>
+<p class="font-title-md text-title-md text-on-surface font-bold">Cero Incidentes</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Supervisión constante de nuestro equipo capacitado en cada sede.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-space-xl bg-surface">
+<div class="max-w-7xl mx-auto px-margin lg:px-margin-desktop">
+<div class="relative bg-gradient-to-r from-primary to-primary-container rounded-xl p-space-lg lg:p-space-xl text-on-primary overflow-hidden shadow-[0_16px_36px_rgba(13,69,50,0.18)]">
+<div class="absolute -right-16 -bottom-16 w-80 h-80 rounded-full bg-secondary-container/30 blur-2xl pointer-events-none"></div>
+<div class="absolute top-0 right-1/4 w-40 h-40 rounded-full bg-primary-fixed/20 blur-xl pointer-events-none"></div>
+<div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-center">
+<div class="lg:col-span-8 flex flex-col gap-space-sm">
+<div class="inline-flex items-center gap-space-xs bg-surface-container-lowest/20 px-space-md py-space-xs rounded-full w-fit backdrop-blur-md">
+<span class="material-symbols-outlined text-[18px]">celebration</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-extrabold text-white">Únete al Club de Pequeños Jinetes</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-white font-extrabold tracking-tight">
+              ¿Listo para la aventura? Regístrate y accede a promociones exclusivas en cada sede
+            </h2>
+<p class="font-body-lg text-body-lg text-surface-variant max-w-2xl">
+              Crea tu cuenta de padre o tutor en menos de 1 minuto. Reserva tus turnos con anticipación para evitar colas, aprovecha el 20% de descuento en tu segundo ticket y acumula sellos en tu pasaporte prehistórico digital.
+            </p>
+</div>
+<div class="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col items-center lg:items-end justify-center gap-space-md">
+<a class="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs font-label-lg text-label-lg bg-secondary-container text-on-secondary px-space-xl py-space-md rounded-full shadow-[0_10px_24px_rgba(255,122,48,0.35)] hover:bg-secondary transition-all hover:scale-105 active:scale-95 min-h-[48px] text-center" data-path="registro" href="{{ url_for('auth.registro') }}">
+<span class="material-symbols-outlined text-[20px]">how_to_reg</span>
+              Crear Cuenta Gratis
+            </a>
+<span class="font-label-sm text-label-sm text-surface-variant text-center lg:text-right">
+              Sin costos de afiliación • Boleta electrónica inmediata
+            </span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-space-xl bg-surface-container-low/60">
+<div class="max-w-7xl mx-auto px-margin lg:px-margin-desktop">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter-desktop pb-space-lg">
+<div class="space-y-space-xs">
+<h4 class="font-title-md text-title-md text-primary font-bold">Horarios de Atención</h4>
+<p class="font-body-md text-body-md text-on-surface">Lunes a Domingo</p>
+<p class="font-body-md text-body-md text-on-surface-variant font-bold">10:00 AM – 10:00 PM</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Atención en feriados y fines de semana según horario del centro comercial.</p>
+</div>
+<div class="space-y-space-xs">
+<h4 class="font-title-md text-title-md text-primary font-bold">Sedes Oficiales</h4>
+<p class="font-body-md text-body-md text-on-surface">Sede Real Plaza (Cajamarca)</p>
+<p class="font-body-md text-body-md text-on-surface">Sede Mega Plaza (Cajamarca, Nivel 1)</p>
+<p class="font-label-sm text-label-sm text-secondary-container font-bold">Próximamente en: Hoyos Rubio</p>
+</div>
+<div class="space-y-space-xs">
+<h4 class="font-title-md text-title-md text-primary font-bold">Enlaces Útiles</h4>
+<div class="flex flex-col space-y-1">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" data-path="inicio" href="/">Inicio</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" data-path="nosotros" href="/#nosotros">Nosotros</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" data-path="sedes" href="/#sedes">Sedes y Tarifas</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" data-path="login" href="{{ url_for('auth.iniciar_sesion') }}">Portal de Clientes</a>
+</div>
+</div>
+<div class="space-y-space-xs">
+<h4 class="font-title-md text-title-md text-primary font-bold">Atención &amp; Transparencia</h4>
+<a class="inline-flex items-center gap-space-xs bg-surface-container px-space-md py-space-xs rounded-lg hover:bg-surface-container-high transition-colors text-on-surface" href="#">
+<span class="material-symbols-outlined text-primary text-[20px]">menu_book</span>
+<span class="font-label-md text-label-md">Libro de Reclamaciones</span>
+</a>
+<p class="font-label-sm text-label-sm text-on-surface-variant pt-2">RUC: 20608934512 — Dino Park Perú S.A.C.</p>
+</div>
+</div>
+<div class="pt-space-md text-center">
+<p class="font-label-sm text-label-sm text-on-surface-variant">
+          * Precios incluyen IGV. Sujetos a términos y condiciones. Los paseos se realizan con personal de asistencia calificado. Los niños menores de 3 años deben estar acompañados por un adulto responsable.
+        </p>
+</div>
+</div>
+</section>
+</div></main><footer class="w-full bg-surface-container-low py-space-xl"><div class="max-w-7xl mx-auto px-margin lg:px-margin-desktop flex flex-col md:flex-row items-center justify-between gap-space-lg"><div class="flex items-center gap-space-sm"><img alt="Logo_dino.jpg" class="h-8 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}"><span class="font-headline-sm text-headline-sm text-primary">Dino Park</span><span class="font-body-md text-body-md text-on-surface-variant">— Diversión Prehistórica y Alquiler de Atracciones</span></div><div class="font-body-md text-body-md text-on-surface-variant text-center md:text-right">© 2024 Dino Park Perú S.A.C. Todos los derechos reservados.</div></div></footer>
+
+</body></html>
