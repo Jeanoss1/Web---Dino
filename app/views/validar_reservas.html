@@ -1,0 +1,173 @@
+{% extends 'base_panel.html' %}
+{% set pagina_activa = 'validaciones' %}
+{% block titulo %}Validar pagos · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-5xl mx-auto space-y-space-md">
+  <div class="flex flex-wrap items-center justify-between gap-space-sm">
+    <div class="flex items-center gap-space-sm">
+      <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+        <span class="material-symbols-outlined text-[24px]">fact_check</span>
+      </div>
+      <div>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">Validación de pagos Yape</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">
+          Revisa en tu app Yape que llegó el monto exacto al número <b>{{ yape_numero_formato }}</b> antes de aceptar.
+        </p>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button id="tab-por_validar" type="button" data-tab="por_validar" class="px-4 py-2 rounded-full font-label-md text-label-md font-bold min-h-[44px]">Por validar <span id="cuenta" class="ml-1"></span></button>
+      <button id="tab-confirmada" type="button" data-tab="confirmada" class="px-4 py-2 rounded-full font-label-md text-label-md font-bold min-h-[44px]">Confirmadas</button>
+    </div>
+  </div>
+
+  <div id="alerta" class="hidden px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold"></div>
+  <div id="lista" class="space-y-space-md">
+    <p class="font-body-md text-body-md text-on-surface-variant">Cargando…</p>
+  </div>
+</div>
+
+<!-- Vista ampliada de la captura -->
+<div id="visor" class="hidden fixed inset-0 z-[60] bg-inverse-surface/80 flex items-center justify-center p-space-md">
+  <button type="button" id="cerrar-visor" class="absolute top-4 right-4 w-11 h-11 rounded-full bg-surface-container-lowest text-on-surface flex items-center justify-center shadow-md">
+    <span class="material-symbols-outlined">close</span>
+  </button>
+  <img id="visor-img" alt="Captura del pago" class="max-h-full max-w-full rounded-lg shadow-xl">
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const soles = n => 'S/ ' + Number(n).toFixed(2);
+const fechaCorta = iso => new Date(iso).toLocaleDateString('es-PE', { weekday: 'short', day: 'numeric', month: 'short' });
+const hora = iso => new Date(iso).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+const fechaHora = iso => fechaCorta(iso) + ' ' + hora(iso);
+
+let tab = 'por_validar';
+let temporizador = null;
+
+function alerta(msg, tipo = 'error') {
+  const el = $('alerta');
+  el.textContent = msg;
+  el.className = 'px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold ' +
+    (tipo === 'error' ? 'bg-error-container text-on-error-container' : 'bg-primary-container/30 text-on-primary-container');
+  setTimeout(() => el.classList.add('hidden'), 5000);
+}
+
+function pintarTabs() {
+  ['por_validar', 'confirmada'].forEach(t => {
+    $('tab-' + t).className = 'px-4 py-2 rounded-full font-label-md text-label-md font-bold min-h-[44px] ' +
+      (t === tab ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high');
+  });
+}
+
+async function cargar() {
+  pintarTabs();
+  try {
+    const res = await fetch('/api/caja/reservas?estado=' + tab, { credentials: 'same-origin' });
+    if (res.status === 401) { location.href = '/iniciar-sesion?next=/caja/validaciones'; return; }
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error');
+    if (tab === 'por_validar') $('cuenta').textContent = json.length ? '(' + json.length + ')' : '';
+    render(json);
+  } catch (e) {
+    $('lista').innerHTML = `<p class="text-error font-body-md text-body-md">${esc(e.message)}</p>`;
+  }
+}
+
+function render(reservas) {
+  if (!reservas.length) {
+    $('lista').innerHTML = `<div class="p-space-lg bg-surface-container-lowest rounded-lg text-center font-body-md text-body-md text-on-surface-variant">
+      ${tab === 'por_validar' ? 'No hay pagos pendientes de validar.' : 'Todavía no hay reservas confirmadas.'}</div>`;
+    return;
+  }
+  $('lista').innerHTML = reservas.map(r => {
+    const c = r.comprobante;
+    const detalles = r.detalles.map(d => `
+      <div class="flex items-center justify-between gap-2 text-sm">
+        <span class="font-bold">${esc(d.unidad)}</span>
+        <span class="text-on-surface-variant">${esc(fechaCorta(d.inicio))} · ${hora(d.inicio)} - ${hora(d.fin)}</span>
+      </div>`).join('');
+
+    const botones = tab === 'por_validar' ? `
+      <div class="space-y-space-xs">
+        <input type="text" maxlength="200" id="motivo-${r.id_reserva}" placeholder="Motivo si rechazas (ej. el monto no coincide)"
+          class="w-full text-sm rounded-md bg-surface-container-low border border-outline-variant/50 px-3 py-2 min-h-[44px]">
+        <div class="grid grid-cols-2 gap-space-sm">
+          <button type="button" data-rechazar="${r.id_reserva}" class="min-h-[48px] rounded-full bg-error-container text-on-error-container font-label-lg text-label-lg">Rechazar</button>
+          <button type="button" data-aceptar="${r.id_reserva}" class="min-h-[48px] rounded-full bg-primary text-on-primary font-label-lg text-label-lg shadow-md">Aceptar</button>
+        </div>
+      </div>` : `
+      <div class="flex items-center gap-1 text-primary font-label-md text-label-md font-bold">
+        <span class="material-symbols-outlined text-[18px]">verified</span> Confirmada</div>`;
+
+    return `
+      <article class="bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant/30 p-space-md grid grid-cols-1 md:grid-cols-12 gap-space-md">
+        <div class="md:col-span-3">
+          ${c ? `<img src="${esc(c.url)}" data-ver="${esc(c.url)}" alt="Captura"
+              class="w-full h-56 md:h-40 object-cover rounded-md border border-outline-variant/40 cursor-zoom-in">` :
+            '<div class="h-40 rounded-md bg-surface-container flex items-center justify-center text-sm text-on-surface-variant">Sin captura</div>'}
+          ${c ? `<p class="text-xs text-on-surface-variant mt-1">Subida: ${esc(fechaHora(c.fecha_subida))}</p>` : ''}
+        </div>
+        <div class="md:col-span-5 space-y-space-xs">
+          <div class="flex items-center gap-2">
+            <span class="font-title-md text-title-md font-bold">Reserva #${r.id_reserva}</span>
+          </div>
+          <p class="text-sm"><b>${esc(r.cliente.nombre)}</b><br>
+             DNI ${esc(r.cliente.dni)} · Cel. ${esc(r.cliente.telefono || '-')}</p>
+          <div class="space-y-1 pt-space-xs border-t border-outline-variant/30">${detalles}</div>
+          <p class="text-xs text-on-surface-variant">${r.cantidad_personas} persona(s)</p>
+        </div>
+        <div class="md:col-span-4 space-y-space-sm">
+          <div class="p-space-sm rounded-lg bg-surface-container text-center">
+            <p class="font-label-sm text-label-sm text-tertiary uppercase font-bold">Monto que debe figurar en Yape</p>
+            <p class="font-display-lg text-headline-lg font-black text-secondary">${soles(r.total)}</p>
+          </div>
+          ${botones}
+        </div>
+      </article>`;
+  }).join('');
+}
+
+async function accion(id, tipo) {
+  const cuerpo = {};
+  if (tipo === 'rechazar') {
+    const motivo = ($('motivo-' + id).value || '').trim();
+    if (!motivo) { alerta('Escribe el motivo del rechazo.'); $('motivo-' + id).focus(); return; }
+    cuerpo.motivo = motivo;
+  } else if (!confirm(`¿Confirmas que recibiste el pago de la reserva #${id}?`)) {
+    return;
+  }
+  const res = await fetch(`/api/reservas/${id}/${tipo === 'aceptar' ? 'aceptar' : 'rechazar'}`, {
+    method: 'POST', credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) { alerta(json.error || 'No se pudo completar la acción'); return; }
+  alerta(tipo === 'aceptar' ? `Reserva #${id} confirmada.` : `Reserva #${id} rechazada; el cliente podrá subir otra captura.`, 'ok');
+  cargar();
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-tab]');
+  if (t) { tab = t.dataset.tab; cargar(); return; }
+  const a = e.target.closest('[data-aceptar]');
+  if (a) { accion(a.dataset.aceptar, 'aceptar'); return; }
+  const r = e.target.closest('[data-rechazar]');
+  if (r) { accion(r.dataset.rechazar, 'rechazar'); return; }
+  const v = e.target.closest('[data-ver]');
+  if (v) { $('visor-img').src = v.dataset.ver; $('visor').classList.remove('hidden'); return; }
+  if (e.target.id === 'visor' || e.target.closest('#cerrar-visor')) $('visor').classList.add('hidden');
+});
+
+cargar();
+// Se refresca solo cada 30 s para que lleguen los pagos nuevos (si no estás escribiendo un motivo)
+setInterval(() => {
+  const escribiendo = document.activeElement && document.activeElement.tagName === 'INPUT';
+  if (tab === 'por_validar' && !escribiendo && $('visor').classList.contains('hidden')) cargar();
+}, 30000);
+</script>
+{% endblock %}

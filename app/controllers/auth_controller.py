@@ -292,6 +292,11 @@ def iniciar_sesion():
             url_for('reserva.disponibilidad')
         )
 
+    if session['rol'] == 'cajero':
+        return redirect(
+            url_for('comprobante.pagina_validaciones')
+        )
+
     return redirect(
         url_for('home.index')
     )

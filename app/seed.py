@@ -1,7 +1,11 @@
+import os
 from datetime import date, datetime, time, timedelta
+
+from werkzeug.security import generate_password_hash
 
 from app.database import db
 from app.models.Rol import Rol
+from app.models.usuario import Usuario
 from app.models.Sucursal import Sucursal
 from app.models.Flota import Dinosaurio, Carro, Moto
 
@@ -14,6 +18,8 @@ def cargar_datos_iniciales():
     """
 
     _cargar_roles()
+    db.session.flush()
+    _cargar_cajero()
     _cargar_sedes()
 
     # Necesitamos los id_sucursal ya asignados antes de crear flota,
@@ -46,6 +52,45 @@ def _cargar_roles():
                     descripcion=descripcion
                 )
             )
+
+
+def _cargar_cajero():
+    """Crea la cuenta única del cajero a partir del .env
+    (CAJERO_CORREO y CAJERO_CONTRASENA).
+
+    El registro público siempre crea clientes, así que esta es la única
+    vía para tener un cajero. Si ya existe un usuario con ese rol no se
+    crea otro, y si faltan las variables no se crea nada.
+    """
+
+    correo = os.getenv('CAJERO_CORREO', '').strip().lower()
+    contrasena = os.getenv('CAJERO_CONTRASENA', '')
+
+    if not correo or not contrasena:
+        print('[seed] Sin CAJERO_CORREO/CAJERO_CONTRASENA en .env: '
+              'no se crea la cuenta de cajero.')
+        return
+
+    rol = Rol.query.filter_by(nombre='cajero').first()
+
+    if rol is None or Usuario.query.filter_by(id_rol=rol.id_rol).first():
+        return
+
+    if Usuario.query.filter_by(correo=correo).first():
+        print(f'[seed] El correo {correo} ya está registrado con otro rol: '
+              'usa otro en CAJERO_CORREO.')
+        return
+
+    db.session.add(
+        Usuario(
+            nombre='Cajero',
+            apellido='Dino Park',
+            correo=correo,
+            contrasena=generate_password_hash(contrasena),
+            estado=True,
+            id_rol=rol.id_rol,
+        )
+    )
 
 
 def _cargar_sedes():

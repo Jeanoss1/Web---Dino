@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>{% block titulo %}Dino Park{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}}::-webkit-scrollbar{display:none;}</style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "on-secondary-container": "#612400", "secondary-fixed-dim": "#ffb693", "on-error-container": "#93000a",
+        "surface-variant": "#b8efd3", "tertiary-fixed-dim": "#7fd8ae", "on-tertiary-fixed": "#002114",
+        "on-secondary-fixed": "#351000", "error-container": "#ffdad6", "tertiary-fixed": "#9bf5c9",
+        "outline-variant": "#bbcac0", "primary-fixed": "#75fac5", "primary-container": "#2dbe8d",
+        "background": "#e7fff1", "surface-container-low": "#ccffe5", "inverse-surface": "#003827",
+        "inverse-primary": "#56ddaa", "on-secondary": "#ffffff", "on-primary-fixed-variant": "#005139",
+        "on-tertiary-container": "#00472f", "secondary-container": "#ff7a30", "outline": "#6c7a72",
+        "error": "#ba1a1a", "surface-container-highest": "#b8efd3", "primary": "#006c4d", "surface": "#e7fff1",
+        "on-primary-container": "#004731", "surface-bright": "#e7fff1", "secondary-fixed": "#ffdbcc",
+        "surface-container": "#c3fadf", "on-error": "#ffffff", "surface-dim": "#afe6cb", "surface-tint": "#006c4d",
+        "on-surface": "#002115", "secondary": "#a04100", "on-secondary-fixed-variant": "#7a2f00",
+        "primary-fixed-dim": "#56ddaa", "surface-container-lowest": "#ffffff", "on-background": "#002115",
+        "on-tertiary-fixed-variant": "#005137", "tertiary": "#006c4a", "surface-container-high": "#bdf4d9",
+        "tertiary-container": "#61b991", "on-surface-variant": "#3d4a43", "inverse-on-surface": "#c6fde1",
+        "on-primary": "#ffffff", "on-primary-fixed": "#002115", "on-tertiary": "#ffffff"
+      },
+      borderRadius: { DEFAULT: "1rem", lg: "2rem", xl: "3rem", full: "9999px" },
+      spacing: { "space-xl": "2.5rem", "margin-desktop": "2.5rem", gutter: "1rem", "space-xs": "0.25rem",
+        "space-sm": "0.5rem", margin: "1rem", "gutter-desktop": "1.5rem", "space-lg": "1.5rem", "space-md": "1rem" },
+      fontFamily: { "headline-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"],
+        "body-md": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"],
+        "display-lg": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"],
+        "headline-sm": ["Plus Jakarta Sans"] },
+      fontSize: { "headline-lg": ["32px", {lineHeight:"40px",fontWeight:"700"}], "headline-md": ["24px", {lineHeight:"32px",fontWeight:"700"}],
+        "body-lg": ["16px", {lineHeight:"24px",fontWeight:"400"}], "body-md": ["14px", {lineHeight:"20px",fontWeight:"400"}],
+        "label-lg": ["14px", {lineHeight:"18px",fontWeight:"700"}], "title-md": ["18px", {lineHeight:"26px",fontWeight:"600"}],
+        "display-lg": ["48px", {lineHeight:"56px",fontWeight:"800"}], "label-md": ["12px", {lineHeight:"16px",fontWeight:"700"}],
+        "label-sm": ["11px", {lineHeight:"14px",fontWeight:"800"}], "headline-sm": ["20px", {lineHeight:"28px",fontWeight:"700"}] }
+    }
+  }
+}
+</script>
+</head>
+<body class="bg-surface font-body-md text-on-surface">
+
+{# Barra lateral (escritorio) #}
+<aside class="hidden lg:flex fixed left-0 top-0 h-full w-72 bg-surface-container-lowest z-50 flex-col pt-space-md pb-space-lg shadow-[0_4px_20px_rgba(13,69,50,0.06)]">
+  <div class="px-space-lg pb-space-lg flex items-center gap-space-sm">
+    <img alt="Logo Dino Park" class="h-10 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
+    <div class="flex flex-col">
+      <span class="font-headline-sm text-headline-sm text-primary tracking-tight leading-none">Dino Park</span>
+      <span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider mt-1">Portal Exploradores</span>
+    </div>
+  </div>
+  <nav class="flex-1 px-space-md space-y-space-xs">
+    {% set activo = "bg-surface-container text-on-surface font-bold relative after:content-[''] after:absolute after:left-0 after:top-2 after:bottom-2 after:w-1.5 after:bg-primary after:rounded-r-full" %}
+    {% set normal = "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface" %}
+    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] {{ activo if pagina_activa == 'reserva' else normal }}" href="/disponibilidad">
+      <span class="material-symbols-outlined text-primary">confirmation_number</span>
+      <span class="font-label-lg text-label-lg">Reserva</span>
+    </a>
+    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] {{ activo if pagina_activa == 'mis-reservas' else normal }}" href="/mis-reservas">
+      <span class="material-symbols-outlined text-primary">list_alt</span>
+      <span class="font-label-lg text-label-lg">Mis Reservas</span>
+    </a>
+    {% if session.get('rol') in ('administrador', 'cajero') %}
+    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] {{ activo if pagina_activa == 'validaciones' else normal }}" href="/caja/validaciones">
+      <span class="material-symbols-outlined text-primary">fact_check</span>
+      <span class="font-label-lg text-label-lg">Validar pagos</span>
+    </a>
+    {% endif %}
+    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] {{ normal }}" href="/">
+      <span class="material-symbols-outlined text-primary">home</span>
+      <span class="font-label-lg text-label-lg">Inicio</span>
+    </a>
+  </nav>
+  <div class="px-space-md pt-space-sm">
+    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-error hover:bg-error-container hover:text-on-error-container transition-all min-h-[48px]" href="/cerrar-sesion">
+      <span class="material-symbols-outlined text-error">logout</span>
+      <span class="font-label-lg text-label-lg">Cerrar Sesión</span>
+    </a>
+  </div>
+</aside>
+
+{# Barra superior (celular) #}
+<div class="lg:hidden sticky top-0 z-40 bg-surface-container-lowest shadow-sm px-space-md py-space-sm flex items-center justify-between gap-space-sm">
+  <img alt="Logo Dino Park" class="h-8 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
+  <nav class="flex items-center gap-1 overflow-x-auto">
+    <a class="px-3 py-2 rounded-full font-label-md text-label-md {{ 'bg-primary text-on-primary' if pagina_activa == 'reserva' else 'text-on-surface-variant' }}" href="/disponibilidad">Reserva</a>
+    <a class="px-3 py-2 rounded-full font-label-md text-label-md {{ 'bg-primary text-on-primary' if pagina_activa == 'mis-reservas' else 'text-on-surface-variant' }}" href="/mis-reservas">Mis Reservas</a>
+    {% if session.get('rol') in ('administrador', 'cajero') %}
+    <a class="px-3 py-2 rounded-full font-label-md text-label-md {{ 'bg-primary text-on-primary' if pagina_activa == 'validaciones' else 'text-on-surface-variant' }}" href="/caja/validaciones">Validar</a>
+    {% endif %}
+    <a class="px-3 py-2 rounded-full font-label-md text-label-md text-error" href="/cerrar-sesion">Salir</a>
+  </nav>
+</div>
+
+<div class="lg:pl-72">
+<main class="relative bg-surface min-h-screen px-space-md lg:px-space-lg py-space-lg">
+{% block contenido %}{% endblock %}
+</main>
+</div>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
