@@ -1,0 +1,9 @@
+{% with mensajes = get_flashed_messages(with_categories=true) %}
+{% if mensajes %}
+<div class="space-y-2 mb-space-md no-print">
+  {% for categoria, mensaje in mensajes %}
+  <div class="px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold {{ 'bg-error-container text-on-error-container' if categoria == 'error' else ('bg-secondary-fixed text-on-secondary-fixed-variant' if categoria == 'aviso' else 'bg-primary-container/30 text-on-primary-container') }}">{{ mensaje }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}

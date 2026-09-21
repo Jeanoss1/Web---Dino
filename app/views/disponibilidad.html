@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>Dino Park · Disponibilidad</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -46,60 +47,17 @@ tailwind.config = {
   }
 }
 </script>
+<script src="{{ url_for('static', filename='js/csrf.js') }}" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dino.css') }}">
 </head>
+{% set pagina_activa = 'reserva' %}
 <body class="bg-surface font-body-md text-on-surface">
 
-<aside class="hidden lg:flex fixed left-0 top-0 h-full w-72 bg-surface-container-lowest z-50 flex-col pt-space-md pb-space-lg shadow-[0_4px_20px_rgba(13,69,50,0.06)]">
-  <div class="px-space-lg pb-space-lg flex items-center gap-space-sm">
-    <img alt="Logo Dino Park" class="h-10 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
-    <div class="flex flex-col">
-      <span class="font-headline-sm text-headline-sm text-primary tracking-tight leading-none">Dino Park</span>
-      <span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider mt-1">Portal Exploradores</span>
-    </div>
-  </div>
-  <nav class="flex-1 px-space-md space-y-space-xs">
-    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] bg-surface-container text-on-surface font-bold relative after:content-[''] after:absolute after:left-0 after:top-2 after:bottom-2 after:w-1.5 after:bg-primary after:rounded-r-full" href="/disponibilidad">
-      <span class="material-symbols-outlined text-primary">confirmation_number</span>
-      <span class="font-label-lg text-label-lg">Reserva</span>
-    </a>
-    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all min-h-[48px]" href="/mis-reservas">
-      <span class="material-symbols-outlined text-primary">list_alt</span>
-      <span class="font-label-lg text-label-lg">Mis Reservas</span>
-    </a>
-    {% if session.get('rol') in ('administrador', 'cajero') %}
-    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all min-h-[48px]" href="/caja/validaciones">
-      <span class="material-symbols-outlined text-primary">fact_check</span>
-      <span class="font-label-lg text-label-lg">Validar pagos</span>
-    </a>
-    {% endif %}
-    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all min-h-[48px]" href="/">
-      <span class="material-symbols-outlined text-primary">home</span>
-      <span class="font-label-lg text-label-lg">Inicio</span>
-    </a>
-  </nav>
-  <div class="px-space-md pt-space-sm">
-    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-error hover:bg-error-container hover:text-on-error-container transition-all min-h-[48px]" href="/cerrar-sesion">
-      <span class="material-symbols-outlined text-error">logout</span>
-      <span class="font-label-lg text-label-lg">Cerrar Sesión</span>
-    </a>
-  </div>
-</aside>
+{% include '_menu.html' %}
 
-<!-- Barra superior para celular -->
-<div class="lg:hidden sticky top-0 z-40 bg-surface-container-lowest shadow-sm px-space-md py-space-sm flex items-center justify-between gap-space-sm">
-  <img alt="Logo Dino Park" class="h-8 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
-  <nav class="flex items-center gap-1 overflow-x-auto">
-    <a class="px-3 py-2 rounded-full font-label-md text-label-md bg-primary text-on-primary" href="/disponibilidad">Reserva</a>
-    <a class="px-3 py-2 rounded-full font-label-md text-label-md text-on-surface-variant" href="/mis-reservas">Mis Reservas</a>
-    {% if session.get('rol') in ('administrador', 'cajero') %}
-    <a class="px-3 py-2 rounded-full font-label-md text-label-md text-on-surface-variant" href="/caja/validaciones">Validar</a>
-    {% endif %}
-    <a class="px-3 py-2 rounded-full font-label-md text-label-md text-error" href="/cerrar-sesion">Salir</a>
-  </nav>
-</div>
-
-<div class="lg:pl-72">
+<div class="lg:pl-72 layout-main">
 <main class="relative pt-space-lg bg-surface min-h-screen px-space-md lg:px-space-lg py-space-lg">
+{% include '_flash.html' %}
 <div id="alerta-global" class="hidden mb-space-md px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold"></div>
 
 <div class="flex flex-col w-full space-y-space-md">
@@ -111,25 +69,25 @@ tailwind.config = {
         <span class="material-symbols-outlined text-[24px]">rocket_launch</span>
       </div>
       <div>
-        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">Reserva de Turnos &amp; Atracciones</h1>
-        <p class="font-body-md text-body-md text-on-surface-variant">Selecciona tu sede, fecha y vehículo para reservar un turno.</p>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">Reserva de Horarios &amp; Atracciones</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">Selecciona tu sede, fecha y vehículo para reservar un horario.</p>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-space-md items-end">
-      <div class="md:col-span-5 space-y-1">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12 gap-space-md items-end">
+      <div class="xl:col-span-5 space-y-1">
         <label class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider font-bold">1. Sede</label>
         <div id="sedes-container" class="flex flex-wrap gap-2">
           <span class="font-label-sm text-label-sm text-on-surface-variant">Cargando sedes…</span>
         </div>
       </div>
 
-      <div class="md:col-span-4 space-y-1">
+      <div class="xl:col-span-4 space-y-1">
         <label class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider font-bold">2. Fecha</label>
         <input id="input-fecha" type="date" class="w-full px-3 py-2 text-sm font-semibold rounded-md bg-surface-container-low border border-outline-variant/50 text-on-surface focus:ring-1 focus:ring-primary focus:outline-none min-h-[44px]">
       </div>
 
-      <div class="md:col-span-3 space-y-1">
+      <div class="xl:col-span-3 space-y-1">
         <label class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider font-bold">Personas</label>
         <input id="input-personas" type="number" min="1" value="1" class="w-full px-3 py-2 text-sm font-semibold rounded-md bg-surface-container-low border border-outline-variant/50 text-on-surface focus:ring-1 focus:ring-primary focus:outline-none min-h-[44px]">
       </div>
@@ -158,7 +116,7 @@ tailwind.config = {
 
       <div id="turnos-section" class="hidden bg-surface-container-lowest p-space-md lg:p-space-lg rounded-lg shadow-sm border border-outline-variant/30 space-y-space-md">
         <div class="flex items-center justify-between gap-space-sm pb-space-sm border-b border-outline-variant/20">
-          <span id="turnos-titulo" class="font-title-md text-title-md font-bold text-on-surface">Turnos disponibles</span>
+          <span id="turnos-titulo" class="font-title-md text-title-md font-bold text-on-surface">Horarios disponibles</span>
         </div>
         <div id="turnos-container" class="grid grid-cols-2 sm:grid-cols-3 gap-space-sm"></div>
       </div>
@@ -173,7 +131,7 @@ tailwind.config = {
         </div>
 
         <div id="resumen-vacio" class="text-center py-space-md text-on-surface-variant font-body-md text-body-md">
-          Selecciona una atracción y un turno para continuar.
+          Selecciona una atracción y un horario para continuar.
         </div>
 
         <!-- PASO 1: resumen + confirmar -->
@@ -192,7 +150,7 @@ tailwind.config = {
 
           <div class="bg-surface-container p-space-md rounded-lg space-y-space-xs">
             <div class="flex justify-between text-on-surface-variant font-body-md text-body-md">
-              <span>Precio por hora</span>
+              <span id="resumen-precio-etiqueta">Precio por bloque</span>
               <span id="resumen-precio" class="font-semibold"></span>
             </div>
             <div class="pt-space-xs border-t border-outline-variant/30 flex items-baseline justify-between text-on-surface">
@@ -207,14 +165,14 @@ tailwind.config = {
             <div class="min-w-0">
               <p class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider font-bold">Pago por Yape</p>
               <p class="font-title-md text-title-md font-bold text-on-surface">{{ yape_numero_formato }}</p>
-              <p class="text-xs text-on-surface-variant">Primero reserva tu turno; luego yapea y sube tu captura.</p>
+              <p class="text-xs text-on-surface-variant">Primero reserva tu horario; luego yapea y sube tu captura.</p>
             </div>
           </div>
 
           <button id="btn-confirmar" type="button"
             class="w-full min-h-[52px] py-space-sm px-space-lg rounded-full bg-secondary-container text-on-secondary font-headline-sm text-headline-sm tracking-wide shadow-lg hover:brightness-105 active:scale-95 transition-all flex items-center justify-center gap-space-sm text-center disabled:opacity-50">
             <span class="material-symbols-outlined text-[26px]">event_available</span>
-            <span>Reservar turno</span>
+            <span>Reservar horario</span>
           </button>
         </div>
 
@@ -225,7 +183,7 @@ tailwind.config = {
               <span class="material-symbols-outlined">check_circle</span>
               Reserva <span id="pago-id"></span> registrada
             </p>
-            <p class="text-sm text-on-primary-container">Tu turno quedó apartado. Falta el pago para confirmarlo.</p>
+            <p class="text-sm text-on-primary-container">Tu horario quedó apartado por unos minutos. Falta el pago para confirmarlo.</p>
           </div>
 
           <div class="p-space-md rounded-lg bg-surface-container border border-outline-variant/30 space-y-space-sm">
@@ -276,7 +234,7 @@ tailwind.config = {
 const API = {
   sedes: '/api/sedes',
   flota: '/api/flota',
-  turnos: '/api/turnos',
+  franjas: '/api/franjas',
   reservas: '/api/reservas',
 };
 
@@ -310,6 +268,8 @@ const state = {
 };
 
 // Fecha local (toISOString usa UTC y de noche daría el día siguiente)
+const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 function hoyISO() {
   const d = new Date();
   const mes = String(d.getMonth() + 1).padStart(2, '0');
@@ -364,7 +324,7 @@ async function cargarSedes() {
   try {
     state.sedes = await apiGet(API.sedes);
   } catch (e) {
-    cont.innerHTML = `<span class="font-label-sm text-label-sm text-error">${e.message}</span>`;
+    cont.innerHTML = `<span class="font-label-sm text-label-sm text-error">${esc(e.message)}</span>`;
     return;
   }
 
@@ -388,7 +348,7 @@ function renderSedes() {
     btn.className = `px-space-sm py-2 rounded-md font-label-md text-label-md font-bold flex items-center justify-center gap-1 shadow-sm transition-all min-h-[44px] ${
       activo ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
     }`;
-    btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">location_on</span> ${s.nombre}`;
+    btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">location_on</span> ${esc(s.nombre)}`;
     btn.addEventListener('click', () => {
       if (state.idSede === s.id_sucursal) return;
       state.idSede = s.id_sucursal;
@@ -410,7 +370,7 @@ async function cargarFlota() {
     if (state.tipoActivo) params.set('tipo', state.tipoActivo);
     state.flota = await apiGet(`${API.flota}?${params.toString()}`);
   } catch (e) {
-    cont.innerHTML = `<p class="font-body-md text-body-md text-error">${e.message}</p>`;
+    cont.innerHTML = `<p class="font-body-md text-body-md text-error">${esc(e.message)}</p>`;
     return;
   }
 
@@ -477,17 +437,17 @@ function renderFlota() {
     card.innerHTML = `
       ${activo ? `<div class="absolute top-2 right-2 bg-primary text-on-primary font-label-sm text-[10px] uppercase font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm z-10"><span class="material-symbols-outlined text-[14px]">check_circle</span> Seleccionado</div>` : ''}
       <div class="h-28 w-full bg-surface-container-low/60 rounded-md overflow-hidden flex items-center justify-center mb-2">
-        <img src="${imagenPorTipo(f.tipo)}" alt="${f.nombre}" class="w-full h-full object-contain p-2">
+        <img src="${imagenPorTipo(f.tipo)}" alt="${esc(f.nombre)}" class="w-full h-full object-contain p-2">
       </div>
       <div class="space-y-1">
-        <h3 class="font-title-md text-title-md font-bold text-on-surface leading-tight">${f.nombre}</h3>
-        <p class="font-label-sm text-label-sm text-on-surface-variant">${f.tipo || ''}${f.modelo ? ' · ' + f.modelo : ''}</p>
+        <h3 class="font-title-md text-title-md font-bold text-on-surface leading-tight">${esc(f.nombre)}</h3>
+        <p class="font-label-sm text-label-sm text-on-surface-variant">${esc(f.tipo || '')}${f.modelo ? ' · ' + esc(f.modelo) : ''}</p>
       </div>
       <div class="pt-3 mt-2 border-t border-outline-variant/30 flex items-center justify-between text-xs">
-        <span class="font-bold text-secondary">S/ ${Number(f.precio_hora || 0).toFixed(2)} / hora</span>
+        <span class="font-bold text-secondary">S/ ${Number(f.precio || 0).toFixed(2)} / ${f.minutos} min</span>
         <span class="px-2 py-0.5 rounded-full font-bold text-[11px] ${
           disponible ? 'bg-primary-container/20 text-on-primary-container' : 'bg-outline/20 text-on-surface-variant'
-        }">${disponible ? 'Disponible' : f.estado}</span>
+        }">${disponible ? 'Disponible' : esc(f.estado)}</span>
       </div>
     `;
 
@@ -524,16 +484,16 @@ async function cargarTurnos() {
   const titulo = document.getElementById('turnos-titulo');
 
   section.classList.remove('hidden');
-  titulo.textContent = `Turnos disponibles · ${state.flotaSeleccionada.nombre}`;
-  cont.innerHTML = `<p class="font-body-md text-body-md text-on-surface-variant col-span-full">Cargando turnos…</p>`;
+  titulo.textContent = `Horarios disponibles · ${state.flotaSeleccionada.nombre}`;
+  cont.innerHTML = `<p class="font-body-md text-body-md text-on-surface-variant col-span-full">Cargando horarios…</p>`;
 
   try {
     const fecha = document.getElementById('input-fecha').value;
     const params = new URLSearchParams({ id_flota: state.idFlota });
     if (fecha) params.set('fecha', fecha);
-    state.turnos = await apiGet(`${API.turnos}?${params.toString()}`);
+    state.turnos = await apiGet(`${API.franjas}?${params.toString()}`);
   } catch (e) {
-    cont.innerHTML = `<p class="font-body-md text-body-md text-error col-span-full">${e.message}</p>`;
+    cont.innerHTML = `<p class="font-body-md text-body-md text-error col-span-full">${esc(e.message)}</p>`;
     return;
   }
 
@@ -550,12 +510,12 @@ function renderTurnos() {
   cont.innerHTML = '';
 
   if (state.turnos.length === 0) {
-    cont.innerHTML = `<p class="font-body-md text-body-md text-on-surface-variant col-span-full">No hay turnos disponibles para esta fecha.</p>`;
+    cont.innerHTML = `<p class="font-body-md text-body-md text-on-surface-variant col-span-full">No hay horarios disponibles para esta fecha.</p>`;
     return;
   }
 
   state.turnos.forEach(t => {
-    const activo = t.id_turno === state.idTurno;
+    const activo = t.id_franja === state.idTurno;
     const div = document.createElement('div');
     div.className = `p-space-sm rounded-md flex flex-col justify-between cursor-pointer transition-colors ${
       activo
@@ -576,7 +536,7 @@ function renderTurnos() {
     `;
     div.addEventListener('click', () => {
       if (bloqueadoPorPago()) return;
-      state.idTurno = t.id_turno;
+      state.idTurno = t.id_franja;
       state.turnoSeleccionado = t;
       renderTurnos();
       renderResumen();
@@ -616,7 +576,8 @@ function renderResumen() {
     `<span class="material-symbols-outlined text-[14px] text-primary">schedule</span>
      ${formatearHora(state.turnoSeleccionado.horario_inicio)} - ${formatearHora(state.turnoSeleccionado.horario_fin)}`;
 
-  const precio = Number(state.flotaSeleccionada.precio_hora || 0);
+  const precio = Number(state.flotaSeleccionada.precio || 0);
+  document.getElementById('resumen-precio-etiqueta').textContent = `Precio por ${state.flotaSeleccionada.minutos} minutos`;
   document.getElementById('resumen-precio').textContent = `S/ ${precio.toFixed(2)}`;
   document.getElementById('resumen-total').textContent = `S/ ${precio.toFixed(2)}`;
 }
@@ -627,7 +588,7 @@ async function confirmarReserva() {
   ocultarAlerta();
 
   if (!state.idFlota || !state.idTurno) {
-    mostrarAlerta('Selecciona una atracción y un turno antes de confirmar.');
+    mostrarAlerta('Selecciona una atracción y un horario antes de confirmar.');
     return;
   }
 
@@ -640,7 +601,7 @@ async function confirmarReserva() {
   try {
     const reserva = await apiPost(API.reservas, {
       cantidad_personas: cantidadPersonas,
-      items: [{ id_flota: state.idFlota, id_turno: state.idTurno }],
+      items: [{ id_flota: state.idFlota, id_franja: state.idTurno }],
     });
 
     // Pasa al paso 2: pagar con Yape y subir la captura

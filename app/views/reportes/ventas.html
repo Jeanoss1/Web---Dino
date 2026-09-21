@@ -1,0 +1,26 @@
+{% extends 'base_panel.html' %}
+{% import '_ui.html' as ui %}
+{% block titulo %}Reportes de ventas · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-7xl mx-auto space-y-space-md">
+  <div class="flex flex-wrap items-center justify-between gap-space-sm">
+    {{ ui.encabezado('bar_chart', 'Reportes de ventas', r.etiqueta) }}
+    <div class="flex gap-space-sm">
+      <a class="{{ ui.BTN }} inline-flex items-center" href="{{ url_for('reportes.exportar', formato='excel') }}?{{ consulta }}">Exportar Excel</a>
+      <a class="{{ ui.BTN2 }} inline-flex items-center" href="{{ url_for('reportes.exportar', formato='pdf') }}?{{ consulta }}">Exportar PDF</a>
+    </div>
+  </div>
+
+  {{ ui.filtros(url_for('reportes.ventas'), sedes, sede_sel, rango, desde, hasta) }}
+
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-space-md">
+    {{ ui.indicador('Total vendido', 'S/ %.2f'|format(r.resumen.total)) }}
+    {{ ui.indicador('Ventas', r.resumen.ventas, '', 'text-primary') }}
+    {{ ui.indicador('Minutos vendidos', r.resumen.minutos, '', 'text-primary') }}
+    {{ ui.indicador('Ticket promedio', 'S/ %.2f'|format(r.resumen.ticket_promedio)) }}
+  </div>
+
+  {% include 'reportes/_tablas.html' %}
+</div>
+{% endblock %}

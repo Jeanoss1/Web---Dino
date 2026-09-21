@@ -1,0 +1,59 @@
+{% extends 'base_panel.html' %}
+{% import '_ui.html' as ui %}
+{% block titulo %}Mantenimiento · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-6xl mx-auto space-y-space-md">
+  {{ ui.encabezado('build', 'Mantenimiento y repuestos', 'Una unidad en mantenimiento no se puede reservar ni vender.') }}
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-md">
+    <form method="post" action="{{ url_for('mantenimiento.iniciar') }}" class="{{ ui.CARD }} space-y-space-sm">
+      {{ ui.csrf() }}
+      <h2 class="font-title-md text-title-md font-bold">Enviar unidad a mantenimiento</h2>
+      <div><label class="{{ ui.ETIQUETA }}">Unidad</label>
+        <select class="{{ ui.INPUT }}" name="id_flota" required>{% for f in flota if f.estado != 'mantenimiento' %}<option value="{{ f.id_flota }}">{{ f.nombre }} · {{ f.sucursal.nombre }}</option>{% endfor %}</select></div>
+      <div class="grid grid-cols-2 gap-space-sm">
+        <div><label class="{{ ui.ETIQUETA }}">Tipo</label><input class="{{ ui.INPUT }}" name="tipo" value="preventivo" required></div>
+        <div><label class="{{ ui.ETIQUETA }}">Repuesto (opcional)</label>
+          <select class="{{ ui.INPUT }}" name="id_repuesto"><option value="">Ninguno</option>{% for r in repuestos %}<option value="{{ r.id_repuesto }}">{{ r.nombre }} (stock {{ r.stock }})</option>{% endfor %}</select></div>
+      </div>
+      <div><label class="{{ ui.ETIQUETA }}">Observación</label><input class="{{ ui.INPUT }}" name="observacion" maxlength="300"></div>
+      <button class="{{ ui.BTN2 }}" type="submit">Iniciar mantenimiento</button>
+    </form>
+
+    <div class="{{ ui.CARD }} space-y-space-sm">
+      <h2 class="font-title-md text-title-md font-bold">Repuestos</h2>
+      <div class="overflow-x-auto"><table class="w-full"><thead><tr><th class="{{ ui.TH }}">Repuesto</th><th class="{{ ui.TH }}">Stock</th><th class="{{ ui.TH }}">Reponer</th></tr></thead><tbody>
+      {% for r in repuestos %}
+        <tr class="border-t border-outline-variant/30"><td class="{{ ui.TD }}">{{ r.nombre }}</td>
+          <td class="{{ ui.TD }}">{{ r.stock }} / mín. {{ r.stock_minimo }} {% if r.necesita_reposicion %}{{ ui.etiqueta_estado('Bajo stock', 'error') }}{% endif %}</td>
+          <td class="{{ ui.TD }}"><form method="post" action="{{ url_for('mantenimiento.sumar_stock', id_repuesto=r.id_repuesto) }}" class="flex gap-1">{{ ui.csrf() }}
+            <input class="{{ ui.INPUT }} !w-20 !min-h-[36px]" type="number" name="cantidad" min="1" value="1"><button class="{{ ui.BTN_SUAVE }}" type="submit">+</button></form></td></tr>
+      {% else %}<tr><td class="{{ ui.TD }}" colspan="3">Aún no hay repuestos.</td></tr>{% endfor %}
+      </tbody></table></div>
+      <form method="post" action="{{ url_for('mantenimiento.crear_repuesto') }}" class="grid grid-cols-2 sm:grid-cols-6 gap-space-sm items-end">
+        {{ ui.csrf() }}
+        <div class="col-span-2 sm:col-span-3"><label class="{{ ui.ETIQUETA }}">Nuevo repuesto</label><input class="{{ ui.INPUT }}" name="nombre" required></div>
+        <div class="col-span-1"><label class="{{ ui.ETIQUETA }}">Stock</label><input class="{{ ui.INPUT }}" type="number" name="stock" min="0" value="0"></div>
+        <div class="col-span-1"><label class="{{ ui.ETIQUETA }}">Mín.</label><input class="{{ ui.INPUT }}" type="number" name="stock_minimo" min="0" value="1"></div>
+        <div class="col-span-2 sm:col-span-1"><button class="{{ ui.BTN }} w-full !px-2" type="submit">Crear</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="{{ ui.CARD }} overflow-x-auto">
+    <h2 class="font-title-md text-title-md font-bold mb-2">Últimos mantenimientos</h2>
+    <table class="w-full"><thead><tr><th class="{{ ui.TH }}">Unidad</th><th class="{{ ui.TH }}">Tipo</th><th class="{{ ui.TH }}">Inicio</th><th class="{{ ui.TH }}">Fin</th>
+      <th class="{{ ui.TH }}">Repuesto</th><th class="{{ ui.TH }}">Estado</th><th class="{{ ui.TH }}"></th></tr></thead><tbody>
+    {% for m in mantenimientos %}
+      <tr class="border-t border-outline-variant/30"><td class="{{ ui.TD }} font-bold">{{ m.flota.nombre }}</td><td class="{{ ui.TD }}">{{ m.tipo }}</td>
+        <td class="{{ ui.TD }}">{{ m.fecha_inicio.strftime('%d/%m %H:%M') }}</td><td class="{{ ui.TD }}">{{ m.fecha_fin.strftime('%d/%m %H:%M') if m.fecha_fin else '—' }}</td>
+        <td class="{{ ui.TD }}">{{ m.repuesto.nombre if m.repuesto else '—' }}</td>
+        <td class="{{ ui.TD }}">{{ ui.etiqueta_estado('En proceso' if m.estado == 'en_proceso' else 'Finalizado', 'aviso' if m.estado == 'en_proceso' else 'ok') }}</td>
+        <td class="{{ ui.TD }}">{% if m.estado == 'en_proceso' %}<form method="post" action="{{ url_for('mantenimiento.finalizar', id_mantenimiento=m.id_mantenimiento) }}">{{ ui.csrf() }}
+          <button class="{{ ui.BTN }}" type="submit">Finalizar</button></form>{% endif %}</td></tr>
+    {% else %}<tr><td class="{{ ui.TD }}" colspan="7">Sin mantenimientos registrados.</td></tr>{% endfor %}
+    </tbody></table>
+  </div>
+</div>
+{% endblock %}

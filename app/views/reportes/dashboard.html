@@ -1,0 +1,69 @@
+{% extends 'base_panel.html' %}
+{% import '_ui.html' as ui %}
+{% block titulo %}Dashboard · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-7xl mx-auto space-y-space-md">
+  <div class="flex flex-wrap items-center justify-between gap-space-sm">
+    {{ ui.encabezado('dashboard', 'Dashboard', r.etiqueta) }}
+    <div class="flex gap-space-sm">
+      <a class="{{ ui.BTN }} inline-flex items-center" href="{{ url_for('reportes.exportar', formato='excel') }}?{{ consulta }}">Exportar Excel</a>
+      <a class="{{ ui.BTN2 }} inline-flex items-center" href="{{ url_for('reportes.exportar', formato='pdf') }}?{{ consulta }}">Exportar PDF</a>
+    </div>
+  </div>
+
+  {{ ui.filtros(url_for('reportes.dashboard'), sedes, sede_sel, rango, desde, hasta) }}
+
+  {% if alertas_contadores %}
+  <a href="{{ url_for('reportes.contadores', solo_alertas=1) }}" class="block p-space-md rounded-lg bg-error-container text-on-error-container font-label-md text-label-md font-bold">
+    ⚠ Hay {{ alertas_contadores }} atracción(es) con diferencia en el contador hoy. Ver contadores →</a>
+  {% endif %}
+
+  {% if alertas_hoy %}
+  <a href="{{ url_for('reportes.pagina_cuadre') }}" class="block p-space-md rounded-lg bg-error-container text-on-error-container font-label-md text-label-md font-bold">
+    ⚠ Hay {{ alertas_hoy }} alerta(s) de cuadre hoy (minutos o dinero). Ver cuadre diario →</a>
+  {% endif %}
+
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-space-md">
+    {{ ui.indicador('Total vendido', 'S/ %.2f'|format(r.resumen.total)) }}
+    {{ ui.indicador('Ventas', r.resumen.ventas, '', 'text-primary') }}
+    {{ ui.indicador('Minutos vendidos', r.resumen.minutos, '', 'text-primary') }}
+    {{ ui.indicador('Ticket promedio', 'S/ %.2f'|format(r.resumen.ticket_promedio)) }}
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
+    <div class="{{ ui.CARD }} lg:col-span-2"><h2 class="font-title-md text-title-md font-bold mb-2">Ventas por día (S/)</h2><div class="h-64 grafico"><canvas id="g-dia"></canvas></div></div>
+    <div class="{{ ui.CARD }}"><h2 class="font-title-md text-title-md font-bold mb-2">Efectivo vs. Yape</h2><div class="h-64 grafico"><canvas id="g-metodo"></canvas></div></div>
+    <div class="{{ ui.CARD }}"><h2 class="font-title-md text-title-md font-bold mb-2">Por sede (S/)</h2><div class="h-56"><canvas id="g-sede"></canvas></div></div>
+    <div class="{{ ui.CARD }}"><h2 class="font-title-md text-title-md font-bold mb-2">Por tipo de atracción</h2><div class="h-56"><canvas id="g-tipo"></canvas></div></div>
+    <div class="{{ ui.CARD }}"><h2 class="font-title-md text-title-md font-bold mb-2">Ventas por hora trabajada (S/)</h2><div class="h-56"><canvas id="g-hora"></canvas></div></div>
+  </div>
+
+  {% include 'reportes/_tablas.html' %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+  const datos = {{ {'dia': r.por_dia, 'sede': r.por_sede, 'tipo': r.por_tipo, 'metodo': r.por_metodo, 'cajero': r.por_cajero}|tojson }};
+  const verde = '#006c4d', naranja = '#ff7a30', menta = '#2dbe8d', marron = '#a04100', claro = '#61b991';
+  const paleta = [verde, naranja, menta, marron, claro];
+  const sol = v => 'S/ ' + Number(v).toFixed(2);
+  Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+  const opciones = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
+  const opcionesLeyenda = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } };
+
+  new Chart('g-dia', { type: 'bar', data: { labels: datos.dia.map(d => d.fecha.slice(5).split('-').reverse().join('/')),
+    datasets: [{ data: datos.dia.map(d => d.total), backgroundColor: verde, borderRadius: 6 }] }, options: opciones });
+  new Chart('g-metodo', { type: 'doughnut', data: { labels: datos.metodo.map(d => d.metodo),
+    datasets: [{ data: datos.metodo.map(d => d.total), backgroundColor: [naranja, verde, menta] }] }, options: opcionesLeyenda });
+  new Chart('g-sede', { type: 'bar', data: { labels: datos.sede.map(d => d.sede),
+    datasets: [{ data: datos.sede.map(d => d.total), backgroundColor: paleta, borderRadius: 6 }] }, options: opciones });
+  new Chart('g-tipo', { type: 'doughnut', data: { labels: datos.tipo.map(d => d.tipo),
+    datasets: [{ data: datos.tipo.map(d => d.total), backgroundColor: paleta }] }, options: opcionesLeyenda });
+  new Chart('g-hora', { type: 'bar', data: { labels: datos.cajero.map(d => d.cajero),
+    datasets: [{ data: datos.cajero.map(d => d.ventas_por_hora), backgroundColor: naranja, borderRadius: 6 }] },
+    options: { ...opciones, indexAxis: 'y' } });
+</script>
+{% endblock %}

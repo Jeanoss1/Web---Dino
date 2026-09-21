@@ -1,0 +1,43 @@
+{% extends 'base_panel.html' %}
+{% import '_ui.html' as ui %}
+{% block titulo %}Tarifas · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-2xl mx-auto space-y-space-md">
+  {{ ui.encabezado('payments', 'Tarifa estándar', 'Vale para TODAS las atracciones: dinosaurios, carros, motos y otros.') }}
+
+  <div class="grid grid-cols-2 gap-space-md">
+    {{ ui.indicador('Precio por bloque', 'S/ %.2f'|format(tarifa.precio)) }}
+    {{ ui.indicador('Minutos por bloque', tarifa.minutos ~ ' min', '', 'text-primary') }}
+  </div>
+
+  <form method="post" action="{{ url_for('admin.editar_tarifa') }}" class="{{ ui.CARD }} space-y-space-sm">
+    {{ ui.csrf() }}
+    <h2 class="font-title-md text-title-md font-bold">Editar tarifa</h2>
+    <div class="grid grid-cols-2 gap-space-sm">
+      <div><label class="{{ ui.ETIQUETA }}">Precio por bloque (S/)</label>
+        <input class="{{ ui.INPUT }}" type="number" name="precio" min="0.10" step="0.10" value="{{ '%.2f'|format(tarifa.precio) }}" required></div>
+      <div><label class="{{ ui.ETIQUETA }}">Minutos por bloque</label>
+        <input class="{{ ui.INPUT }}" type="number" name="minutos" min="1" max="240" value="{{ tarifa.minutos }}" required></div>
+    </div>
+    <p class="text-sm text-on-surface-variant">Cada venta calcula: minutos = bloques × {{ tarifa.minutos }} y total = bloques × S/ {{ '%.2f'|format(tarifa.precio) }}.
+      Las ventas ya hechas conservan el precio con el que se vendieron. Los horarios (franjas) de días futuros ya generados mantienen su duración.</p>
+    <button class="{{ ui.BTN2 }}" type="submit">Guardar tarifa</button>
+    <p class="text-xs text-on-surface-variant">Última edición: {{ tarifa.actualizado_en.strftime('%d/%m/%Y %H:%M') }}{% if editor %} por {{ editor.nombre_completo }}{% endif %}.</p>
+  </form>
+
+  <form method="post" action="{{ url_for('admin.editar_tolerancias') }}" class="{{ ui.CARD }} space-y-space-sm">
+    {{ ui.csrf() }}
+    <h2 class="font-title-md text-title-md font-bold">Tolerancia de los contadores</h2>
+    <p class="text-sm text-on-surface-variant">Diferencia permitida entre el contador físico (lectura del cajero), el contador del sistema y lo vendido.
+      Si se supera, la atracción queda con alerta al cerrar la caja.</p>
+    <div class="grid grid-cols-2 gap-space-sm">
+      <div><label class="{{ ui.ETIQUETA }}">Dinosaurios (minutos)</label>
+        <input class="{{ ui.INPUT }}" type="number" name="tolerancia_minutos" min="0" max="1000" value="{{ tolerancias.tolerancia_minutos }}" required></div>
+      <div><label class="{{ ui.ETIQUETA }}">Carros y motos (encendidos)</label>
+        <input class="{{ ui.INPUT }}" type="number" name="tolerancia_encendidos" min="0" max="1000" value="{{ tolerancias.tolerancia_encendidos }}" required></div>
+    </div>
+    <button class="{{ ui.BTN }}" type="submit">Guardar tolerancias</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% import "_ui.html" as ui %}
+{# Tablas del reporte (recibe `r` y `ui`) #}
+<div class="{{ ui.CARD }} overflow-x-auto">
+  <h2 class="font-title-md text-title-md font-bold mb-1">Ventas por cajero</h2>
+  <p class="text-xs text-on-surface-variant mb-2">Las horas trabajadas salen de los turnos asignados hasta hoy (8 h completo / 4 h medio). «estimado» = el cajero no tenía asignaciones y se calculó por días con ventas.</p>
+  <table class="w-full"><thead><tr>
+    <th class="{{ ui.TH }}">Cajero</th><th class="{{ ui.TH }}">Sede</th><th class="{{ ui.TH }}">Turno</th>
+    <th class="{{ ui.TH }} text-right">Total vendido</th><th class="{{ ui.TH }} text-right">Ventas</th><th class="{{ ui.TH }} text-right">Minutos</th>
+    <th class="{{ ui.TH }} text-right">Ticket prom.</th><th class="{{ ui.TH }} text-right">Horas</th><th class="{{ ui.TH }} text-right">Ventas por hora</th></tr></thead><tbody>
+  {% for c in r.por_cajero %}
+    <tr class="border-t border-outline-variant/30">
+      <td class="{{ ui.TD }} font-bold">{{ c.cajero }}</td><td class="{{ ui.TD }}">{{ c.sede }}</td><td class="{{ ui.TD }}">{{ c.turno }}</td>
+      <td class="{{ ui.TD }} text-right font-bold">S/ {{ '%.2f'|format(c.total) }}</td><td class="{{ ui.TD }} text-right">{{ c.ventas }}</td>
+      <td class="{{ ui.TD }} text-right">{{ c.minutos }}</td><td class="{{ ui.TD }} text-right">S/ {{ '%.2f'|format(c.ticket_promedio) }}</td>
+      <td class="{{ ui.TD }} text-right">{{ c.horas }}{% if c.fuente_horas == 'estimado' %} <span class="text-xs text-on-surface-variant">(estimado)</span>{% endif %}</td>
+      <td class="{{ ui.TD }} text-right font-bold text-primary">S/ {{ '%.2f'|format(c.ventas_por_hora) }}</td></tr>
+  {% else %}<tr><td class="{{ ui.TD }} text-on-surface-variant" colspan="9">Sin datos en este rango.</td></tr>{% endfor %}
+  </tbody></table>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
+  <div class="{{ ui.CARD }} overflow-x-auto"><h2 class="font-title-md text-title-md font-bold mb-2">Por sede</h2>
+    <table class="w-full"><thead><tr><th class="{{ ui.TH }}">Sede</th><th class="{{ ui.TH }} text-right">Total</th><th class="{{ ui.TH }} text-right">Ventas</th><th class="{{ ui.TH }} text-right">Min.</th></tr></thead><tbody>
+    {% for s in r.por_sede %}<tr class="border-t border-outline-variant/30"><td class="{{ ui.TD }} font-bold">{{ s.sede }}</td><td class="{{ ui.TD }} text-right">S/ {{ '%.2f'|format(s.total) }}</td><td class="{{ ui.TD }} text-right">{{ s.ventas }}</td><td class="{{ ui.TD }} text-right">{{ s.minutos }}</td></tr>{% endfor %}
+    </tbody></table></div>
+  <div class="{{ ui.CARD }} overflow-x-auto"><h2 class="font-title-md text-title-md font-bold mb-2">Por tipo de atracción</h2>
+    <table class="w-full"><thead><tr><th class="{{ ui.TH }}">Tipo</th><th class="{{ ui.TH }} text-right">Total</th><th class="{{ ui.TH }} text-right">Alquileres</th><th class="{{ ui.TH }} text-right">Min.</th></tr></thead><tbody>
+    {% for t in r.por_tipo %}<tr class="border-t border-outline-variant/30"><td class="{{ ui.TD }} font-bold">{{ t.tipo }}</td><td class="{{ ui.TD }} text-right">S/ {{ '%.2f'|format(t.total) }}</td><td class="{{ ui.TD }} text-right">{{ t.alquileres }}</td><td class="{{ ui.TD }} text-right">{{ t.minutos }}</td></tr>
+    {% else %}<tr><td class="{{ ui.TD }}" colspan="4">Sin datos.</td></tr>{% endfor %}</tbody></table></div>
+  <div class="{{ ui.CARD }} overflow-x-auto"><h2 class="font-title-md text-title-md font-bold mb-2">Por método de pago</h2>
+    <table class="w-full"><thead><tr><th class="{{ ui.TH }}">Método</th><th class="{{ ui.TH }} text-right">Total</th><th class="{{ ui.TH }} text-right">Ventas</th></tr></thead><tbody>
+    {% for m in r.por_metodo %}<tr class="border-t border-outline-variant/30"><td class="{{ ui.TD }} font-bold">{{ m.metodo }}</td><td class="{{ ui.TD }} text-right">S/ {{ '%.2f'|format(m.total) }}</td><td class="{{ ui.TD }} text-right">{{ m.ventas }}</td></tr>
+    {% else %}<tr><td class="{{ ui.TD }}" colspan="3">Sin datos.</td></tr>{% endfor %}</tbody></table></div>
+</div>

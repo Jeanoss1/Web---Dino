@@ -1,31 +1,13 @@
-from app import create_app
-from app.database import db
+import os
 
-# --- IMPORTA TODOS TUS MODELOS AQUÍ ---
-# Asegúrate de que las mayúsculas coincidan con los nombres de tus archivos
-from app.models.Caja import Caja
-from app.models.Cliente import Cliente
-from app.models.DetalleReserva import DetalleReserva
-from app.models.DetalleVenta import DetalleVenta
-from app.models.Flota import Flota
-from app.models.Mantenimiento import Mantenimiento
-from app.models.MovimientoCaja import MovimientoCaja
-from app.models.Pago import Pago
-from app.models.Repuesto import Repuesto
-from app.models.Reserva import Reserva
-from app.models.Rol import Rol
-from app.models.Sucursal import Sucursal
-from app.models.Ticket import Ticket
-from app.models.Turno import Turno
-from app.models.usuario import Usuario  # Este está en minúscula en tu carpeta
-from app.models.Venta import Venta      # Asumiendo que ya le quitaste la doble "t"
-# --------------------------------------
+from app import create_app
+from app.scheduler import iniciar_planificador
 
 app = create_app()
 
-# Este bloque crea las tablas que acabamos de importar
-with app.app_context():
-    db.create_all()
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Con el recargador de Flask (debug) solo el proceso hijo inicia el planificador,
+    # para no finalizar alquileres desde dos procesos.
+    if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        iniciar_planificador(app)
+    app.run(debug=app.config['DEBUG'])

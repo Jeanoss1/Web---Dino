@@ -1,0 +1,168 @@
+{% extends 'base_panel.html' %}
+{% import '_ui.html' as ui %}
+{% block titulo %}Mi caja · Dino Park{% endblock %}
+
+{% macro etiqueta_contador(tipo) %}{{ 'minutos' if tipo == 'minutos' else 'encendidos' }}{% endmacro %}
+
+{% block contenido %}
+<div class="max-w-5xl mx-auto space-y-space-md">
+  {{ ui.encabezado('point_of_sale', 'Mi caja · ' ~ cajero.sucursal.nombre,
+     'Cajero ' ~ ('a tiempo completo (8 h)' if cajero.tipo_turno == 'completo' else 'de medio tiempo (4 h)')) }}
+
+  <div class="{{ ui.CARD }} flex flex-wrap items-center justify-between gap-space-sm">
+    <span class="font-label-md text-label-md text-on-surface-variant">Turno de hoy</span>
+    {% if turno_hoy %}
+      {{ ui.etiqueta_estado(turno_hoy.turno.etiqueta, 'ok') }}
+    {% else %}
+      {{ ui.etiqueta_estado('Sin turno asignado hoy (descanso)', 'aviso') }}
+    {% endif %}
+  </div>
+
+  {% if not caja %}
+  <form method="post" action="{{ url_for('caja.abrir') }}" class="{{ ui.CARD }} space-y-space-md" id="form-apertura">
+    {{ ui.csrf() }}
+    <h2 class="font-title-md text-title-md font-bold">Abrir caja</h2>
+    <p class="text-sm text-on-surface-variant">Cuenta el efectivo con el que empiezas (sencillo) y anota cómo encuentras el contador de cada atracción.</p>
+    <div class="max-w-xs"><label class="{{ ui.ETIQUETA }}">Efectivo inicial (S/)</label>
+      <input class="{{ ui.INPUT }}" type="number" name="monto_inicial" min="0" step="0.10" value="0" required></div>
+
+    {% if unidades_apertura %}
+    <div>
+      <h3 class="font-label-lg text-label-lg font-bold mb-1">Lectura inicial de las atracciones</h3>
+      <p class="text-xs text-on-surface-variant mb-2">Dinosaurios: minutos acumulados. Carros y motos: número de encendidos. Si la lectura es distinta de la del último cierre debes escribir el motivo (se avisa al administrador).</p>
+      <div class="overflow-x-auto">
+      <table class="w-full tabla-apilada"><thead><tr>
+        <th class="{{ ui.TH }}">Atracción</th><th class="{{ ui.TH }}">Cuenta</th><th class="{{ ui.TH }}">Lectura inicial</th><th class="{{ ui.TH }}">Motivo (si difiere)</th></tr></thead><tbody>
+      {% for u in unidades_apertura %}
+        <tr class="border-t border-outline-variant/30">
+          <td class="{{ ui.TD }} font-bold" data-label="Atracción">{{ u.flota.nombre }}<br><span class="text-xs font-normal text-on-surface-variant">{{ u.flota.tipo|capitalize }}</span></td>
+          <td class="{{ ui.TD }}" data-label="Cuenta">{{ etiqueta_contador(u.flota.tipo_contador)|capitalize }}</td>
+          <td class="{{ ui.TD }}" data-label="Lectura inicial">
+            <input class="{{ ui.INPUT }} !w-28 lectura-inicial" type="number" name="li_{{ u.flota.id_flota }}" min="0" required
+                   value="{{ u.sugerida if u.sugerida is not none }}" data-sugerida="{{ u.sugerida if u.sugerida is not none }}" data-motivo="mi_{{ u.flota.id_flota }}">
+            <div class="text-xs text-on-surface-variant">{% if u.primera %}Primera vez: escribe la lectura real actual.{% else %}Último cierre: {{ u.sugerida }}{% endif %}</div>
+          </td>
+          <td class="{{ ui.TD }}" data-label="Motivo (si difiere)"><input class="{{ ui.INPUT }}" name="mi_{{ u.flota.id_flota }}" id="mi_{{ u.flota.id_flota }}" maxlength="200" placeholder="Solo si cambió"></td>
+        </tr>
+      {% endfor %}
+      </tbody></table></div>
+    </div>
+    {% endif %}
+    {% if omitidas %}
+    <p class="text-xs text-on-surface-variant">Sin lectura (no disponibles): {% for o in omitidas %}{{ o.nombre }} ({{ o.estado }}){{ ', ' if not loop.last }}{% endfor %}.</p>
+    {% endif %}
+    <button class="{{ ui.BTN2 }}" type="submit">Abrir caja</button>
+  </form>
+  {% else %}
+  <p class="text-sm text-on-surface-variant">Caja abierta desde {{ caja.fecha_apertura.strftime('%d/%m/%Y %H:%M') }}.</p>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-space-md">
+    {{ ui.indicador('Efectivo esperado', 'S/ %.2f'|format(resumen.efectivo_esperado), 'Inicial + ventas − egresos') }}
+    {{ ui.indicador('Ventas en efectivo', 'S/ %.2f'|format(resumen.total_efectivo)) }}
+    {{ ui.indicador('Ventas por Yape', 'S/ %.2f'|format(resumen.total_yape), 'Incluye reservas validadas') }}
+    {{ ui.indicador('Minutos', resumen.minutos_vendidos ~ ' / ' ~ resumen.minutos_usados, 'vendidos / usados', 'text-primary') }}
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-md">
+    <form method="post" action="{{ url_for('caja.movimiento') }}" class="{{ ui.CARD }} space-y-space-sm">
+      {{ ui.csrf() }}
+      <h2 class="font-title-md text-title-md font-bold">Ingreso / egreso manual</h2>
+      <div class="grid grid-cols-2 gap-space-sm">
+        <div><label class="{{ ui.ETIQUETA }}">Tipo</label>
+          <select class="{{ ui.INPUT }}" name="tipo"><option value="egreso">Egreso</option><option value="ingreso">Ingreso</option></select></div>
+        <div><label class="{{ ui.ETIQUETA }}">Monto (S/)</label>
+          <input class="{{ ui.INPUT }}" type="number" name="monto" min="0.10" step="0.10" required></div>
+      </div>
+      <div><label class="{{ ui.ETIQUETA }}">Descripción</label>
+        <input class="{{ ui.INPUT }}" name="descripcion" maxlength="200" required placeholder="Ej. compra de agua"></div>
+      <button class="{{ ui.BTN }}" type="submit">Registrar</button>
+    </form>
+
+    <div class="{{ ui.CARD }} space-y-space-sm">
+      <h2 class="font-title-md text-title-md font-bold">Movimientos de esta caja</h2>
+      <div class="overflow-x-auto">
+      <table class="w-full"><thead><tr><th class="{{ ui.TH }}">Hora</th><th class="{{ ui.TH }}">Tipo</th><th class="{{ ui.TH }}">Detalle</th><th class="{{ ui.TH }} text-right">Monto</th></tr></thead>
+        <tbody>
+        {% for m in caja.movimientos|sort(attribute='id_movimiento', reverse=True) %}
+          <tr class="border-t border-outline-variant/30"><td class="{{ ui.TD }}">{{ m.fecha.strftime('%H:%M') }}</td>
+            <td class="{{ ui.TD }}">{{ ui.etiqueta_estado('Ingreso' if m.tipo == 'ingreso' else 'Egreso', 'ok' if m.tipo == 'ingreso' else 'error') }}</td>
+            <td class="{{ ui.TD }}">{{ m.descripcion }}</td><td class="{{ ui.TD }} text-right font-bold">S/ {{ '%.2f'|format(m.monto) }}</td></tr>
+        {% else %}<tr><td class="{{ ui.TD }} text-on-surface-variant" colspan="4">Sin movimientos todavía.</td></tr>{% endfor %}
+        </tbody></table></div>
+    </div>
+  </div>
+
+  <form method="post" action="{{ url_for('caja.cerrar') }}" class="{{ ui.CARD }} space-y-space-md"
+        onsubmit="return confirm('¿Cerrar la caja? Ya no podrás registrar ventas con ella.')">
+    {{ ui.csrf() }}
+    <h2 class="font-title-md text-title-md font-bold">Cerrar caja</h2>
+    <p class="text-sm text-on-surface-variant">Cuenta el efectivo y anota la lectura final del contador de cada atracción. Se compararán con lo esperado (efectivo S/ {{ '%.2f'|format(resumen.efectivo_esperado) }}), con el contador del sistema y con lo vendido.</p>
+
+    {% if lecturas_caja %}
+    <div class="overflow-x-auto">
+    <table class="w-full tabla-apilada"><thead><tr>
+      <th class="{{ ui.TH }}">Atracción</th><th class="{{ ui.TH }}">Cuenta</th><th class="{{ ui.TH }}">Lectura inicial</th><th class="{{ ui.TH }}">Lectura final</th><th class="{{ ui.TH }}">Observación</th></tr></thead><tbody>
+    {% for l in lecturas_caja %}
+      <tr class="border-t border-outline-variant/30">
+        <td class="{{ ui.TD }} font-bold" data-label="Atracción">{{ l.flota.nombre }}</td>
+        <td class="{{ ui.TD }}" data-label="Cuenta">{{ etiqueta_contador(l.tipo_contador)|capitalize }}</td>
+        <td class="{{ ui.TD }}" data-label="Lectura inicial">{{ l.lectura_inicial }}</td>
+        <td class="{{ ui.TD }}" data-label="Lectura final"><input class="{{ ui.INPUT }} !w-28" type="number" name="lf_{{ l.id_flota }}" min="{{ l.lectura_inicial }}" required placeholder="≥ {{ l.lectura_inicial }}"></td>
+        <td class="{{ ui.TD }}" data-label="Observación"><input class="{{ ui.INPUT }}" name="of_{{ l.id_flota }}" maxlength="300" placeholder="Opcional"></td>
+      </tr>
+    {% endfor %}
+    </tbody></table></div>
+    {% endif %}
+    {% set no_disponibles = caja.lecturas|selectattr('flota.estado', 'ne', 'disponible')|list %}
+    {% if no_disponibles %}
+    <p class="text-xs text-on-surface-variant">Se omiten (no disponibles): {% for l in no_disponibles %}{{ l.flota.nombre }} ({{ l.flota.estado }}){{ ', ' if not loop.last }}{% endfor %}.</p>
+    {% endif %}
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
+      <div><label class="{{ ui.ETIQUETA }}">Efectivo contado (S/)</label>
+        <input class="{{ ui.INPUT }}" type="number" name="monto_contado" min="0" step="0.10" required></div>
+      <div><label class="{{ ui.ETIQUETA }}">Observación general (opcional)</label>
+        <input class="{{ ui.INPUT }}" name="observacion" maxlength="300"></div>
+    </div>
+    <button class="{{ ui.BTN2 }}" type="submit">Cerrar caja y cuadrar</button>
+  </form>
+  {% endif %}
+
+  {% if cierres %}
+  <div class="{{ ui.CARD }} overflow-x-auto">
+    <h2 class="font-title-md text-title-md font-bold mb-2">Mis últimos cierres</h2>
+    <table class="w-full"><thead><tr>
+      <th class="{{ ui.TH }}">Cierre</th><th class="{{ ui.TH }}">Esperado</th><th class="{{ ui.TH }}">Contado</th>
+      <th class="{{ ui.TH }}">Diferencia</th><th class="{{ ui.TH }}">Yape</th><th class="{{ ui.TH }}">Min. vend./usados</th><th class="{{ ui.TH }}">Contadores</th></tr></thead><tbody>
+    {% for c in cierres %}
+      {% set con_alerta = c.lecturas|selectattr('alerta')|list %}
+      <tr class="border-t border-outline-variant/30">
+        <td class="{{ ui.TD }}">{{ c.fecha_cierre.strftime('%d/%m %H:%M') }}</td>
+        <td class="{{ ui.TD }}">S/ {{ '%.2f'|format(c.efectivo_esperado) }}</td>
+        <td class="{{ ui.TD }}">S/ {{ '%.2f'|format(c.monto_final) }}</td>
+        <td class="{{ ui.TD }} font-bold {{ 'text-error' if c.diferencia|abs >= 0.01 else 'text-primary' }}">S/ {{ '%.2f'|format(c.diferencia) }}</td>
+        <td class="{{ ui.TD }}">S/ {{ '%.2f'|format(c.total_yape) }}</td>
+        <td class="{{ ui.TD }}">{{ c.minutos_vendidos }} / {{ c.minutos_usados }}</td>
+        <td class="{{ ui.TD }}">{{ ui.etiqueta_estado(con_alerta|length ~ ' con alerta', 'error') if con_alerta else ui.etiqueta_estado('OK', 'ok') }}</td></tr>
+    {% endfor %}</tbody></table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Si la lectura inicial difiere de la del último cierre, el motivo pasa a ser obligatorio.
+  document.querySelectorAll('.lectura-inicial').forEach(input => {
+    const motivo = document.getElementById(input.dataset.motivo);
+    const revisar = () => {
+      const distinta = input.dataset.sugerida !== '' && input.value !== '' && input.value !== input.dataset.sugerida;
+      motivo.required = distinta;
+      motivo.classList.toggle('ring-2', distinta);
+      motivo.classList.toggle('ring-error', distinta);
+      motivo.placeholder = distinta ? 'Obligatorio: ¿por qué cambió?' : 'Solo si cambió';
+    };
+    input.addEventListener('input', revisar);
+    revisar();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'base_panel.html' %}
+{% import '_ui.html' as ui %}
+{% block titulo %}Usuarios y cajeros · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-6xl mx-auto space-y-space-md">
+  {{ ui.encabezado('group', 'Usuarios y cajeros', 'Crea cajeros (una sede y un tipo de turno) o administradores, y gestiona las cuentas.') }}
+
+  <form method="post" action="{{ url_for('admin.crear_usuario') }}" class="{{ ui.CARD }} grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12 gap-space-sm items-end">
+    {{ ui.csrf() }}
+    <div class="xl:col-span-2"><label class="{{ ui.ETIQUETA }}">Rol</label>
+      <select class="{{ ui.INPUT }}" name="rol" id="rol-nuevo" onchange="document.querySelectorAll('.solo-cajero').forEach(e => e.classList.toggle('hidden', this.value !== 'cajero'))">
+        <option value="cajero">Cajero</option><option value="administrador">Administrador</option></select></div>
+    <div class="xl:col-span-2"><label class="{{ ui.ETIQUETA }}">Nombre</label><input class="{{ ui.INPUT }}" name="nombre" required></div>
+    <div class="xl:col-span-2"><label class="{{ ui.ETIQUETA }}">Apellido</label><input class="{{ ui.INPUT }}" name="apellido" required></div>
+    <div class="xl:col-span-3"><label class="{{ ui.ETIQUETA }}">Correo</label><input class="{{ ui.INPUT }}" type="email" name="correo" required></div>
+    <div class="xl:col-span-3"><label class="{{ ui.ETIQUETA }}">Contraseña inicial</label><input class="{{ ui.INPUT }}" type="password" name="contrasena" minlength="8" required autocomplete="new-password"></div>
+    <div class="xl:col-span-3 solo-cajero"><label class="{{ ui.ETIQUETA }}">Sede</label>
+      <select class="{{ ui.INPUT }}" name="id_sucursal">{% for s in sedes %}<option value="{{ s.id_sucursal }}">{{ s.nombre }}{{ ' (inactiva)' if s.estado != 'activa' }}</option>{% endfor %}</select></div>
+    <div class="xl:col-span-3 solo-cajero"><label class="{{ ui.ETIQUETA }}">Turno</label>
+      <select class="{{ ui.INPUT }}" name="tipo_turno"><option value="completo">Tiempo completo (8 h)</option><option value="medio">Medio tiempo (4 h)</option></select></div>
+    <div class="xl:col-span-3"><button class="{{ ui.BTN2 }} w-full" type="submit">Crear cuenta</button></div>
+  </form>
+
+  <div class="{{ ui.CARD }} overflow-x-auto">
+    <table class="w-full"><thead><tr>
+      <th class="{{ ui.TH }}">Nombre</th><th class="{{ ui.TH }}">Correo</th><th class="{{ ui.TH }}">Rol</th>
+      <th class="{{ ui.TH }}">Sede / turno</th><th class="{{ ui.TH }}">Estado</th><th class="{{ ui.TH }}">Acciones</th></tr></thead><tbody>
+    {% for u in usuarios %}
+      <tr class="border-t border-outline-variant/30 align-top">
+        <td class="{{ ui.TD }} font-bold">{{ u.nombre_completo }}</td>
+        <td class="{{ ui.TD }}">{{ u.correo }}</td>
+        <td class="{{ ui.TD }}">{{ u.rol_nombre|capitalize }}</td>
+        <td class="{{ ui.TD }}">
+          {% if u.cajero %}
+          <form method="post" action="{{ url_for('admin.editar_cajero', id_usuario=u.id_usuario) }}" class="flex flex-wrap gap-1 items-center">
+            {{ ui.csrf() }}
+            <select class="{{ ui.INPUT }} !w-auto !min-h-[36px]" name="id_sucursal">{% for s in sedes %}<option value="{{ s.id_sucursal }}" {{ 'selected' if s.id_sucursal == u.cajero.id_sucursal }}>{{ s.nombre }}</option>{% endfor %}</select>
+            <select class="{{ ui.INPUT }} !w-auto !min-h-[36px]" name="tipo_turno"><option value="completo" {{ 'selected' if u.cajero.tipo_turno == 'completo' }}>8 h</option><option value="medio" {{ 'selected' if u.cajero.tipo_turno == 'medio' }}>4 h</option></select>
+            <button class="{{ ui.BTN_SUAVE }}" type="submit">Guardar</button>
+          </form>
+          {% else %}—{% endif %}
+        </td>
+        <td class="{{ ui.TD }}">{{ ui.etiqueta_estado('Activo' if u.estado else 'Inactivo', 'ok' if u.estado else 'gris') }}</td>
+        <td class="{{ ui.TD }}">
+          <div class="flex flex-wrap gap-1 items-center">
+            <form method="post" action="{{ url_for('admin.estado_usuario', id_usuario=u.id_usuario) }}">{{ ui.csrf() }}
+              <button class="{{ ui.BTN_SUAVE }}" type="submit">{{ 'Desactivar' if u.estado else 'Activar' }}</button></form>
+            <form method="post" action="{{ url_for('admin.clave_usuario', id_usuario=u.id_usuario) }}" class="flex gap-1">{{ ui.csrf() }}
+              <input class="{{ ui.INPUT }} !w-32 !min-h-[36px]" type="password" name="contrasena" placeholder="Nueva clave" minlength="8" required autocomplete="new-password">
+              <button class="{{ ui.BTN_SUAVE }}" type="submit">Cambiar</button></form>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody></table>
+  </div>
+</div>
+{% endblock %}

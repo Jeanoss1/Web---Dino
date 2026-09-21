@@ -1,0 +1,84 @@
+{% extends 'base_panel.html' %}
+{% import '_ui.html' as ui %}
+{% block titulo %}Contadores · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-7xl mx-auto space-y-space-md">
+  <div class="flex flex-wrap items-center justify-between gap-space-sm">
+    {{ ui.encabezado('speed', 'Cuadre de contadores por atracción', etiqueta) }}
+    <div class="flex flex-wrap gap-space-sm">
+      <a class="{{ ui.BTN }} inline-flex items-center" href="{{ url_for('reportes.exportar_contadores', formato='excel') }}?{{ consulta }}">Exportar Excel</a>
+      <a class="{{ ui.BTN2 }} inline-flex items-center" href="{{ url_for('reportes.exportar_contadores', formato='pdf') }}?{{ consulta }}">Exportar PDF</a>
+    </div>
+  </div>
+
+  {{ ui.filtros(url_for('reportes.contadores'), sedes, sede_sel, rango, desde, hasta) }}
+  <form method="get" class="flex items-center gap-2 text-sm">
+    <input type="hidden" name="sede" value="{{ sede_sel or '' }}"><input type="hidden" name="rango" value="{{ rango }}">
+    <input type="hidden" name="desde" value="{{ desde.isoformat() }}"><input type="hidden" name="hasta" value="{{ hasta.isoformat() }}">
+    <label class="flex items-center gap-2"><input type="checkbox" name="solo_alertas" value="1" {{ 'checked' if solo_alertas }} onchange="this.form.submit()"> Mostrar solo las atracciones con alerta</label>
+  </form>
+
+  {% if c.total_alertas %}
+  <div class="p-space-md rounded-lg bg-error-container text-on-error-container font-label-md text-label-md font-bold">
+    ⚠ {{ c.total_alertas }} atracción(es) con diferencia en este rango. Tolerancia: {{ c.tolerancias.tolerancia_minutos }} min (dinosaurios) · {{ c.tolerancias.tolerancia_encendidos }} encendidos (carros y motos).</div>
+  {% else %}
+  <div class="p-space-md rounded-lg bg-primary-container/30 text-on-primary-container font-label-md text-label-md font-bold">Sin alertas en este rango.</div>
+  {% endif %}
+
+  <div class="{{ ui.CARD }} overflow-x-auto">
+    <h2 class="font-title-md text-title-md font-bold mb-2">Resumen por atracción</h2>
+    <table class="w-full"><thead><tr>
+      <th class="{{ ui.TH }}">Sede</th><th class="{{ ui.TH }}">Atracción</th><th class="{{ ui.TH }}">Cuenta</th><th class="{{ ui.TH }} text-right">Cierres</th>
+      <th class="{{ ui.TH }} text-right">Uso real</th><th class="{{ ui.TH }} text-right">Sistema</th><th class="{{ ui.TH }} text-right">Vendido</th><th class="{{ ui.TH }} text-right">Alertas</th></tr></thead><tbody>
+    {% for r in c.resumen %}
+      <tr class="border-t border-outline-variant/30 {{ 'bg-error-container/40' if r.alertas }}">
+        <td class="{{ ui.TD }}">{{ r.sede }}</td><td class="{{ ui.TD }} font-bold">{{ r.atraccion }}</td><td class="{{ ui.TD }}">{{ r.tipo_contador|capitalize }}</td>
+        <td class="{{ ui.TD }} text-right">{{ r.cierres }}</td><td class="{{ ui.TD }} text-right">{{ r.uso_real }}</td>
+        <td class="{{ ui.TD }} text-right">{{ r.sistema }}</td><td class="{{ ui.TD }} text-right">{{ r.vendido }}</td>
+        <td class="{{ ui.TD }} text-right font-bold {{ 'text-error' if r.alertas }}">{{ r.alertas }}</td></tr>
+    {% else %}<tr><td class="{{ ui.TD }} text-on-surface-variant" colspan="8">No hay cierres en este rango.</td></tr>{% endfor %}
+    </tbody></table>
+  </div>
+
+  <div class="{{ ui.CARD }} overflow-x-auto">
+    <h2 class="font-title-md text-title-md font-bold mb-2">Historial de lecturas</h2>
+    <table class="w-full"><thead><tr>
+      <th class="{{ ui.TH }}">Cierre</th><th class="{{ ui.TH }}">Sede</th><th class="{{ ui.TH }}">Cajero</th><th class="{{ ui.TH }}">Atracción</th>
+      <th class="{{ ui.TH }} text-right">Inicial</th><th class="{{ ui.TH }} text-right">Final</th><th class="{{ ui.TH }} text-right">Uso real</th>
+      <th class="{{ ui.TH }} text-right">Sistema</th><th class="{{ ui.TH }} text-right">Vendido</th><th class="{{ ui.TH }} text-right">Dif. sist.</th><th class="{{ ui.TH }} text-right">Dif. vend.</th>
+      <th class="{{ ui.TH }}">Alertas y observaciones</th><th class="{{ ui.TH }}">Ajustar</th></tr></thead><tbody>
+    {% for f in c.filas %}
+      <tr class="border-t border-outline-variant/30 align-top {{ 'bg-error-container/40' if f.alerta }}">
+        <td class="{{ ui.TD }} whitespace-nowrap">{{ f.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+        <td class="{{ ui.TD }}">{{ f.sede }}</td><td class="{{ ui.TD }}">{{ f.cajero }}</td>
+        <td class="{{ ui.TD }} font-bold">{{ f.atraccion }}<br><span class="text-xs font-normal text-on-surface-variant">{{ f.tipo_contador }}</span></td>
+        <td class="{{ ui.TD }} text-right">{{ f.inicial }}</td>
+        <td class="{{ ui.TD }} text-right">{{ f.final if f.final is not none else '—' }}</td>
+        <td class="{{ ui.TD }} text-right font-bold">{{ f.uso_real if f.uso_real is not none else '—' }}</td>
+        <td class="{{ ui.TD }} text-right">{{ f.sistema if f.sistema is not none else '—' }}</td>
+        <td class="{{ ui.TD }} text-right">{{ f.vendido if f.vendido is not none else '—' }}</td>
+        <td class="{{ ui.TD }} text-right {{ 'text-error font-bold' if f.dif_sistema }}">{{ f.dif_sistema if f.dif_sistema is not none else '—' }}</td>
+        <td class="{{ ui.TD }} text-right {{ 'text-error font-bold' if f.dif_vendido }}">{{ f.dif_vendido if f.dif_vendido is not none else '—' }}</td>
+        <td class="{{ ui.TD }} text-xs min-w-[14rem]">
+          {% if f.alerta %}<div class="text-error font-bold">⚠ {{ f.alertas }}</div>{% endif %}
+          {% if f.observacion %}<div class="text-on-surface-variant">{{ f.observacion }}</div>{% endif %}
+        </td>
+        <td class="{{ ui.TD }}">
+          {% if f.ajustable %}
+          <details><summary class="text-xs text-primary cursor-pointer">Ajustar</summary>
+            <form method="post" action="{{ url_for('reportes.ajustar_lectura', id_lectura=f.id_lectura) }}" class="space-y-1 mt-1 min-w-[12rem]">
+              {{ ui.csrf() }}
+              <input class="{{ ui.INPUT }}" type="number" name="lectura_final" min="{{ f.inicial }}" value="{{ f.final }}" required>
+              <input class="{{ ui.INPUT }}" name="nota" maxlength="300" required placeholder="Justificación (obligatoria)">
+              <button class="{{ ui.BTN_SUAVE }}" type="submit">Guardar ajuste</button>
+            </form></details>
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}<tr><td class="{{ ui.TD }} text-on-surface-variant" colspan="13">No hay lecturas cerradas en este rango.</td></tr>{% endfor %}
+    </tbody></table>
+    <p class="text-xs text-on-surface-variant mt-2">Uso real = lectura final − inicial. Los cierres no se editan; solo el administrador puede ajustarlos con una justificación.</p>
+  </div>
+</div>
+{% endblock %}

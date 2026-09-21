@@ -1,0 +1,72 @@
+{% extends 'base_panel.html' %}
+{% import '_ui.html' as ui %}
+{% block titulo %}Venta presencial · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-5xl mx-auto space-y-space-md">
+  {{ ui.encabezado('sell', 'Venta presencial · ' ~ cajero.sucursal.nombre,
+     'Tarifa única: S/ ' ~ '%.2f'|format(tarifa.precio) ~ ' por ' ~ tarifa.minutos ~ ' minutos.') }}
+
+  {% if not caja %}
+  <div class="p-space-md rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-md text-label-md">
+    Debes <a class="underline font-bold" href="{{ url_for('caja.panel') }}">abrir tu caja</a> antes de registrar ventas.
+  </div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('venta.registrar_venta') }}" class="{{ ui.CARD }} grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12 gap-space-md items-end"
+        data-precio="{{ tarifa.precio }}" data-minutos="{{ tarifa.minutos }}" id="form-venta">
+    {{ ui.csrf() }}
+    <div class="xl:col-span-5">
+      <label class="{{ ui.ETIQUETA }}">Unidad</label>
+      <select class="{{ ui.INPUT }}" name="id_flota" required>
+        <option value="">Selecciona…</option>
+        {% for u in unidades %}
+        <option value="{{ u.id_flota }}" {{ 'disabled' if u.id_flota in en_uso }}>{{ u.nombre }} ({{ u.tipo }}){{ ' — en uso' if u.id_flota in en_uso }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="xl:col-span-2">
+      <label class="{{ ui.ETIQUETA }}">Bloques</label>
+      <input class="{{ ui.INPUT }}" type="number" name="bloques" id="bloques" min="1" max="10" value="1" required>
+    </div>
+    <div class="xl:col-span-3">
+      <label class="{{ ui.ETIQUETA }}">Pago</label>
+      <select class="{{ ui.INPUT }}" name="metodo_pago"><option value="efectivo">Efectivo</option><option value="yape">Yape</option></select>
+    </div>
+    <div class="xl:col-span-2 text-right">
+      <p class="font-label-sm text-label-sm text-tertiary uppercase font-bold">Total</p>
+      <p class="font-headline-md text-headline-md font-black text-secondary" id="total">S/ {{ '%.2f'|format(tarifa.precio) }}</p>
+      <p class="text-xs text-on-surface-variant" id="minutos">{{ tarifa.minutos }} min</p>
+    </div>
+    <div class="sm:col-span-2 xl:col-span-12">
+      <button class="{{ ui.BTN2 }}" type="submit" {{ 'disabled' if not caja }}>Cobrar y registrar venta</button>
+    </div>
+  </form>
+
+  <div class="{{ ui.CARD }} overflow-x-auto">
+    <h2 class="font-title-md text-title-md font-bold mb-2">Mis ventas de hoy</h2>
+    <table class="w-full"><thead><tr><th class="{{ ui.TH }}">N°</th><th class="{{ ui.TH }}">Hora</th><th class="{{ ui.TH }}">Origen</th>
+      <th class="{{ ui.TH }}">Pago</th><th class="{{ ui.TH }}">Minutos</th><th class="{{ ui.TH }} text-right">Total</th><th class="{{ ui.TH }}"></th></tr></thead><tbody>
+    {% for v in ventas_hoy %}
+      <tr class="border-t border-outline-variant/30"><td class="{{ ui.TD }}">#{{ v.id_venta }}</td><td class="{{ ui.TD }}">{{ v.fecha.strftime('%H:%M') }}</td>
+        <td class="{{ ui.TD }}">{{ 'Reserva Yape' if v.origen == 'reserva' else 'Presencial' }}</td>
+        <td class="{{ ui.TD }}">{{ v.tipo_pago|capitalize }}</td><td class="{{ ui.TD }}">{{ v.minutos }}</td>
+        <td class="{{ ui.TD }} text-right font-bold">S/ {{ '%.2f'|format(v.total) }}</td>
+        <td class="{{ ui.TD }}"><a class="text-primary underline" href="{{ url_for('venta.ticket', id_venta=v.id_venta) }}">Ticket</a></td></tr>
+    {% else %}<tr><td class="{{ ui.TD }} text-on-surface-variant" colspan="7">Aún no registraste ventas hoy.</td></tr>{% endfor %}
+    </tbody></table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const f = document.getElementById('form-venta');
+  const precio = parseFloat(f.dataset.precio), minutos = parseInt(f.dataset.minutos, 10);
+  document.getElementById('bloques').addEventListener('input', e => {
+    const n = Math.max(1, parseInt(e.target.value, 10) || 1);
+    document.getElementById('total').textContent = 'S/ ' + (n * precio).toFixed(2);
+    document.getElementById('minutos').textContent = (n * minutos) + ' min';
+  });
+</script>
+{% endblock %}

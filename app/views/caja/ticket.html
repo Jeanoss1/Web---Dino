@@ -1,0 +1,61 @@
+{% extends 'base_panel.html' %}
+{% import '_ui.html' as ui %}
+{% block titulo %}Ticket #{{ venta.id_venta }} · Dino Park{% endblock %}
+
+{% block head %}
+<style>
+  /* Al imprimir sale SOLO el voucher: papel térmico de 80 mm, una sola página, sin fondos */
+  @page { size: 80mm auto; margin: 0; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="max-w-md mx-auto space-y-space-md">
+  <div class="{{ ui.CARD }} ticket-termico" id="ticket">
+    <div class="text-center space-y-1">
+      <img alt="Dino Park" class="h-14 mx-auto" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
+      <p class="font-title-md text-title-md font-bold leading-tight">DINO PARK</p>
+      <p class="text-sm">Sede {{ venta.sucursal.nombre }}</p>
+    </div>
+
+    <div class="ticket-linea"></div>
+    <dl class="ticket-datos text-sm">
+      <div><dt>Ticket N°</dt><dd>{% for d in venta.detalles %}{% if d.pago and d.pago.ticket %}{{ d.pago.ticket.codigo }}{{ ', ' if not loop.last }}{% endif %}{% endfor %} (venta #{{ venta.id_venta }})</dd></div>
+      <div><dt>Fecha</dt><dd>{{ venta.fecha.strftime('%d/%m/%Y') }}</dd></div>
+      <div><dt>Hora</dt><dd>{{ venta.fecha.strftime('%H:%M') }}</dd></div>
+    </dl>
+
+    <div class="ticket-linea"></div>
+    {% for d in venta.detalles %}
+    <div class="text-sm space-y-0.5 ticket-detalle">
+      <p class="font-bold">{{ d.flota.nombre }}</p>
+      <dl class="ticket-datos">
+        <div><dt>Minutos</dt><dd>{{ d.minutos }} min ({{ d.cantidad }} bloque{{ 's' if d.cantidad != 1 }})</dd></div>
+        <div><dt>Precio</dt><dd>S/ {{ '%.2f'|format(d.precio) }} por bloque</dd></div>
+        {% if d.usos %}<div><dt>Termina</dt><dd>{{ d.usos[0].hora_fin_prevista.strftime('%H:%M') }}</dd></div>{% endif %}
+        <div><dt>Subtotal</dt><dd>S/ {{ '%.2f'|format(d.subtotal) }}</dd></div>
+      </dl>
+    </div>
+    {% endfor %}
+
+    <div class="ticket-linea"></div>
+    <dl class="ticket-datos text-sm">
+      <div class="ticket-total"><dt>TOTAL</dt><dd>S/ {{ '%.2f'|format(venta.total) }}</dd></div>
+      <div><dt>Pago</dt><dd>{{ venta.tipo_pago|capitalize }}</dd></div>
+      <div><dt>Cajero</dt><dd>{{ venta.usuario.nombre_completo }}</dd></div>
+    </dl>
+
+    <div class="ticket-linea"></div>
+    <p class="text-center text-sm font-bold">¡Gracias por visitarnos!</p>
+    <p class="text-center text-xs">Diviértete con Dino Park</p>
+  </div>
+
+  <div class="flex flex-wrap gap-space-sm no-print">
+    <button class="{{ ui.BTN }}" type="button" onclick="window.print()">Imprimir</button>
+    {% if rol == 'cajero' %}
+    <a class="{{ ui.BTN2 }} inline-flex items-center" href="{{ url_for('venta.pagina_uso') }}">Ir a minutos de uso</a>
+    <a class="{{ ui.BTN_SUAVE }} inline-flex items-center" href="{{ url_for('venta.nueva_venta') }}">Nueva venta</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

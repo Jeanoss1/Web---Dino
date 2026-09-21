@@ -1,0 +1,87 @@
+{# Menú lateral (escritorio) y superior (celular), según el rol de la sesión #}
+{% if rol == 'administrador' %}
+  {% set items = [
+    ('dashboard', url_for('reportes.dashboard'), 'dashboard', 'Dashboard'),
+    ('reportes', url_for('reportes.ventas'), 'bar_chart', 'Reportes'),
+    ('cuadre', url_for('reportes.pagina_cuadre'), 'balance', 'Cuadre diario'),
+    ('contadores', url_for('reportes.contadores'), 'speed', 'Contadores'),
+    ('validaciones', url_for('caja.pagina_validaciones'), 'fact_check', 'Validar pagos'),
+    ('usuarios', url_for('admin.lista_usuarios'), 'group', 'Usuarios y cajeros'),
+    ('turnos', url_for('admin.horario_semanal'), 'calendar_month', 'Turnos semanales'),
+    ('flota', url_for('admin.lista_flota'), 'directions_car', 'Flota'),
+    ('tarifas', url_for('admin.ver_tarifa'), 'payments', 'Tarifas'),
+    ('sedes', url_for('admin.lista_sedes'), 'store', 'Sedes'),
+    ('mantenimiento', url_for('mantenimiento.pagina'), 'build', 'Mantenimiento'),
+  ] %}
+{% elif rol == 'cajero' %}
+  {% set items = [
+    ('caja', url_for('caja.panel'), 'point_of_sale', 'Mi caja'),
+    ('venta', url_for('venta.nueva_venta'), 'sell', 'Venta presencial'),
+    ('uso', url_for('venta.pagina_uso'), 'timer', 'Minutos de uso'),
+    ('validaciones', url_for('caja.pagina_validaciones'), 'fact_check', 'Validar pagos'),
+  ] %}
+{% elif rol == 'cliente' %}
+  {% set items = [
+    ('reserva', url_for('reserva.disponibilidad'), 'confirmation_number', 'Reserva'),
+    ('mis-reservas', url_for('reserva.pagina_mis_reservas'), 'list_alt', 'Mis Reservas'),
+  ] %}
+{% else %}
+  {% set items = [] %}
+{% endif %}
+{% set activo = "bg-surface-container text-on-surface font-bold relative after:content-[''] after:absolute after:left-0 after:top-2 after:bottom-2 after:w-1.5 after:bg-primary after:rounded-r-full" %}
+{% set normal = "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface" %}
+
+<aside class="no-print hidden lg:flex fixed left-0 top-0 h-full w-72 bg-surface-container-lowest z-50 flex-col pt-space-md pb-space-lg shadow-[0_4px_20px_rgba(13,69,50,0.06)]">
+  <div class="px-space-lg pb-space-md flex items-center gap-space-sm">
+    <img alt="Logo Dino Park" class="h-10 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
+    <div class="flex flex-col">
+      <span class="font-headline-sm text-headline-sm text-primary tracking-tight leading-none">Dino Park</span>
+      <span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider mt-1">
+        {% if rol == 'administrador' %}Administración{% elif rol == 'cajero' %}Cajero · {{ sede_cajero }}{% else %}Portal Exploradores{% endif %}
+      </span>
+    </div>
+  </div>
+  <nav class="flex-1 px-space-md space-y-space-xs overflow-y-auto">
+    {% for clave, url, icono, texto in items %}
+    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[44px] {{ activo if pagina_activa == clave else normal }}" href="{{ url }}">
+      <span class="material-symbols-outlined text-primary">{{ icono }}</span>
+      <span class="font-label-lg text-label-lg">{{ texto }}</span>
+    </a>
+    {% endfor %}
+    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[44px] {{ normal }}" href="{{ url_for('home.index') }}">
+      <span class="material-symbols-outlined text-primary">home</span>
+      <span class="font-label-lg text-label-lg">Inicio</span>
+    </a>
+  </nav>
+  <div class="px-space-md pt-space-sm">
+    {% if usuario %}
+    <p class="px-space-md pb-1 font-label-md text-label-md text-on-surface-variant truncate">{{ usuario.nombre_completo }}</p>
+    <form method="post" action="{{ url_for('auth.cerrar_sesion') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="w-full flex items-center gap-space-sm px-space-md py-space-sm rounded text-error hover:bg-error-container hover:text-on-error-container transition-all min-h-[44px]" type="submit">
+        <span class="material-symbols-outlined text-error">logout</span>
+        <span class="font-label-lg text-label-lg">Cerrar Sesión</span>
+      </button>
+    </form>
+    {% else %}
+    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-primary min-h-[44px]" href="{{ url_for('auth.iniciar_sesion') }}">
+      <span class="material-symbols-outlined">login</span><span class="font-label-lg text-label-lg">Iniciar sesión</span>
+    </a>
+    {% endif %}
+  </div>
+</aside>
+
+<div class="no-print lg:hidden sticky top-0 z-40 bg-surface-container-lowest shadow-sm px-space-md py-space-sm flex items-center justify-between gap-space-sm">
+  <img alt="Logo Dino Park" class="h-8 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
+  <nav class="flex items-center gap-1 menu-movil min-w-0">
+    {% for clave, url, icono, texto in items %}
+    <a class="px-3 py-2 rounded-full font-label-md text-label-md {{ 'bg-primary text-on-primary' if pagina_activa == clave else 'text-on-surface-variant' }}" href="{{ url }}">{{ texto }}</a>
+    {% endfor %}
+    {% if usuario %}
+    <form method="post" action="{{ url_for('auth.cerrar_sesion') }}" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="px-3 py-2 rounded-full font-label-md text-label-md text-error" type="submit">Salir</button>
+    </form>
+    {% endif %}
+  </nav>
+</div>

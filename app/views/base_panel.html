@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>{% block titulo %}Dino Park{% endblock %}</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -46,63 +47,17 @@ tailwind.config = {
   }
 }
 </script>
+<script src="{{ url_for('static', filename='js/csrf.js') }}" defer></script>
+{% block head %}{% endblock %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dino.css') }}">
 </head>
 <body class="bg-surface font-body-md text-on-surface">
 
-{# Barra lateral (escritorio) #}
-<aside class="hidden lg:flex fixed left-0 top-0 h-full w-72 bg-surface-container-lowest z-50 flex-col pt-space-md pb-space-lg shadow-[0_4px_20px_rgba(13,69,50,0.06)]">
-  <div class="px-space-lg pb-space-lg flex items-center gap-space-sm">
-    <img alt="Logo Dino Park" class="h-10 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
-    <div class="flex flex-col">
-      <span class="font-headline-sm text-headline-sm text-primary tracking-tight leading-none">Dino Park</span>
-      <span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider mt-1">Portal Exploradores</span>
-    </div>
-  </div>
-  <nav class="flex-1 px-space-md space-y-space-xs">
-    {% set activo = "bg-surface-container text-on-surface font-bold relative after:content-[''] after:absolute after:left-0 after:top-2 after:bottom-2 after:w-1.5 after:bg-primary after:rounded-r-full" %}
-    {% set normal = "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface" %}
-    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] {{ activo if pagina_activa == 'reserva' else normal }}" href="/disponibilidad">
-      <span class="material-symbols-outlined text-primary">confirmation_number</span>
-      <span class="font-label-lg text-label-lg">Reserva</span>
-    </a>
-    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] {{ activo if pagina_activa == 'mis-reservas' else normal }}" href="/mis-reservas">
-      <span class="material-symbols-outlined text-primary">list_alt</span>
-      <span class="font-label-lg text-label-lg">Mis Reservas</span>
-    </a>
-    {% if session.get('rol') in ('administrador', 'cajero') %}
-    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] {{ activo if pagina_activa == 'validaciones' else normal }}" href="/caja/validaciones">
-      <span class="material-symbols-outlined text-primary">fact_check</span>
-      <span class="font-label-lg text-label-lg">Validar pagos</span>
-    </a>
-    {% endif %}
-    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] {{ normal }}" href="/">
-      <span class="material-symbols-outlined text-primary">home</span>
-      <span class="font-label-lg text-label-lg">Inicio</span>
-    </a>
-  </nav>
-  <div class="px-space-md pt-space-sm">
-    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-error hover:bg-error-container hover:text-on-error-container transition-all min-h-[48px]" href="/cerrar-sesion">
-      <span class="material-symbols-outlined text-error">logout</span>
-      <span class="font-label-lg text-label-lg">Cerrar Sesión</span>
-    </a>
-  </div>
-</aside>
+{% include '_menu.html' %}
 
-{# Barra superior (celular) #}
-<div class="lg:hidden sticky top-0 z-40 bg-surface-container-lowest shadow-sm px-space-md py-space-sm flex items-center justify-between gap-space-sm">
-  <img alt="Logo Dino Park" class="h-8 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
-  <nav class="flex items-center gap-1 overflow-x-auto">
-    <a class="px-3 py-2 rounded-full font-label-md text-label-md {{ 'bg-primary text-on-primary' if pagina_activa == 'reserva' else 'text-on-surface-variant' }}" href="/disponibilidad">Reserva</a>
-    <a class="px-3 py-2 rounded-full font-label-md text-label-md {{ 'bg-primary text-on-primary' if pagina_activa == 'mis-reservas' else 'text-on-surface-variant' }}" href="/mis-reservas">Mis Reservas</a>
-    {% if session.get('rol') in ('administrador', 'cajero') %}
-    <a class="px-3 py-2 rounded-full font-label-md text-label-md {{ 'bg-primary text-on-primary' if pagina_activa == 'validaciones' else 'text-on-surface-variant' }}" href="/caja/validaciones">Validar</a>
-    {% endif %}
-    <a class="px-3 py-2 rounded-full font-label-md text-label-md text-error" href="/cerrar-sesion">Salir</a>
-  </nav>
-</div>
-
-<div class="lg:pl-72">
+<div class="lg:pl-72 layout-main">
 <main class="relative bg-surface min-h-screen px-space-md lg:px-space-lg py-space-lg">
+{% include '_flash.html' %}
 {% block contenido %}{% endblock %}
 </main>
 </div>

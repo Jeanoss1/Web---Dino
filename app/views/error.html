@@ -1,0 +1,10 @@
+{% extends 'base_panel.html' %}
+{% block titulo %}{{ codigo }} · Dino Park{% endblock %}
+{% block contenido %}
+<div class="max-w-lg mx-auto text-center space-y-space-md py-space-xl">
+  <span class="material-symbols-outlined text-primary" style="font-size:64px">{{ 'lock' if codigo == 403 else 'error' }}</span>
+  <h1 class="font-headline-md text-headline-md font-bold text-on-surface">{{ codigo }}</h1>
+  <p class="font-body-lg text-body-lg text-on-surface-variant">{{ mensaje }}</p>
+  <a href="{{ url_for('home.index') }}" class="inline-block px-space-lg py-space-sm rounded-full bg-primary text-on-primary font-label-lg text-label-lg">Volver al inicio</a>
+</div>
+{% endblock %}

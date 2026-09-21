@@ -11,6 +11,7 @@ class MovimientoCaja(db.Model):
     monto = db.Column(db.Numeric(10, 2), nullable=False)
     fecha = db.Column(db.DateTime, default=datetime.now)
     descripcion = db.Column(db.String(200))
+    origen = db.Column(db.String(20), default='manual')      # manual / venta
 
     id_caja = db.Column(db.Integer, db.ForeignKey('cajas.id_caja'), nullable=False)
     id_ticket = db.Column(db.Integer, db.ForeignKey('tickets.id_ticket'))

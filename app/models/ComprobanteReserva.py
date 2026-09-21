@@ -23,6 +23,7 @@ class ComprobanteReserva(db.Model):
     fecha_validacion = db.Column(db.DateTime)
     motivo_rechazo = db.Column(db.String(200))
 
+    validador = db.relationship('Usuario', foreign_keys=[id_validador])
     reserva = db.relationship(
         'Reserva',
         backref=db.backref(

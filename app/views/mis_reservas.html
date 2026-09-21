@@ -28,10 +28,12 @@ const YAPE_FORMATO = "{{ yape_numero_formato }}";
 const YAPE_LOGO = "{{ url_for('static', filename='img/Logo_yape.png') }}";
 
 const ESTADOS = {
-  pendiente:  { texto: 'Pendiente de pago', clase: 'bg-secondary-fixed text-on-secondary-fixed-variant' },
-  por_validar:{ texto: 'Pago en validación', clase: 'bg-tertiary-fixed text-on-tertiary-fixed-variant' },
+  pendiente_pago:   { texto: 'Pendiente de pago', clase: 'bg-secondary-fixed text-on-secondary-fixed-variant' },
+  pago_en_revision: { texto: 'Pago en revisión', clase: 'bg-tertiary-fixed text-on-tertiary-fixed-variant' },
   confirmada: { texto: 'Confirmada', clase: 'bg-primary-container text-on-primary-container' },
+  rechazada:  { texto: 'Pago rechazado', clase: 'bg-error-container text-on-error-container' },
   cancelada:  { texto: 'Cancelada', clase: 'bg-surface-container-high text-on-surface-variant' },
+  completada: { texto: 'Completada', clase: 'bg-surface-container-high text-on-surface-variant' },
 };
 
 const $ = id => document.getElementById(id);
@@ -85,15 +87,12 @@ function render(reservas) {
   if (!reservas.length) {
     lista.innerHTML = `<div class="p-space-lg bg-surface-container-lowest rounded-lg text-center space-y-space-sm">
       <p class="font-body-md text-body-md text-on-surface-variant">Todavía no tienes reservas.</p>
-      <a href="/disponibilidad" class="inline-block px-space-lg py-space-sm rounded-full bg-secondary-container text-on-secondary font-label-lg text-label-lg">Reservar un turno</a></div>`;
+      <a href="/disponibilidad" class="inline-block px-space-lg py-space-sm rounded-full bg-secondary-container text-on-secondary font-label-lg text-label-lg">Reservar un horario</a></div>`;
     return;
   }
 
   lista.innerHTML = reservas.map(r => {
-    const rechazado = r.estado === 'pendiente' && r.comprobante && r.comprobante.estado === 'rechazado';
-    const est = rechazado
-      ? { texto: 'Pago rechazado', clase: 'bg-error-container text-on-error-container' }
-      : (ESTADOS[r.estado] || { texto: r.estado, clase: 'bg-surface-container text-on-surface' });
+    const est = ESTADOS[r.estado] || { texto: r.estado, clase: 'bg-surface-container text-on-surface' };
 
     const detalles = r.detalles.map(d => `
       <div class="flex items-center justify-between gap-2 text-sm">
@@ -102,25 +101,30 @@ function render(reservas) {
       </div>`).join('');
 
     let accion = '';
-    if (r.estado === 'pendiente') {
-      accion = (rechazado
-        ? `<div class="p-space-sm rounded-lg bg-error-container text-on-error-container font-label-md text-label-md">
-             El cajero rechazó tu captura: <b>${esc(r.comprobante.motivo_rechazo)}</b>. Sube una nueva.</div>` : '')
+    if (r.estado === 'pendiente_pago') {
+      accion = (r.vence_en
+        ? `<div class="p-space-sm rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant font-label-md text-label-md">
+             Paga antes de las <b>${hora(r.vence_en)}</b> o el horario se liberará.</div>` : '')
         + bloqueYape(r)
         + `<button type="button" data-cancelar="${r.id_reserva}" class="w-full min-h-[44px] rounded-full bg-surface-container text-error font-label-md text-label-md">Cancelar reserva</button>`;
-    } else if (r.estado === 'por_validar') {
+    } else if (r.estado === 'pago_en_revision') {
       accion = `<div class="p-space-sm rounded-lg bg-tertiary-fixed/50 font-label-md text-label-md text-on-tertiary-fixed-variant">
         Recibimos tu comprobante. El cajero lo revisará y confirmará tu reserva.
         <a class="underline font-bold" target="_blank" href="${esc(r.comprobante.url)}">Ver mi captura</a></div>`;
     } else if (r.estado === 'confirmada') {
       accion = `<div class="p-space-sm rounded-lg bg-primary-container/30 font-label-md text-label-md text-on-primary-container flex items-center gap-1">
-        <span class="material-symbols-outlined text-[18px]">verified</span> ¡Pago validado! Tu reserva está confirmada.</div>`;
+        <span class="material-symbols-outlined text-[18px]">verified</span> ¡Pago validado! Preséntate en ${esc(r.sede)} a tu hora.</div>`;
+    } else if (r.estado === 'rechazada') {
+      accion = `<div class="p-space-sm rounded-lg bg-error-container text-on-error-container font-label-md text-label-md">
+        El cajero rechazó tu pago: <b>${esc((r.comprobante && r.comprobante.motivo_rechazo) || 'sin motivo')}</b>.
+        Los horarios se liberaron; puedes hacer una nueva reserva.
+        <a class="underline font-bold" href="/disponibilidad">Reservar de nuevo</a></div>`;
     }
 
     return `
       <article class="bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant/30 p-space-md space-y-space-sm">
         <div class="flex items-center justify-between gap-2">
-          <span class="font-title-md text-title-md font-bold text-on-surface">Reserva #${r.id_reserva}</span>
+          <span class="font-title-md text-title-md font-bold text-on-surface">Reserva #${r.id_reserva} · ${esc(r.sede)}</span>
           <span class="px-3 py-1 rounded-full font-label-sm text-label-sm font-bold ${est.clase}">${est.texto}</span>
         </div>
         <div class="space-y-1">${detalles}</div>

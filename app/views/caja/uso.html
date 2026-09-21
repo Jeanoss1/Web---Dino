@@ -1,0 +1,69 @@
+{% extends 'base_panel.html' %}
+{% import '_ui.html' as ui %}
+{% block titulo %}Minutos de uso · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-5xl mx-auto space-y-space-md">
+  {{ ui.encabezado('timer', 'Control de minutos · ' ~ cajero.sucursal.nombre,
+     'Las ventas presenciales empiezan a correr al cobrar y terminan solas. Solo inicia manualmente las reservas cuando llega el cliente.') }}
+
+  <div class="{{ ui.CARD }} overflow-x-auto">
+    <h2 class="font-title-md text-title-md font-bold mb-2">Alquileres de hoy ({{ hoy.strftime('%d/%m/%Y') }})</h2>
+    <table class="w-full"><thead><tr>
+      <th class="{{ ui.TH }}">Venta</th><th class="{{ ui.TH }}">Unidad</th><th class="{{ ui.TH }}">Origen</th>
+      <th class="{{ ui.TH }}">Vendidos</th><th class="{{ ui.TH }}">Usados</th><th class="{{ ui.TH }}">Estado / acción</th></tr></thead><tbody>
+    {% for d in detalles %}
+      {% set en_curso = d.uso_en_curso %}
+      <tr class="border-t border-outline-variant/30">
+        <td class="{{ ui.TD }}">#{{ d.id_venta }}</td>
+        <td class="{{ ui.TD }} font-bold">{{ d.flota.nombre }}</td>
+        <td class="{{ ui.TD }}">{{ 'Reserva' if d.venta.origen == 'reserva' else 'Presencial' }}</td>
+        <td class="{{ ui.TD }}">{{ d.minutos }} min</td>
+        <td class="{{ ui.TD }}">{{ d.minutos_usados }} min</td>
+        <td class="{{ ui.TD }}">
+          {% if en_curso %}
+            <div class="flex flex-wrap items-center gap-2">
+              {{ ui.etiqueta_estado('En uso', 'aviso') }}
+              <span class="text-xs">Inició {{ en_curso.hora_inicio.strftime('%H:%M') }} · termina solo a las <b>{{ en_curso.hora_fin_prevista.strftime('%H:%M') }}</b>
+                (<span class="cuenta-regresiva" data-fin="{{ en_curso.hora_fin_prevista.isoformat() }}"></span>)</span>
+            </div>
+            <details class="mt-1">
+              <summary class="text-xs text-primary cursor-pointer">Finalizar antes (excepcional)</summary>
+              <form method="post" action="{{ url_for('venta.finalizar_uso', id_uso=en_curso.id_uso) }}" class="flex flex-wrap gap-2 mt-1"
+                    onsubmit="return confirm('¿Finalizar antes de tiempo?')">
+                {{ ui.csrf() }}
+                <input class="{{ ui.INPUT }} !w-56" name="motivo" maxlength="200" required placeholder="Motivo (obligatorio)">
+                <button class="{{ ui.BTN_PELIGRO }}" type="submit">Finalizar antes</button>
+              </form>
+            </details>
+          {% elif d.minutos_usados >= d.minutos %}
+            {{ ui.etiqueta_estado('Finalizado' ~ (' (antes de tiempo)' if d.usos and d.usos[-1].finalizado_por == 'cajero' else ''), 'gris') }}
+          {% else %}
+          <form method="post" action="{{ url_for('venta.iniciar_uso') }}">
+            {{ ui.csrf() }}<input type="hidden" name="id_detalle" value="{{ d.id_detalle_venta }}">
+            <button class="{{ ui.BTN }}" type="submit">Iniciar tiempo</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td class="{{ ui.TD }} text-on-surface-variant" colspan="6">No hay alquileres vendidos para hoy en esta sede.</td></tr>
+    {% endfor %}
+    </tbody></table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Cuenta regresiva en pantalla; el servidor finaliza solo aunque esta página esté cerrada.
+  function pintar() {
+    document.querySelectorAll('.cuenta-regresiva').forEach(el => {
+      const s = Math.round((new Date(el.dataset.fin) - new Date()) / 1000);
+      el.textContent = s > 0 ? Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') : 'finalizando…';
+    });
+  }
+  pintar(); setInterval(pintar, 1000);
+  if (document.querySelector('.cuenta-regresiva')) setTimeout(() => location.reload(), 30000);
+</script>
+{% endblock %}

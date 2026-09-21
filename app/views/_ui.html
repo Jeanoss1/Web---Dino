@@ -1,0 +1,65 @@
+{# Estilos y macros compartidos por los paneles (mismos colores y tipografía de Dino Park) #}
+{% set INPUT = "w-full text-sm rounded-md bg-surface-container-low border border-outline-variant/50 px-3 py-2 min-h-[44px] focus:ring-1 focus:ring-primary focus:outline-none" %}
+{% set BTN = "min-h-[44px] px-5 rounded-full bg-primary text-on-primary font-label-lg text-label-lg shadow-sm hover:brightness-110 active:scale-95 transition-all" %}
+{% set BTN2 = "min-h-[44px] px-5 rounded-full bg-secondary-container text-on-secondary font-label-lg text-label-lg shadow-sm hover:brightness-105 active:scale-95 transition-all" %}
+{% set BTN_SUAVE = "min-h-[40px] px-4 rounded-full bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-all" %}
+{% set BTN_PELIGRO = "min-h-[40px] px-4 rounded-full bg-error-container text-on-error-container font-label-md text-label-md transition-all" %}
+{% set CARD = "bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant/30 p-space-md" %}
+{% set TH = "text-left px-3 py-2 font-label-md text-label-md text-tertiary uppercase whitespace-nowrap" %}
+{% set TD = "px-3 py-2 text-sm align-middle" %}
+{% set ETIQUETA = "font-label-sm text-label-sm text-tertiary uppercase tracking-wider font-bold block mb-1" %}
+
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro encabezado(icono, titulo, subtitulo='') %}
+<div class="flex items-center gap-space-sm">
+  <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+    <span class="material-symbols-outlined text-[24px]">{{ icono }}</span>
+  </div>
+  <div>
+    <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">{{ titulo }}</h1>
+    {% if subtitulo %}<p class="font-body-md text-body-md text-on-surface-variant">{{ subtitulo }}</p>{% endif %}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro indicador(etiqueta, valor, nota='', clase='text-secondary') %}
+<div class="bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant/30 p-space-md">
+  <p class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider font-bold">{{ etiqueta }}</p>
+  <p class="font-headline-md text-headline-md font-black {{ clase }} mt-1">{{ valor }}</p>
+  {% if nota %}<p class="font-body-md text-body-md text-on-surface-variant">{{ nota }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro etiqueta_estado(texto, tipo='ok') %}
+<span class="px-3 py-1 rounded-full font-label-sm text-label-sm font-bold whitespace-nowrap
+  {{ {'ok': 'bg-primary-container text-on-primary-container', 'aviso': 'bg-secondary-fixed text-on-secondary-fixed-variant',
+      'error': 'bg-error-container text-on-error-container', 'gris': 'bg-surface-container-high text-on-surface-variant'}[tipo] }}">{{ texto }}</span>
+{% endmacro %}
+
+{# Filtros de reporte: sede + rango semanal/mensual/personalizado #}
+{% macro filtros(destino, sedes, sede_sel, rango, desde, hasta, ref='') %}
+<form method="get" action="{{ destino }}" class="{{ CARD }} grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12 gap-space-sm items-end" id="form-filtros">
+  <div class="xl:col-span-3">
+    <label class="{{ ETIQUETA }}">Sede</label>
+    <select name="sede" class="{{ INPUT }}">
+      <option value="">Todas las sedes</option>
+      {% for s in sedes %}<option value="{{ s.id_sucursal }}" {{ 'selected' if sede_sel == s.id_sucursal }}>{{ s.nombre }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="xl:col-span-3">
+    <label class="{{ ETIQUETA }}">Rango</label>
+    <select name="rango" id="rango" class="{{ INPUT }}" onchange="document.getElementById('personal').classList.toggle('hidden', !['personalizado','diario'].includes(this.value))">
+      <option value="diario" {{ 'selected' if rango == 'diario' }}>Diario</option>
+      <option value="semanal" {{ 'selected' if rango == 'semanal' }}>Semanal (lunes a domingo)</option>
+      <option value="mensual" {{ 'selected' if rango == 'mensual' }}>Mensual</option>
+      <option value="personalizado" {{ 'selected' if rango == 'personalizado' }}>Fechas personalizadas</option>
+    </select>
+  </div>
+  <div class="xl:col-span-4 grid grid-cols-2 gap-space-sm {{ 'hidden' if rango not in ('personalizado', 'diario') }}" id="personal">
+    <div><label class="{{ ETIQUETA }}">Desde (o día)</label><input type="date" name="desde" value="{{ desde.isoformat() }}" class="{{ INPUT }}"></div>
+    <div><label class="{{ ETIQUETA }}">Hasta</label><input type="date" name="hasta" value="{{ hasta.isoformat() }}" class="{{ INPUT }}"></div>
+  </div>
+  <div class="xl:col-span-2"><button class="{{ BTN }} w-full" type="submit">Ver</button></div>
+</form>
+{% endmacro %}

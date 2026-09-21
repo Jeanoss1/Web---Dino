@@ -1,0 +1,79 @@
+{% extends 'base_panel.html' %}
+{% import '_ui.html' as ui %}
+{% block titulo %}Turnos semanales · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-7xl mx-auto space-y-space-md">
+  {{ ui.encabezado('calendar_month', 'Turnos semanales de los cajeros',
+     'Semana del ' ~ lunes.strftime('%d/%m/%Y') ~ ' al ' ~ dias[6].strftime('%d/%m/%Y') ~ '. Vacío = día libre.') }}
+
+  <div class="{{ ui.CARD }} flex flex-wrap items-center gap-space-sm">
+    <a class="{{ ui.BTN_SUAVE }} inline-flex items-center" href="{{ url_for('admin.horario_semanal', semana=anterior.isoformat(), sede=sede_sel) }}">← Semana anterior</a>
+    <a class="{{ ui.BTN_SUAVE }} inline-flex items-center" href="{{ url_for('admin.horario_semanal', sede=sede_sel) }}">Esta semana</a>
+    <a class="{{ ui.BTN_SUAVE }} inline-flex items-center" href="{{ url_for('admin.horario_semanal', semana=siguiente.isoformat(), sede=sede_sel) }}">Semana siguiente →</a>
+    <form method="get" class="flex items-center gap-2 ml-auto">
+      <input type="hidden" name="semana" value="{{ lunes.isoformat() }}">
+      <select class="{{ ui.INPUT }} !w-auto" name="sede" onchange="this.form.submit()">
+        <option value="">Todas las sedes</option>
+        {% for s in sedes %}<option value="{{ s.id_sucursal }}" {{ 'selected' if sede_sel == s.id_sucursal }}>{{ s.nombre }}</option>{% endfor %}
+      </select>
+    </form>
+  </div>
+
+  <form method="post" action="{{ url_for('admin.guardar_horario') }}" class="{{ ui.CARD }} space-y-space-sm">
+    {{ ui.csrf() }}
+    <input type="hidden" name="semana" value="{{ lunes.isoformat() }}">
+    <input type="hidden" name="sede" value="{{ sede_sel or '' }}">
+    <div class="overflow-x-auto">
+      <table class="w-full"><thead><tr>
+        <th class="{{ ui.TH }}">Cajero</th>
+        {% for d in dias %}<th class="{{ ui.TH }}">{{ nombres_dias[loop.index0][:3] }} {{ d.strftime('%d/%m') }}</th>{% endfor %}
+      </tr></thead><tbody>
+      {% for c in cajeros %}
+        <tr class="border-t border-outline-variant/30">
+          <td class="{{ ui.TD }} font-bold whitespace-nowrap">{{ c.nombre }}<br>
+            <span class="text-xs font-normal text-on-surface-variant">{{ c.sucursal.nombre }} · {{ '8 h' if c.tipo_turno == 'completo' else '4 h' }}</span></td>
+          {% for d in dias %}
+          {% set actual = asignaciones.get((c.id_cajero, d)) %}
+          <td class="px-1 py-2">
+            <select class="{{ ui.INPUT }} !min-h-[36px] !px-1 !text-xs" name="t_{{ c.id_cajero }}_{{ d.isoformat() }}">
+              <option value="">Libre</option>
+              {% for t in turnos if t.tipo == c.tipo_turno %}
+              <option value="{{ t.id_turno }}" {{ 'selected' if actual and actual.id_turno == t.id_turno }}>{{ t.nombre }} ({{ t.hora_inicio.strftime('%H:%M') }}-{{ t.hora_fin.strftime('%H:%M') }})</option>
+              {% endfor %}
+            </select>
+          </td>
+          {% endfor %}
+        </tr>
+      {% else %}<tr><td class="{{ ui.TD }}" colspan="8">No hay cajeros activos.</td></tr>{% endfor %}
+      </tbody></table>
+    </div>
+    <button class="{{ ui.BTN2 }}" type="submit">Guardar horario de la semana</button>
+  </form>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-md">
+    <form method="post" action="{{ url_for('admin.copiar_horario') }}" class="{{ ui.CARD }} space-y-space-sm">
+      {{ ui.csrf() }}<input type="hidden" name="semana" value="{{ lunes.isoformat() }}">
+      <h2 class="font-title-md text-title-md font-bold">Copiar la semana anterior</h2>
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="rotar" checked> Rotar mañana ↔ tarde (rotación semanal)</label>
+      <button class="{{ ui.BTN }}" type="submit">Copiar a esta semana</button>
+    </form>
+
+    <form method="post" action="{{ url_for('admin.importar_horario') }}" enctype="multipart/form-data" class="{{ ui.CARD }} space-y-space-sm">
+      {{ ui.csrf() }}<input type="hidden" name="semana" value="{{ lunes.isoformat() }}">
+      <h2 class="font-title-md text-title-md font-bold">Cargar el horario desde un archivo</h2>
+      <p class="text-sm text-on-surface-variant">Una fila por cajero: correo y luego lunes a domingo con el nombre del turno o «libre».
+        <a class="text-primary underline" href="{{ url_for('admin.plantilla_horario', semana=lunes.isoformat()) }}">Descargar plantilla (.csv)</a></p>
+      <input type="file" name="archivo" accept=".csv,.xlsx" class="block w-full text-sm bg-surface-container-lowest rounded-md border border-outline-variant/50 p-2" required>
+      <button class="{{ ui.BTN }}" type="submit">Importar</button>
+    </form>
+  </div>
+
+  <div class="{{ ui.CARD }}">
+    <h2 class="font-title-md text-title-md font-bold mb-1">Turnos disponibles</h2>
+    <ul class="text-sm text-on-surface-variant list-disc pl-5">
+      {% for t in turnos %}<li><b>{{ t.nombre }}</b> — {{ t.hora_inicio.strftime('%H:%M') }} a {{ t.hora_fin.strftime('%H:%M') }} ({{ t.horas|round|int }} h, {{ 'tiempo completo' if t.tipo == 'completo' else 'medio tiempo' }})</li>{% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

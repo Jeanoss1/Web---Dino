@@ -1,0 +1,45 @@
+{% extends 'base_panel.html' %}
+{% import '_ui.html' as ui %}
+{% block titulo %}Flota · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-6xl mx-auto space-y-space-md">
+  {{ ui.encabezado('directions_car', 'Flota', 'Todas las unidades cuestan S/ ' ~ '%.2f'|format(tarifa.precio) ~ ' por ' ~ tarifa.minutos ~ ' min (se edita en Tarifas).') }}
+
+  <form method="post" action="{{ url_for('admin.crear_unidad') }}" class="{{ ui.CARD }} grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12 gap-space-sm items-end">
+    {{ ui.csrf() }}
+    <div class="xl:col-span-2"><label class="{{ ui.ETIQUETA }}">Nombre</label><input class="{{ ui.INPUT }}" name="nombre" required></div>
+    <div class="xl:col-span-2"><label class="{{ ui.ETIQUETA }}">Tipo</label>
+      <select class="{{ ui.INPUT }}" name="tipo"><option value="dinosaurio">Dinosaurio</option><option value="carro">Carro</option><option value="moto">Moto</option><option value="otros">Otros</option></select></div>
+    <div class="xl:col-span-2"><label class="{{ ui.ETIQUETA }}">Sede</label>
+      <select class="{{ ui.INPUT }}" name="id_sucursal">{% for s in sedes %}<option value="{{ s.id_sucursal }}">{{ s.nombre }}</option>{% endfor %}</select></div>
+    <div class="xl:col-span-2"><label class="{{ ui.ETIQUETA }}">Modelo</label><input class="{{ ui.INPUT }}" name="modelo"></div>
+    <div class="xl:col-span-2"><label class="{{ ui.ETIQUETA }}">Contador</label>
+      <select class="{{ ui.INPUT }}" name="tipo_contador"><option value="">Según el tipo</option><option value="minutos">Minutos</option><option value="encendidos">Encendidos</option></select></div>
+    <div class="xl:col-span-2"><label class="{{ ui.ETIQUETA }}">Lectura actual</label>
+      <input class="{{ ui.INPUT }}" type="number" name="lectura_inicial" min="0" placeholder="Contador físico hoy"></div>
+    <div class="xl:col-span-2"><label class="{{ ui.ETIQUETA }}">Detalle (especie, etc.)</label><input class="{{ ui.INPUT }}" name="detalle"></div>
+    <div class="xl:col-span-2 sm:col-span-2"><button class="{{ ui.BTN2 }} w-full" type="submit">Agregar</button></div>
+  </form>
+
+  <div class="{{ ui.CARD }} overflow-x-auto">
+    <table class="w-full"><thead><tr><th class="{{ ui.TH }}">Unidad</th><th class="{{ ui.TH }}">Tipo</th><th class="{{ ui.TH }}">Sede</th>
+      <th class="{{ ui.TH }}">Contador</th><th class="{{ ui.TH }}">Estado</th><th class="{{ ui.TH }}">Cambiar estado</th></tr></thead><tbody>
+    {% for f in flota %}
+      <tr class="border-t border-outline-variant/30">
+        <td class="{{ ui.TD }} font-bold">{{ f.nombre }}<br><span class="text-xs font-normal text-on-surface-variant">{{ f.modelo }}</span></td>
+        <td class="{{ ui.TD }}">{{ f.tipo|capitalize }}</td><td class="{{ ui.TD }}">{{ f.sucursal.nombre }}</td><td class="{{ ui.TD }}">
+          <form method="post" action="{{ url_for('admin.contador_unidad', id_flota=f.id_flota) }}" class="flex flex-wrap gap-1 items-center">{{ ui.csrf() }}
+            <select class="{{ ui.INPUT }} !w-auto !min-h-[36px]" name="tipo_contador" onchange="this.form.submit()">
+              <option value="minutos" {{ 'selected' if f.tipo_contador == 'minutos' }}>Minutos</option>
+              <option value="encendidos" {{ 'selected' if f.tipo_contador == 'encendidos' }}>Encendidos</option></select></form>
+          <span class="text-xs text-on-surface-variant">Sistema: <b>{{ f.contador_sistema }}</b> · Lectura manual: <b>{{ f.lectura_manual if f.lectura_manual is not none else '—' }}</b></span></td>
+        <td class="{{ ui.TD }}">{{ ui.etiqueta_estado(f.estado|capitalize, 'ok' if f.estado == 'disponible' else ('aviso' if f.estado == 'mantenimiento' else 'gris')) }}</td>
+        <td class="{{ ui.TD }}"><form method="post" action="{{ url_for('admin.estado_unidad', id_flota=f.id_flota) }}" class="flex gap-1">{{ ui.csrf() }}
+          <select class="{{ ui.INPUT }} !w-auto !min-h-[36px]" name="estado">{% for e in estados %}<option value="{{ e }}" {{ 'selected' if e == f.estado }}>{{ e|capitalize }}</option>{% endfor %}</select>
+          <button class="{{ ui.BTN_SUAVE }}" type="submit">Aplicar</button></form></td>
+      </tr>
+    {% endfor %}</tbody></table>
+  </div>
+</div>
+{% endblock %}

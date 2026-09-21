@@ -1,0 +1,63 @@
+{% extends 'base_panel.html' %}
+{% import '_ui.html' as ui %}
+{% block titulo %}Cuadre diario · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-7xl mx-auto space-y-space-md">
+  {{ ui.encabezado('balance', 'Cierre y cuadre diario',
+     'Minutos vendidos vs. usados, y dinero vendido vs. dinero en caja (efectivo + Yape).') }}
+
+  <form method="get" class="{{ ui.CARD }} grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12 gap-space-sm items-end">
+    <div class="xl:col-span-4"><label class="{{ ui.ETIQUETA }}">Fecha</label>
+      <input class="{{ ui.INPUT }}" type="date" name="fecha" value="{{ fecha.isoformat() }}"></div>
+    <div class="xl:col-span-4"><label class="{{ ui.ETIQUETA }}">Sede</label>
+      <select class="{{ ui.INPUT }}" name="sede"><option value="">Todas las sedes</option>
+      {% for s in sedes %}<option value="{{ s.id_sucursal }}" {{ 'selected' if sede_sel == s.id_sucursal }}>{{ s.nombre }}</option>{% endfor %}</select></div>
+    <div class="xl:col-span-4"><button class="{{ ui.BTN }} w-full" type="submit">Ver cuadre</button></div>
+  </form>
+
+  {% if c.total_alertas %}
+  <div class="p-space-md rounded-lg bg-error-container text-on-error-container font-label-md text-label-md font-bold">
+    ⚠ {{ c.total_alertas }} alerta(s) el {{ fecha.strftime('%d/%m/%Y') }}. Revisa las filas marcadas en rojo.</div>
+  {% else %}
+  <div class="p-space-md rounded-lg bg-primary-container/30 text-on-primary-container font-label-md text-label-md font-bold">Sin diferencias: todo cuadra este día.</div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+    {% for s in c.sedes %}
+    <div class="{{ ui.CARD }} space-y-1">
+      <h2 class="font-title-md text-title-md font-bold">{{ s.sede }}</h2>
+      <p class="text-sm">Vendido: <b>S/ {{ '%.2f'|format(s.vendido_total) }}</b> (efectivo S/ {{ '%.2f'|format(s.vendido_efectivo) }} + Yape S/ {{ '%.2f'|format(s.vendido_yape) }}) · {{ s.ventas }} venta(s)</p>
+      <p class="text-sm">Minutos: vendidos <b>{{ s.minutos_vendidos }}</b> · usados <b>{{ s.minutos_usados }}</b> ·
+        <span class="font-bold {{ 'text-error' if s.diferencia_minutos|abs > 2 else 'text-primary' }}">diferencia {{ s.diferencia_minutos }}</span></p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="{{ ui.CARD }} overflow-x-auto">
+    <h2 class="font-title-md text-title-md font-bold mb-2">Por cajero</h2>
+    <table class="w-full"><thead><tr>
+      <th class="{{ ui.TH }}">Cajero</th><th class="{{ ui.TH }}">Sede</th><th class="{{ ui.TH }}">Caja</th>
+      <th class="{{ ui.TH }} text-right">Vendido</th><th class="{{ ui.TH }} text-right">Efectivo</th><th class="{{ ui.TH }} text-right">Yape</th>
+      <th class="{{ ui.TH }} text-right">Esperado</th><th class="{{ ui.TH }} text-right">Contado</th><th class="{{ ui.TH }} text-right">Dif. S/</th>
+      <th class="{{ ui.TH }} text-right">Min. vend.</th><th class="{{ ui.TH }} text-right">Min. usados</th><th class="{{ ui.TH }} text-right">Dif. min.</th><th class="{{ ui.TH }}">Alertas</th></tr></thead><tbody>
+    {% for f in c.filas %}
+      <tr class="border-t border-outline-variant/30 {{ 'bg-error-container/40' if f.alertas }}">
+        <td class="{{ ui.TD }} font-bold">{{ f.cajero }}</td><td class="{{ ui.TD }}">{{ f.sede }}</td>
+        <td class="{{ ui.TD }}">{{ ui.etiqueta_estado(f.estado_caja|capitalize, 'ok' if f.estado_caja == 'cerrada' else ('aviso' if f.estado_caja == 'abierta' else 'gris')) }}</td>
+        <td class="{{ ui.TD }} text-right font-bold">S/ {{ '%.2f'|format(f.vendido_total) }}</td>
+        <td class="{{ ui.TD }} text-right">S/ {{ '%.2f'|format(f.vendido_efectivo) }}</td><td class="{{ ui.TD }} text-right">S/ {{ '%.2f'|format(f.vendido_yape) }}</td>
+        <td class="{{ ui.TD }} text-right">S/ {{ '%.2f'|format(f.efectivo_esperado) }}</td>
+        <td class="{{ ui.TD }} text-right">{{ 'S/ %.2f'|format(f.efectivo_contado) if f.efectivo_contado is not none else '—' }}</td>
+        <td class="{{ ui.TD }} text-right font-bold {{ 'text-error' if f.diferencia_efectivo is not none and f.diferencia_efectivo|abs >= 0.01 }}">{{ 'S/ %.2f'|format(f.diferencia_efectivo) if f.diferencia_efectivo is not none else '—' }}</td>
+        <td class="{{ ui.TD }} text-right">{{ f.minutos_vendidos }}</td><td class="{{ ui.TD }} text-right">{{ f.minutos_usados }}</td>
+        <td class="{{ ui.TD }} text-right font-bold {{ 'text-error' if f.diferencia_minutos|abs > 2 }}">{{ f.diferencia_minutos }}</td>
+        <td class="{{ ui.TD }} text-error text-xs">{% for a in f.alertas %}<div>⚠ {{ a }}</div>{% else %}<span class="text-primary">OK</span>{% endfor %}</td>
+      </tr>
+    {% else %}<tr><td class="{{ ui.TD }}" colspan="13">No hay cajeros activos.</td></tr>{% endfor %}
+    </tbody></table>
+    <p class="text-xs text-on-surface-variant mt-2">Los minutos vendidos se cuentan en el día de la venta (las reservas, el día en que el cajero validó el pago) y los usados en el día en que se usaron.
+      Una reserva para otro día puede generar diferencias que se compensan en la sede.</p>
+  </div>
+</div>
+{% endblock %}

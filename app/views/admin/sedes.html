@@ -1,0 +1,29 @@
+{% extends 'base_panel.html' %}
+{% import '_ui.html' as ui %}
+{% block titulo %}Sedes · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-4xl mx-auto space-y-space-md">
+  {{ ui.encabezado('store', 'Sedes', 'Activa o desactiva sedes. Una sede inactiva no aparece para los clientes (por ejemplo, Hoyos Rubio hasta su apertura).') }}
+
+  <div class="{{ ui.CARD }} overflow-x-auto">
+    <table class="w-full"><thead><tr><th class="{{ ui.TH }}">Sede</th><th class="{{ ui.TH }}">Dirección</th><th class="{{ ui.TH }}">Estado</th><th class="{{ ui.TH }}"></th></tr></thead><tbody>
+    {% for s in sedes %}
+      <tr class="border-t border-outline-variant/30">
+        <td class="{{ ui.TD }} font-bold">{{ s.nombre }}</td><td class="{{ ui.TD }}">{{ s.direccion }}</td>
+        <td class="{{ ui.TD }}">{{ ui.etiqueta_estado('Activa' if s.estado == 'activa' else 'Inactiva', 'ok' if s.estado == 'activa' else 'gris') }}</td>
+        <td class="{{ ui.TD }}"><form method="post" action="{{ url_for('admin.estado_sede', id_sucursal=s.id_sucursal) }}">{{ ui.csrf() }}
+          <button class="{{ ui.BTN_SUAVE }}" type="submit">{{ 'Desactivar' if s.estado == 'activa' else 'Activar' }}</button></form></td>
+      </tr>
+    {% endfor %}</tbody></table>
+  </div>
+
+  <form method="post" action="{{ url_for('admin.crear_sede') }}" class="{{ ui.CARD }} grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12 gap-space-sm items-end">
+    {{ ui.csrf() }}
+    <div class="xl:col-span-3"><label class="{{ ui.ETIQUETA }}">Nueva sede</label><input class="{{ ui.INPUT }}" name="nombre" required></div>
+    <div class="xl:col-span-5"><label class="{{ ui.ETIQUETA }}">Dirección</label><input class="{{ ui.INPUT }}" name="direccion" maxlength="200"></div>
+    <div class="xl:col-span-2"><label class="flex items-center gap-2 text-sm"><input type="checkbox" name="activa" checked> Activa</label></div>
+    <div class="xl:col-span-2"><button class="{{ ui.BTN2 }} w-full" type="submit">Crear</button></div>
+  </form>
+</div>
+{% endblock %}

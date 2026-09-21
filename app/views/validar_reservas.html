@@ -17,8 +17,9 @@
       </div>
     </div>
     <div class="flex gap-2">
-      <button id="tab-por_validar" type="button" data-tab="por_validar" class="px-4 py-2 rounded-full font-label-md text-label-md font-bold min-h-[44px]">Por validar <span id="cuenta" class="ml-1"></span></button>
+      <button id="tab-pago_en_revision" type="button" data-tab="pago_en_revision" class="px-4 py-2 rounded-full font-label-md text-label-md font-bold min-h-[44px]">Por validar <span id="cuenta" class="ml-1"></span></button>
       <button id="tab-confirmada" type="button" data-tab="confirmada" class="px-4 py-2 rounded-full font-label-md text-label-md font-bold min-h-[44px]">Confirmadas</button>
+      <button id="tab-rechazada" type="button" data-tab="rechazada" class="px-4 py-2 rounded-full font-label-md text-label-md font-bold min-h-[44px]">Rechazadas</button>
     </div>
   </div>
 
@@ -46,7 +47,7 @@ const fechaCorta = iso => new Date(iso).toLocaleDateString('es-PE', { weekday: '
 const hora = iso => new Date(iso).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
 const fechaHora = iso => fechaCorta(iso) + ' ' + hora(iso);
 
-let tab = 'por_validar';
+let tab = 'pago_en_revision';
 let temporizador = null;
 
 function alerta(msg, tipo = 'error') {
@@ -58,7 +59,7 @@ function alerta(msg, tipo = 'error') {
 }
 
 function pintarTabs() {
-  ['por_validar', 'confirmada'].forEach(t => {
+  ['pago_en_revision', 'confirmada', 'rechazada'].forEach(t => {
     $('tab-' + t).className = 'px-4 py-2 rounded-full font-label-md text-label-md font-bold min-h-[44px] ' +
       (t === tab ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high');
   });
@@ -71,7 +72,7 @@ async function cargar() {
     if (res.status === 401) { location.href = '/iniciar-sesion?next=/caja/validaciones'; return; }
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error');
-    if (tab === 'por_validar') $('cuenta').textContent = json.length ? '(' + json.length + ')' : '';
+    if (tab === 'pago_en_revision') $('cuenta').textContent = json.length ? '(' + json.length + ')' : '';
     render(json);
   } catch (e) {
     $('lista').innerHTML = `<p class="text-error font-body-md text-body-md">${esc(e.message)}</p>`;
@@ -81,7 +82,7 @@ async function cargar() {
 function render(reservas) {
   if (!reservas.length) {
     $('lista').innerHTML = `<div class="p-space-lg bg-surface-container-lowest rounded-lg text-center font-body-md text-body-md text-on-surface-variant">
-      ${tab === 'por_validar' ? 'No hay pagos pendientes de validar.' : 'Todavía no hay reservas confirmadas.'}</div>`;
+      ${tab === 'pago_en_revision' ? 'No hay pagos pendientes de validar.' : 'No hay reservas en esta lista.'}</div>`;
     return;
   }
   $('lista').innerHTML = reservas.map(r => {
@@ -92,7 +93,7 @@ function render(reservas) {
         <span class="text-on-surface-variant">${esc(fechaCorta(d.inicio))} · ${hora(d.inicio)} - ${hora(d.fin)}</span>
       </div>`).join('');
 
-    const botones = tab === 'por_validar' ? `
+    const botones = tab === 'pago_en_revision' ? `
       <div class="space-y-space-xs">
         <input type="text" maxlength="200" id="motivo-${r.id_reserva}" placeholder="Motivo si rechazas (ej. el monto no coincide)"
           class="w-full text-sm rounded-md bg-surface-container-low border border-outline-variant/50 px-3 py-2 min-h-[44px]">
@@ -101,27 +102,32 @@ function render(reservas) {
           <button type="button" data-aceptar="${r.id_reserva}" class="min-h-[48px] rounded-full bg-primary text-on-primary font-label-lg text-label-lg shadow-md">Aceptar</button>
         </div>
       </div>` : `
-      <div class="flex items-center gap-1 text-primary font-label-md text-label-md font-bold">
-        <span class="material-symbols-outlined text-[18px]">verified</span> Confirmada</div>`;
+      <div class="space-y-1 font-label-md text-label-md ${tab === 'confirmada' ? 'text-primary' : 'text-error'} font-bold">
+        <div class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">${tab === 'confirmada' ? 'verified' : 'block'}</span>
+          ${tab === 'confirmada' ? 'Confirmada' : 'Rechazada'}</div>
+        ${c && c.validado_por ? `<p class="text-xs font-normal text-on-surface-variant">Validó ${esc(c.validado_por)} · ${esc(fechaHora(c.fecha_validacion))}</p>` : ''}
+        ${c && c.motivo_rechazo ? `<p class="text-xs font-normal text-on-surface-variant">Motivo: ${esc(c.motivo_rechazo)}</p>` : ''}
+      </div>`;
 
     return `
-      <article class="bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant/30 p-space-md grid grid-cols-1 md:grid-cols-12 gap-space-md">
-        <div class="md:col-span-3">
+      <article class="bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant/30 p-space-md grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12 gap-space-md">
+        <div class="xl:col-span-3">
           ${c ? `<img src="${esc(c.url)}" data-ver="${esc(c.url)}" alt="Captura"
               class="w-full h-56 md:h-40 object-cover rounded-md border border-outline-variant/40 cursor-zoom-in">` :
             '<div class="h-40 rounded-md bg-surface-container flex items-center justify-center text-sm text-on-surface-variant">Sin captura</div>'}
           ${c ? `<p class="text-xs text-on-surface-variant mt-1">Subida: ${esc(fechaHora(c.fecha_subida))}</p>` : ''}
         </div>
-        <div class="md:col-span-5 space-y-space-xs">
+        <div class="xl:col-span-5 space-y-space-xs">
           <div class="flex items-center gap-2">
             <span class="font-title-md text-title-md font-bold">Reserva #${r.id_reserva}</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-surface-container font-bold">${esc(r.sede)}</span>
           </div>
           <p class="text-sm"><b>${esc(r.cliente.nombre)}</b><br>
              DNI ${esc(r.cliente.dni)} · Cel. ${esc(r.cliente.telefono || '-')}</p>
           <div class="space-y-1 pt-space-xs border-t border-outline-variant/30">${detalles}</div>
           <p class="text-xs text-on-surface-variant">${r.cantidad_personas} persona(s)</p>
         </div>
-        <div class="md:col-span-4 space-y-space-sm">
+        <div class="xl:col-span-4 space-y-space-sm">
           <div class="p-space-sm rounded-lg bg-surface-container text-center">
             <p class="font-label-sm text-label-sm text-tertiary uppercase font-bold">Monto que debe figurar en Yape</p>
             <p class="font-display-lg text-headline-lg font-black text-secondary">${soles(r.total)}</p>
@@ -147,7 +153,7 @@ async function accion(id, tipo) {
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) { alerta(json.error || 'No se pudo completar la acción'); return; }
-  alerta(tipo === 'aceptar' ? `Reserva #${id} confirmada.` : `Reserva #${id} rechazada; el cliente podrá subir otra captura.`, 'ok');
+  alerta(tipo === 'aceptar' ? `Reserva #${id} confirmada.` : `Reserva #${id} rechazada; los horarios quedaron libres.`, 'ok');
   cargar();
 }
 
@@ -167,7 +173,7 @@ cargar();
 // Se refresca solo cada 30 s para que lleguen los pagos nuevos (si no estás escribiendo un motivo)
 setInterval(() => {
   const escribiendo = document.activeElement && document.activeElement.tagName === 'INPUT';
-  if (tab === 'por_validar' && !escribiendo && $('visor').classList.contains('hidden')) cargar();
+  if (tab === 'pago_en_revision' && !escribiendo && $('visor').classList.contains('hidden')) cargar();
 }, 30000);
 </script>
 {% endblock %}
