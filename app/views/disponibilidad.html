@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Dino Park · Disponibilidad</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}}::-webkit-scrollbar{display:none;}</style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "on-secondary-container": "#612400", "secondary-fixed-dim": "#ffb693", "on-error-container": "#93000a",
+        "surface-variant": "#b8efd3", "tertiary-fixed-dim": "#7fd8ae", "on-tertiary-fixed": "#002114",
+        "on-secondary-fixed": "#351000", "error-container": "#ffdad6", "tertiary-fixed": "#9bf5c9",
+        "outline-variant": "#bbcac0", "primary-fixed": "#75fac5", "primary-container": "#2dbe8d",
+        "background": "#e7fff1", "surface-container-low": "#ccffe5", "inverse-surface": "#003827",
+        "inverse-primary": "#56ddaa", "on-secondary": "#ffffff", "on-primary-fixed-variant": "#005139",
+        "on-tertiary-container": "#00472f", "secondary-container": "#ff7a30", "outline": "#6c7a72",
+        "error": "#ba1a1a", "surface-container-highest": "#b8efd3", "primary": "#006c4d", "surface": "#e7fff1",
+        "on-primary-container": "#004731", "surface-bright": "#e7fff1", "secondary-fixed": "#ffdbcc",
+        "surface-container": "#c3fadf", "on-error": "#ffffff", "surface-dim": "#afe6cb", "surface-tint": "#006c4d",
+        "on-surface": "#002115", "secondary": "#a04100", "on-secondary-fixed-variant": "#7a2f00",
+        "primary-fixed-dim": "#56ddaa", "surface-container-lowest": "#ffffff", "on-background": "#002115",
+        "on-tertiary-fixed-variant": "#005137", "tertiary": "#006c4a", "surface-container-high": "#bdf4d9",
+        "tertiary-container": "#61b991", "on-surface-variant": "#3d4a43", "inverse-on-surface": "#c6fde1",
+        "on-primary": "#ffffff", "on-primary-fixed": "#002115", "on-tertiary": "#ffffff"
+      },
+      borderRadius: { DEFAULT: "1rem", lg: "2rem", xl: "3rem", full: "9999px" },
+      spacing: { "space-xl": "2.5rem", "margin-desktop": "2.5rem", gutter: "1rem", "space-xs": "0.25rem",
+        "space-sm": "0.5rem", margin: "1rem", "gutter-desktop": "1.5rem", "space-lg": "1.5rem", "space-md": "1rem" },
+      fontFamily: { "headline-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"],
+        "body-md": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"],
+        "display-lg": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"],
+        "headline-sm": ["Plus Jakarta Sans"] },
+      fontSize: { "headline-lg": ["32px", {lineHeight:"40px",fontWeight:"700"}], "headline-md": ["24px", {lineHeight:"32px",fontWeight:"700"}],
+        "body-lg": ["16px", {lineHeight:"24px",fontWeight:"400"}], "body-md": ["14px", {lineHeight:"20px",fontWeight:"400"}],
+        "label-lg": ["14px", {lineHeight:"18px",fontWeight:"700"}], "title-md": ["18px", {lineHeight:"26px",fontWeight:"600"}],
+        "display-lg": ["48px", {lineHeight:"56px",fontWeight:"800"}], "label-md": ["12px", {lineHeight:"16px",fontWeight:"700"}],
+        "label-sm": ["11px", {lineHeight:"14px",fontWeight:"800"}], "headline-sm": ["20px", {lineHeight:"28px",fontWeight:"700"}] }
+    }
+  }
+}
+</script>
+</head>
+<body class="bg-surface font-body-md text-on-surface">
+
+<aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest z-50 flex flex-col pt-space-md pb-space-lg shadow-[0_4px_20px_rgba(13,69,50,0.06)]">
+  <div class="px-space-lg pb-space-lg flex items-center gap-space-sm">
+    <img alt="Logo Dino Park" class="h-10 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
+    <div class="flex flex-col">
+      <span class="font-headline-sm text-headline-sm text-primary tracking-tight leading-none">Dino Park</span>
+      <span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider mt-1">Portal Exploradores</span>
+    </div>
+  </div>
+  <nav class="flex-1 px-space-md space-y-space-xs">
+    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] bg-surface-container text-on-surface font-bold relative after:content-[''] after:absolute after:left-0 after:top-2 after:bottom-2 after:w-1.5 after:bg-primary after:rounded-r-full" href="/disponibilidad">
+      <span class="material-symbols-outlined text-primary">confirmation_number</span>
+      <span class="font-label-lg text-label-lg">Reserva</span>
+    </a>
+    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all min-h-[48px]" href="/mis-reservas">
+      <span class="material-symbols-outlined text-primary">list_alt</span>
+      <span class="font-label-lg text-label-lg">Mis Reservas</span>
+    </a>
+    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all min-h-[48px]" href="/">
+      <span class="material-symbols-outlined text-primary">home</span>
+      <span class="font-label-lg text-label-lg">Inicio</span>
+    </a>
+  </nav>
+  <div class="px-space-md pt-space-sm">
+    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-error hover:bg-error-container hover:text-on-error-container transition-all min-h-[48px]" href="/cerrar-sesion">
+      <span class="material-symbols-outlined text-error">logout</span>
+      <span class="font-label-lg text-label-lg">Cerrar Sesión</span>
+    </a>
+  </div>
+</aside>
+
+<div class="pl-72">
+<main class="relative pt-space-lg bg-surface min-h-screen px-space-lg py-space-lg">
+<div id="alerta-global" class="hidden mb-space-md px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold"></div>
+
+<div class="flex flex-col w-full space-y-space-md">
+
+  <!-- SECCIÓN: Sede + Fecha -->
+  <section class="bg-surface-container-lowest p-space-md lg:p-space-lg rounded-lg shadow-sm border border-outline-variant/30 space-y-space-md">
+    <div class="flex items-center gap-space-sm border-b border-outline-variant/20 pb-space-sm">
+      <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+        <span class="material-symbols-outlined text-[24px]">rocket_launch</span>
+      </div>
+      <div>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">Reserva de Turnos &amp; Atracciones</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">Selecciona tu sede, fecha y vehículo para reservar un turno.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-space-md items-end">
+      <div class="md:col-span-5 space-y-1">
+        <label class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider font-bold">1. Sede</label>
+        <div id="sedes-container" class="flex flex-wrap gap-2">
+          <span class="font-label-sm text-label-sm text-on-surface-variant">Cargando sedes…</span>
+        </div>
+      </div>
+
+      <div class="md:col-span-4 space-y-1">
+        <label class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider font-bold">2. Fecha</label>
+        <input id="input-fecha" type="date" class="w-full px-3 py-2 text-sm font-semibold rounded-md bg-surface-container-low border border-outline-variant/50 text-on-surface focus:ring-1 focus:ring-primary focus:outline-none min-h-[44px]">
+      </div>
+
+      <div class="md:col-span-3 space-y-1">
+        <label class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider font-bold">Personas</label>
+        <input id="input-personas" type="number" min="1" value="1" class="w-full px-3 py-2 text-sm font-semibold rounded-md bg-surface-container-low border border-outline-variant/50 text-on-surface focus:ring-1 focus:ring-primary focus:outline-none min-h-[44px]">
+      </div>
+    </div>
+
+    <div class="pt-space-xs flex flex-wrap items-center gap-2 border-t border-outline-variant/20">
+      <span class="font-label-sm text-label-sm text-outline uppercase font-bold mr-1">Flota:</span>
+      <div id="tipos-container" class="flex flex-wrap gap-2"></div>
+    </div>
+  </section>
+
+  <div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">
+
+    <!-- COLUMNA IZQUIERDA -->
+    <div class="xl:col-span-8 space-y-space-md">
+
+      <div class="space-y-space-xs">
+        <h2 class="font-title-md text-title-md font-bold text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">apps</span>
+          Selección de Unidad de Flota
+        </h2>
+        <div id="flota-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-md">
+          <p class="font-body-md text-body-md text-on-surface-variant">Elige una sede para ver la flota disponible.</p>
+        </div>
+      </div>
+
+      <div id="turnos-section" class="hidden bg-surface-container-lowest p-space-md lg:p-space-lg rounded-lg shadow-sm border border-outline-variant/30 space-y-space-md">
+        <div class="flex items-center justify-between gap-space-sm pb-space-sm border-b border-outline-variant/20">
+          <span id="turnos-titulo" class="font-title-md text-title-md font-bold text-on-surface">Turnos disponibles</span>
+        </div>
+        <div id="turnos-container" class="grid grid-cols-2 sm:grid-cols-3 gap-space-sm"></div>
+      </div>
+    </div>
+
+    <!-- COLUMNA DERECHA: Resumen / Checkout -->
+    <div class="xl:col-span-4 xl:sticky xl:top-space-lg">
+      <div class="bg-surface-container-lowest rounded-lg p-space-md shadow-md flex flex-col gap-space-md border border-outline-variant/30">
+
+        <div class="bg-surface-container-low p-space-md rounded-lg border border-primary/20">
+          <span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider font-bold">Resumen de tu Reserva</span>
+        </div>
+
+        <div id="resumen-vacio" class="text-center py-space-md text-on-surface-variant font-body-md text-body-md">
+          Selecciona una atracción y un turno para continuar.
+        </div>
+
+        <div id="resumen-lleno" class="hidden space-y-space-md">
+          <div class="p-space-sm rounded-lg bg-surface-container/60 border border-outline-variant/30 space-y-space-xs">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-14 h-14 rounded-md bg-surface-container-low p-1 shrink-0 border border-primary/20 flex items-center justify-center overflow-hidden">
+                <img id="resumen-flota-imagen" src="" alt="" class="w-full h-full object-contain">
+              </div>
+              <div class="min-w-0 flex-1">
+                <span id="resumen-flota-nombre" class="font-title-md text-title-md font-bold text-on-surface block truncate"></span>
+                <div id="resumen-turno" class="text-xs text-on-surface-variant flex items-center gap-1 mt-0.5"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-surface-container p-space-md rounded-lg space-y-space-xs">
+            <div class="flex justify-between text-on-surface-variant font-body-md text-body-md">
+              <span>Precio por hora</span>
+              <span id="resumen-precio" class="font-semibold"></span>
+            </div>
+            <div class="pt-space-xs border-t border-outline-variant/30 flex items-baseline justify-between text-on-surface">
+              <span class="font-headline-sm text-headline-sm font-bold">Total estimado</span>
+              <span id="resumen-total" class="font-display-lg text-display-lg font-black text-secondary leading-none"></span>
+            </div>
+          </div>
+
+          <button id="btn-confirmar" type="button"
+            class="w-full min-h-[52px] py-space-sm px-space-lg rounded-full bg-secondary-container text-on-secondary font-headline-sm text-headline-sm tracking-wide shadow-lg hover:brightness-105 active:scale-95 transition-all flex items-center justify-center gap-space-sm text-center disabled:opacity-50">
+            <span class="material-symbols-outlined text-[26px]">qr_code_2</span>
+            <span>Confirmar Reserva</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+</main>
+</div>
+
+<script>
+const API = {
+  sedes: '/api/sedes',
+  flota: '/api/flota',
+  turnos: '/api/turnos',
+  reservas: '/api/reservas',
+};
+
+// Base de las imágenes estáticas (app/static/img/), inyectada por Jinja.
+const STATIC_IMG = "{{ url_for('static', filename='img/') }}";
+
+// Mapea el tipo de flota (tal como venga desde /api/flota) a la imagen
+// que ya tienes en static/img. Usa coincidencia parcial e insensible a
+// mayúsculas para no depender de cómo esté escrito el tipo en la BD.
+function imagenPorTipo(tipo) {
+  const t = (tipo || '').toLowerCase();
+  if (t.includes('dino')) return STATIC_IMG + 'dinosaurio.png';
+  if (t.includes('carro') || t.includes('auto') || t.includes('kart')) return STATIC_IMG + 'carro.png';
+  if (t.includes('moto')) return STATIC_IMG + 'moto.png';
+  return STATIC_IMG + 'dinosaurio.png'; // fallback razonable
+}
+
+const state = {
+  sedes: [],
+  idSede: null,
+  flota: [],
+  tipos: [],
+  tipoActivo: null,
+  idFlota: null,
+  flotaSeleccionada: null,
+  turnos: [],
+  idTurno: null,
+  turnoSeleccionado: null,
+};
+
+function hoyISO() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
+function mostrarAlerta(msg, tipo = 'error') {
+  const el = document.getElementById('alerta-global');
+  el.textContent = msg;
+  el.className = 'mb-space-md px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold ' +
+    (tipo === 'error'
+      ? 'bg-error-container text-on-error-container'
+      : 'bg-primary-container/30 text-on-primary-container');
+  el.classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function ocultarAlerta() {
+  document.getElementById('alerta-global').classList.add('hidden');
+}
+
+async function apiGet(url) {
+  const res = await fetch(url, { credentials: 'same-origin' });
+  const datos = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(datos.error || 'Error al consultar el servidor');
+  return datos;
+}
+
+async function apiPost(url, body) {
+  const res = await fetch(url, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const datos = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(datos.error || 'Error al procesar la solicitud');
+  return datos;
+}
+
+// ---------- SEDES ----------
+async function cargarSedes() {
+  const cont = document.getElementById('sedes-container');
+  try {
+    state.sedes = await apiGet(API.sedes);
+  } catch (e) {
+    cont.innerHTML = `<span class="font-label-sm text-label-sm text-error">${e.message}</span>`;
+    return;
+  }
+
+  if (state.sedes.length === 0) {
+    cont.innerHTML = `<span class="font-label-sm text-label-sm text-on-surface-variant">No hay sedes activas</span>`;
+    return;
+  }
+
+  if (state.idSede === null) state.idSede = state.sedes[0].id_sucursal;
+  renderSedes();
+  await cargarFlota();
+}
+
+function renderSedes() {
+  const cont = document.getElementById('sedes-container');
+  cont.innerHTML = '';
+  state.sedes.forEach(s => {
+    const activo = s.id_sucursal === state.idSede;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `px-space-sm py-2 rounded-md font-label-md text-label-md font-bold flex items-center justify-center gap-1 shadow-sm transition-all min-h-[44px] ${
+      activo ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+    }`;
+    btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">location_on</span> ${s.nombre}`;
+    btn.addEventListener('click', () => {
+      if (state.idSede === s.id_sucursal) return;
+      state.idSede = s.id_sucursal;
+      resetSeleccionFlota();
+      renderSedes();
+      cargarFlota();
+    });
+    cont.appendChild(btn);
+  });
+}
+
+// ---------- FLOTA ----------
+async function cargarFlota() {
+  const cont = document.getElementById('flota-container');
+  cont.innerHTML = `<p class="font-body-md text-body-md text-on-surface-variant">Cargando flota…</p>`;
+
+  try {
+    const params = new URLSearchParams({ id_sucursal: state.idSede });
+    if (state.tipoActivo) params.set('tipo', state.tipoActivo);
+    state.flota = await apiGet(`${API.flota}?${params.toString()}`);
+  } catch (e) {
+    cont.innerHTML = `<p class="font-body-md text-body-md text-error">${e.message}</p>`;
+    return;
+  }
+
+  // Tipos únicos, calculados sobre la carga sin filtro de tipo para no perder chips
+  if (!state.tipoActivo) {
+    state.tipos = [...new Set(state.flota.map(f => f.tipo).filter(Boolean))];
+  }
+  renderTipos();
+  renderFlota();
+}
+
+function renderTipos() {
+  const cont = document.getElementById('tipos-container');
+  cont.innerHTML = '';
+
+  const btnTodos = document.createElement('button');
+  btnTodos.type = 'button';
+  btnTodos.className = `px-3 py-1.5 rounded-full font-label-sm text-label-sm font-bold transition-all ${
+    state.tipoActivo === null ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'
+  }`;
+  btnTodos.textContent = 'Todos';
+  btnTodos.addEventListener('click', () => {
+    state.tipoActivo = null;
+    resetSeleccionFlota();
+    cargarFlota();
+  });
+  cont.appendChild(btnTodos);
+
+  state.tipos.forEach(tipo => {
+    const activo = state.tipoActivo === tipo;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `px-3 py-1.5 rounded-full font-label-sm text-label-sm font-bold transition-all ${
+      activo ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'
+    }`;
+    btn.textContent = tipo;
+    btn.addEventListener('click', () => {
+      state.tipoActivo = activo ? null : tipo;
+      resetSeleccionFlota();
+      cargarFlota();
+    });
+    cont.appendChild(btn);
+  });
+}
+
+function renderFlota() {
+  const cont = document.getElementById('flota-container');
+  cont.innerHTML = '';
+
+  if (state.flota.length === 0) {
+    cont.innerHTML = `<p class="font-body-md text-body-md text-on-surface-variant">No hay unidades para este filtro.</p>`;
+    return;
+  }
+
+  state.flota.forEach(f => {
+    const activo = f.id_flota === state.idFlota;
+    const disponible = f.estado === 'disponible';
+
+    const card = document.createElement('div');
+    card.className = `relative bg-surface-container-lowest rounded-lg border p-space-sm flex flex-col justify-between transition-all ${
+      activo ? 'border-2 border-primary shadow-md ring-2 ring-primary/20' : 'border-outline-variant/40 hover:border-primary shadow-sm'
+    } ${disponible ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`;
+
+    card.innerHTML = `
+      ${activo ? `<div class="absolute top-2 right-2 bg-primary text-on-primary font-label-sm text-[10px] uppercase font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm z-10"><span class="material-symbols-outlined text-[14px]">check_circle</span> Seleccionado</div>` : ''}
+      <div class="h-28 w-full bg-surface-container-low/60 rounded-md overflow-hidden flex items-center justify-center mb-2">
+        <img src="${imagenPorTipo(f.tipo)}" alt="${f.nombre}" class="w-full h-full object-contain p-2">
+      </div>
+      <div class="space-y-1">
+        <h3 class="font-title-md text-title-md font-bold text-on-surface leading-tight">${f.nombre}</h3>
+        <p class="font-label-sm text-label-sm text-on-surface-variant">${f.tipo || ''}${f.modelo ? ' · ' + f.modelo : ''}</p>
+      </div>
+      <div class="pt-3 mt-2 border-t border-outline-variant/30 flex items-center justify-between text-xs">
+        <span class="font-bold text-secondary">S/ ${Number(f.precio_hora || 0).toFixed(2)} / hora</span>
+        <span class="px-2 py-0.5 rounded-full font-bold text-[11px] ${
+          disponible ? 'bg-primary-container/20 text-on-primary-container' : 'bg-outline/20 text-on-surface-variant'
+        }">${disponible ? 'Disponible' : f.estado}</span>
+      </div>
+    `;
+
+    if (disponible) {
+      card.addEventListener('click', () => {
+        state.idFlota = f.id_flota;
+        state.flotaSeleccionada = f;
+        state.idTurno = null;
+        state.turnoSeleccionado = null;
+        renderFlota();
+        renderResumen();
+        cargarTurnos();
+      });
+    }
+
+    cont.appendChild(card);
+  });
+}
+
+function resetSeleccionFlota() {
+  state.idFlota = null;
+  state.flotaSeleccionada = null;
+  state.idTurno = null;
+  state.turnoSeleccionado = null;
+  document.getElementById('turnos-section').classList.add('hidden');
+  renderResumen();
+}
+
+// ---------- TURNOS ----------
+async function cargarTurnos() {
+  const section = document.getElementById('turnos-section');
+  const cont = document.getElementById('turnos-container');
+  const titulo = document.getElementById('turnos-titulo');
+
+  section.classList.remove('hidden');
+  titulo.textContent = `Turnos disponibles · ${state.flotaSeleccionada.nombre}`;
+  cont.innerHTML = `<p class="font-body-md text-body-md text-on-surface-variant col-span-full">Cargando turnos…</p>`;
+
+  try {
+    const fecha = document.getElementById('input-fecha').value;
+    const params = new URLSearchParams({ id_flota: state.idFlota });
+    if (fecha) params.set('fecha', fecha);
+    state.turnos = await apiGet(`${API.turnos}?${params.toString()}`);
+  } catch (e) {
+    cont.innerHTML = `<p class="font-body-md text-body-md text-error col-span-full">${e.message}</p>`;
+    return;
+  }
+
+  renderTurnos();
+}
+
+function formatearHora(isoStr) {
+  const d = new Date(isoStr);
+  return d.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+}
+
+function renderTurnos() {
+  const cont = document.getElementById('turnos-container');
+  cont.innerHTML = '';
+
+  if (state.turnos.length === 0) {
+    cont.innerHTML = `<p class="font-body-md text-body-md text-on-surface-variant col-span-full">No hay turnos disponibles para esta fecha.</p>`;
+    return;
+  }
+
+  state.turnos.forEach(t => {
+    const activo = t.id_turno === state.idTurno;
+    const div = document.createElement('div');
+    div.className = `p-space-sm rounded-md flex flex-col justify-between cursor-pointer transition-colors ${
+      activo
+        ? 'bg-surface-container-low border-2 border-primary shadow-sm ring-2 ring-primary/20'
+        : 'bg-surface-container hover:bg-surface-container-high border border-outline-variant/40'
+    }`;
+    div.innerHTML = `
+      <div class="flex items-center justify-between">
+        <span class="font-label-md text-label-md font-bold ${activo ? 'text-primary' : 'text-on-surface'}">
+          ${formatearHora(t.horario_inicio)} - ${formatearHora(t.horario_fin)}
+        </span>
+        ${activo ? `<span class="material-symbols-outlined text-primary text-[16px]">check_circle</span>` : ''}
+      </div>
+      <div class="mt-2 flex items-center justify-between text-xs text-on-surface-variant">
+        <span>Cupo: ${t.capacidad}</span>
+        <span class="font-bold text-primary">${activo ? 'Seleccionado' : 'Seleccionar'}</span>
+      </div>
+    `;
+    div.addEventListener('click', () => {
+      state.idTurno = t.id_turno;
+      state.turnoSeleccionado = t;
+      renderTurnos();
+      renderResumen();
+    });
+    cont.appendChild(div);
+  });
+}
+
+// ---------- RESUMEN / CONFIRMACIÓN ----------
+function renderResumen() {
+  const vacio = document.getElementById('resumen-vacio');
+  const lleno = document.getElementById('resumen-lleno');
+
+  if (!state.flotaSeleccionada || !state.turnoSeleccionado) {
+    vacio.classList.remove('hidden');
+    lleno.classList.add('hidden');
+    return;
+  }
+
+  vacio.classList.add('hidden');
+  lleno.classList.remove('hidden');
+
+  document.getElementById('resumen-flota-nombre').textContent = state.flotaSeleccionada.nombre;
+  document.getElementById('resumen-flota-imagen').src = imagenPorTipo(state.flotaSeleccionada.tipo);
+  document.getElementById('resumen-flota-imagen').alt = state.flotaSeleccionada.nombre;
+  document.getElementById('resumen-turno').innerHTML =
+    `<span class="material-symbols-outlined text-[14px] text-primary">schedule</span>
+     ${formatearHora(state.turnoSeleccionado.horario_inicio)} - ${formatearHora(state.turnoSeleccionado.horario_fin)}`;
+
+  const precio = Number(state.flotaSeleccionada.precio_hora || 0);
+  document.getElementById('resumen-precio').textContent = `S/ ${precio.toFixed(2)}`;
+  document.getElementById('resumen-total').textContent = `S/ ${precio.toFixed(2)}`;
+}
+
+async function confirmarReserva() {
+  const btn = document.getElementById('btn-confirmar');
+  ocultarAlerta();
+
+  if (!state.idFlota || !state.idTurno) {
+    mostrarAlerta('Selecciona una atracción y un turno antes de confirmar.');
+    return;
+  }
+
+  const cantidadPersonas = parseInt(document.getElementById('input-personas').value, 10) || 1;
+
+  btn.disabled = true;
+  const textoOriginal = btn.innerHTML;
+  btn.innerHTML = '<span class="font-label-lg text-label-lg">Procesando…</span>';
+
+  try {
+    const reserva = await apiPost(API.reservas, {
+      cantidad_personas: cantidadPersonas,
+      items: [{ id_flota: state.idFlota, id_turno: state.idTurno }],
+    });
+
+    mostrarAlerta(`¡Reserva #${reserva.id_reserva} confirmada! Total: S/ ${reserva.total.toFixed(2)}`, 'ok');
+
+    // refrescar turnos por si el cupo cambió, y limpiar selección
+    state.idTurno = null;
+    state.turnoSeleccionado = null;
+    renderResumen();
+    await cargarTurnos();
+  } catch (e) {
+    mostrarAlerta(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = textoOriginal;
+  }
+}
+
+// ---------- INIT ----------
+document.getElementById('input-fecha').value = hoyISO();
+document.getElementById('input-fecha').addEventListener('change', () => {
+  if (state.idFlota) cargarTurnos();
+});
+document.getElementById('btn-confirmar').addEventListener('click', confirmarReserva);
+
+cargarSedes();
+</script>
+</body>
+</html>

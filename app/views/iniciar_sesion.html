@@ -30,8 +30,21 @@
           Ingresa a tu cuenta para gestionar tus reservas, revisar tus tickets QR y acumular DinoPuntos.
         </p>
 </div>
+<!-- Mensajes flash (errores / éxito) del backend -->
+{% with mensajes = get_flashed_messages(with_categories=true) %}
+{% if mensajes %}
+<div class="w-full flex flex-col gap-space-xs mb-space-md">
+{% for categoria, mensaje in mensajes %}
+<div class="w-full p-space-sm rounded-lg font-label-lg text-label-lg flex items-center gap-space-xs {% if categoria == 'error' %}bg-error-container text-on-error-container{% else %}bg-primary-fixed text-on-primary-fixed{% endif %}">
+<span class="material-symbols-outlined">{% if categoria == 'error' %}error{% else %}check_circle{% endif %}</span>
+<span>{{ mensaje }}</span>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+{% endwith %}
 <!-- 2. Formulario de Inicio de Sesión -->
-<form class="w-full flex flex-col gap-space-md" id="dino-login-form" onsubmit="event.preventDefault(); handleDinoLogin();">
+<form class="w-full flex flex-col gap-space-md" id="dino-login-form" method="POST" action="{{ url_for('auth.iniciar_sesion') }}" onsubmit="return handleDinoLogin(event);">
 <!-- Campo 1: Identificador / Correo / DNI -->
 <div class="flex flex-col gap-1.5 text-left">
 <div class="flex items-center justify-between">
@@ -45,7 +58,7 @@
 <div class="absolute left-space-md flex items-center pointer-events-none text-outline">
 <span class="material-symbols-outlined text-[20px]">badge</span>
 </div>
-<input autocomplete="username" class="w-full h-12 pl-12 pr-4 bg-transparent rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" id="identifier" placeholder="ejemplo@correo.com o tu DNI" required="" type="text"/>
+<input autocomplete="username" class="w-full h-12 pl-12 pr-4 bg-transparent rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" id="identifier" name="identificador" placeholder="ejemplo@correo.com o tu DNI" required="" type="text"/>
 </div>
 </div>
 <!-- Campo 2: Contraseña -->
@@ -63,7 +76,7 @@
 <div class="absolute left-space-md flex items-center pointer-events-none text-outline">
 <span class="material-symbols-outlined text-[20px]">lock</span>
 </div>
-<input autocomplete="current-password" class="w-full h-12 pl-12 pr-12 bg-transparent rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" id="password" placeholder="••••••••" required="" type="password"/>
+<input autocomplete="current-password" class="w-full h-12 pl-12 pr-12 bg-transparent rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" id="password" name="contrasena" placeholder="••••••••" required="" type="password"/>
 <button aria-label="Ver contraseña" class="absolute right-space-sm h-9 w-9 flex items-center justify-center rounded-full text-outline hover:text-on-surface hover:bg-surface-container transition-colors" id="toggle-pwd-btn" onclick="togglePasswordVisibility()" type="button">
 <span class="material-symbols-outlined text-[20px]" id="pwd-icon">visibility</span>
 </button>
@@ -73,7 +86,7 @@
 <div class="flex items-center justify-between mt-space-xs">
 <label class="flex items-center gap-space-sm cursor-pointer select-none group">
 <div class="relative flex items-center justify-center">
-<input checked="" class="peer sr-only" id="remember-me" type="checkbox"/>
+<input checked="" class="peer sr-only" id="remember-me" name="recordarme" type="checkbox"/>
 <div class="w-5 h-5 bg-surface-container rounded-md peer-checked:bg-primary transition-all flex items-center justify-center shadow-inner group-hover:scale-105">
 <span class="material-symbols-outlined text-white text-[16px] opacity-0 peer-checked:opacity-100 transition-opacity">check</span>
 </div>
@@ -167,24 +180,26 @@
       }
     }
 
-    function handleDinoLogin() {
+    // Deja que el formulario se envíe de verdad al backend (method="POST",
+    // action="/iniciar-sesion"). Solo mostramos el spinner mientras
+    // el navegador procesa la navegación; NO hacemos preventDefault().
+    function handleDinoLogin(event) {
+      const form = document.getElementById('dino-login-form');
+
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return false;
+      }
+
       const btn = document.getElementById('btn-login');
-      const origContent = btn.innerHTML;
       btn.disabled = true;
       btn.innerHTML = `
         <span class="inline-block animate-spin material-symbols-outlined text-[24px]">progress_activity</span>
         <span>Accediendo al Valle Jurásico...</span>
       `;
-      setTimeout(() => {
-        btn.innerHTML = `
-          <span class="material-symbols-outlined text-[24px]">check_circle</span>
-          <span>¡Acceso Concedido!</span>
-        `;
-        setTimeout(() => {
-          btn.innerHTML = origContent;
-          btn.disabled = false;
-        }, 1500);
-      }, 1200);
+
+      // Se deja continuar el submit nativo del formulario hacia Flask.
+      return true;
     }
   </script>
 </div></main><footer class="w-full py-space-lg bg-surface-container-low"><div class="max-w-7xl mx-auto px-margin lg:px-margin-desktop flex flex-col sm:flex-row items-center justify-between gap-space-md text-center text-on-surface-variant font-label-md text-label-md"><div class="flex items-center gap-space-xs justify-center"><span class="font-label-lg text-label-lg text-primary">Dino Park</span><span>© 2024 Todos los derechos reservados.</span></div><div class="flex flex-wrap items-center justify-center gap-space-lg"><a class="hover:text-primary transition-colors" data-path="terms-conditions" href="#">Términos</a><a class="hover:text-primary transition-colors" data-path="privacy-policy" href="#">Privacidad</a><a class="hover:text-primary transition-colors" data-path="customer-support" href="#">Ayuda &amp; Soporte</a><a class="hover:text-primary transition-colors flex items-center gap-space-xs" data-path="reclamaciones" href="#"><span class="material-symbols-outlined text-[16px]">menu_book</span>Libro de Reclamaciones</a></div></div></footer></body></html>
