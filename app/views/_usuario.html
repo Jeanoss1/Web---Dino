@@ -1,0 +1,37 @@
+{# Avatar y tarjeta del usuario con sesión: logo de su rol
+   (Administrador / Caja / Usuario) o su foto de Google/Facebook si es cliente.
+   Uso: {% from '_usuario.html' import encabezado_portal, avatar, tarjeta_usuario with context %} #}
+
+{% macro encabezado_portal() -%}
+{%- set rol = session.get('rol') -%}
+<div class="px-space-lg pb-space-lg flex items-center gap-space-sm">
+  <img alt="Logo Dino Park" class="h-10 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
+  <div class="flex flex-col">
+    <span class="font-headline-sm text-headline-sm text-primary tracking-tight leading-none">Dino Park</span>
+    <span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-tertiary uppercase tracking-wider mt-1">
+      <img alt="" class="w-4 h-4" src="{{ url_for('static', filename=logo_rol(rol)) }}">
+      Portal {{ nombre_rol(rol) }}
+    </span>
+  </div>
+</div>
+{%- endmacro %}
+
+{% macro avatar(tamano='w-12 h-12', relleno='p-2') -%}
+{%- set rol = session.get('rol') -%}
+{%- set con_foto = session.get('foto') and rol == 'cliente' -%}
+<img alt="{{ nombre_rol(rol) }}" title="{{ session.get('nombre', '') }} · {{ nombre_rol(rol) }}"
+     class="{{ tamano }} shrink-0 rounded-full bg-surface-container-lowest object-cover {{ '' if con_foto else relleno }}"
+     referrerpolicy="no-referrer"
+     src="{{ session['foto'] if con_foto else url_for('static', filename=logo_rol(rol)) }}">
+{%- endmacro %}
+
+{% macro tarjeta_usuario() -%}
+{%- set rol = session.get('rol') -%}
+<div class="mx-space-md mb-space-md p-space-sm rounded-lg bg-surface-container-low flex items-center gap-space-sm">
+  {{ avatar() }}
+  <div class="flex flex-col min-w-0">
+    <span class="font-label-lg text-label-lg text-on-surface truncate">{{ session.get('nombre', '') }}</span>
+    <span class="font-label-sm text-label-sm text-on-surface-variant truncate">{{ session.get('correo', '') }}</span>
+  </div>
+</div>
+{%- endmacro %}

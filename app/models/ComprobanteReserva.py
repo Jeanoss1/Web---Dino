@@ -10,7 +10,7 @@ class ComprobanteReserva(db.Model):
 
     id_comprobante = db.Column(db.Integer, primary_key=True)
     id_reserva = db.Column(
-        db.Integer, db.ForeignKey('reservas.id_reserva'), nullable=False
+        db.Integer, db.ForeignKey('reservas.id_reserva'), nullable=False, index=True
     )
     metodo_pago = db.Column(db.String(20), default='yape')
     monto = db.Column(db.Numeric(10, 2), nullable=False)

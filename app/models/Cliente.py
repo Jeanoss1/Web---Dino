@@ -9,7 +9,7 @@ class Cliente(db.Model):
     apellido = db.Column(db.String(100), nullable=False)
     dni = db.Column(db.String(12), nullable=False, unique=True)
     telefono = db.Column(db.String(15))
-    correo = db.Column(db.String(120))
+    correo = db.Column(db.String(120), index=True)
     estado = db.Column(db.String(20), default='activo')
 
     # Un cliente realiza muchas reservas (crea Reserva.cliente)

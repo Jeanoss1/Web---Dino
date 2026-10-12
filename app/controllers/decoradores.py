@@ -15,6 +15,11 @@ def login_requerido(f):
     def wrapper(*args, **kwargs):
         if 'id_usuario' not in session:
             return _no_autenticado()
+        # Registrado con Google/Facebook y aún sin DNI ni teléfono
+        if session.get('perfil_incompleto') and request.endpoint != 'auth.completar_perfil':
+            if request.path.startswith('/api/'):
+                return jsonify(error='Completa tu DNI y teléfono para continuar'), 403
+            return redirect(url_for('auth.completar_perfil'))
         return f(*args, **kwargs)
     return wrapper
 

@@ -8,12 +8,12 @@ class Reserva(db.Model):
 
     id_reserva = db.Column(db.Integer, primary_key=True)
     fecha_reserva = db.Column(db.DateTime, default=datetime.now)
-    estado = db.Column(db.String(20), default='pendiente')
+    estado = db.Column(db.String(20), default='pendiente', index=True)
     cantidad_personas = db.Column(db.Integer, default=1)
     total = db.Column(db.Numeric(10, 2), default=0)
 
     id_cliente = db.Column(
-        db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False
+        db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False, index=True
     )
 
     # Una reserva incluye uno o más detalles (crea DetalleReserva.reserva)

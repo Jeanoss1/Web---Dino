@@ -6,15 +6,32 @@ from datetime import datetime
 from flask import (Blueprint, current_app, jsonify, render_template, request,
                    send_from_directory, session)
 
+from sqlalchemy.orm import joinedload, selectinload
+
 from app.controllers.decoradores import login_requerido, rol_requerido
 from app.database import db
 from app.models.Cliente import Cliente
 from app.models.ComprobanteReserva import ComprobanteReserva
+from app.models.DetalleReserva import DetalleReserva
 from app.models.Reserva import Reserva
 
 comprobante_bp = Blueprint('comprobante', __name__)
 
 ROLES_CAJA = ('administrador', 'cajero')
+
+
+def _con_relaciones(consulta, con_cliente=False):
+    """Trae detalles, unidades, turnos y comprobantes en 3-4 consultas en
+    lugar de 3-4 consultas por cada reserva de la lista."""
+    detalles = selectinload(Reserva.detalles)
+    opciones = [
+        detalles.joinedload(DetalleReserva.flota),
+        detalles.joinedload(DetalleReserva.turno),
+        selectinload(Reserva.comprobantes),
+    ]
+    if con_cliente:
+        opciones.append(joinedload(Reserva.cliente))
+    return consulta.options(*opciones)
 
 
 # ----------------------------------------------------------------- utilidades
@@ -99,7 +116,11 @@ def mis_reservas():
     cliente = _cliente_actual()
     if cliente is None:
         return jsonify([])
-    reservas = sorted(cliente.reservas, key=lambda r: r.id_reserva, reverse=True)
+    reservas = (
+        _con_relaciones(Reserva.query.filter_by(id_cliente=cliente.id_cliente))
+        .order_by(Reserva.id_reserva.desc())
+        .all()
+    )
     return jsonify([_reserva_a_dict(r) for r in reservas])
 
 
@@ -180,7 +201,10 @@ def listar_reservas_caja():
     if estado not in ('por_validar', 'confirmada'):
         return jsonify(error="El estado debe ser 'por_validar' o 'confirmada'"), 400
     orden = Reserva.id_reserva.asc() if estado == 'por_validar' else Reserva.id_reserva.desc()
-    reservas = Reserva.query.filter_by(estado=estado).order_by(orden).limit(100).all()
+    reservas = (
+        _con_relaciones(Reserva.query.filter_by(estado=estado), con_cliente=True)
+        .order_by(orden).limit(100).all()
+    )
     return jsonify([_reserva_a_dict(r, con_cliente=True) for r in reservas])
 
 

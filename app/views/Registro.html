@@ -48,6 +48,35 @@
 </div>
 {% endif %}
 {% endwith %}
+<!-- Registro rápido con Google / Facebook -->
+<div class="mt-space-lg flex flex-col items-center gap-space-sm relative z-10">
+<p class="font-label-lg text-label-lg text-on-surface">Crea tu cuenta en un clic, sin inventar otra contraseña</p>
+<div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
+<!-- Registrarme con Google -->
+<a class="w-full h-12 px-space-md rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-space-sm transition-all duration-150 shadow-sm" href="{{ url_for('auth.oauth_iniciar', proveedor='google', accion='registrar') }}">
+<svg class="w-5 h-5" viewbox="0 0 24 24">
+<path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" fill="#4285F4"></path>
+<path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.27 21.39 7.34 24 12 24z" fill="#34A853"></path>
+<path d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.17 0 10.02 0 12s.45 3.83 1.25 5.42l4.03-3.15z" fill="#FBBC05"></path>
+<path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.27 2.61 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" fill="#EA4335"></path>
+</svg>
+<span>Registrarme con Google</span>
+</a>
+<!-- Registrarme con Facebook -->
+<a class="w-full h-12 px-space-md rounded-lg bg-[#1877F2] hover:bg-[#166FE5] text-white font-label-lg text-label-lg flex items-center justify-center gap-space-sm transition-all duration-150 shadow-sm" href="{{ url_for('auth.oauth_iniciar', proveedor='facebook', accion='registrar') }}">
+<svg class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24">
+<path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"></path>
+</svg>
+<span>Registrarme con Facebook</span>
+</a>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant text-center">Usaremos tu nombre, correo y foto de perfil. Solo te pediremos tu DNI y teléfono para tus reservas.</p>
+</div>
+<div class="w-full flex items-center mt-space-lg relative z-10">
+<div class="flex-1 h-px bg-surface-variant"></div>
+<span class="px-space-md font-label-md text-label-md text-outline uppercase tracking-wider">o completa el formulario</span>
+<div class="flex-1 h-px bg-surface-variant"></div>
+</div>
 <!-- 2. Formulario de Registro Estructurado -->
 <form class="mt-space-lg flex flex-col gap-space-xl relative z-10" id="dinoRegistrationForm" method="POST" action="{{ url_for('auth.registro') }}" onsubmit="event.preventDefault(); handleRegistrationSubmit();">
 <!-- SECCIÓN A: Datos del Titular / Adulto Responsable -->
@@ -143,7 +172,7 @@
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
 <!-- Correo -->
-<div class="flex flex-col gap-1.5">
+<div class="flex flex-col gap-1.5 md:col-span-2">
 <label class="font-label-lg text-label-lg text-on-surface flex items-center justify-between" for="email">
 <span>Correo Electrónico <span class="text-error font-extrabold">*</span></span>
 <span class="font-label-sm text-label-sm text-error">Requerido</span>
@@ -152,18 +181,6 @@
 <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline">mail</span>
 <input class="w-full h-12 pl-11 pr-4 bg-surface rounded-DEFAULT font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container shadow-inner transition" id="email" name="correo" placeholder="nombre@correo.com" required="" type="email"/>
 </div>
-</div>
-<!-- Confirmar Correo -->
-<div class="flex flex-col gap-1.5">
-<label class="font-label-lg text-label-lg text-on-surface flex items-center justify-between" for="confirmEmail">
-<span>Confirmar Correo Electrónico <span class="text-error font-extrabold">*</span></span>
-<span class="font-label-sm text-label-sm text-error">Requerido</span>
-</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline">mark_email_read</span>
-<input class="w-full h-12 pl-11 pr-4 bg-surface rounded-DEFAULT font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container shadow-inner transition" id="confirmEmail" name="confirmar_correo" placeholder="Repite tu correo exactamente" required="" type="email"/>
-</div>
-<span class="font-label-sm text-label-sm text-error hidden" id="emailMatchNotice">Los correos no coinciden</span>
 </div>
 <!-- Contraseña -->
 <div class="flex flex-col gap-1.5">
@@ -201,76 +218,6 @@
 </button>
 </div>
 <span class="font-label-sm text-label-sm text-error hidden" id="passwordMatchNotice">Las contraseñas deben ser idénticas</span>
-</div>
-</div>
-</div>
-<!-- SECCIÓN C: Preferencias de Visita -->
-<div class="flex flex-col gap-space-md">
-<div class="flex items-center justify-between pb-space-xs">
-<div class="flex items-center gap-space-sm">
-<span class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-headline-sm text-headline-sm">3</span>
-<div>
-<h2 class="font-headline-sm text-headline-sm text-primary">Preferencias de Visita</h2>
-<p class="font-label-md text-label-md text-on-surface-variant">Configura tu experiencia según la sede más cercana.</p>
-</div>
-</div>
-<span class="hidden sm:inline-flex px-space-sm py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm uppercase tracking-wide">
-            Obligatorio
-          </span>
-</div>
-<div class="flex flex-col gap-space-md">
-<!-- Sede Selector con Tarjetas Interactivas -->
-<div class="flex flex-col gap-2">
-<span class="font-label-lg text-label-lg text-on-surface">
-              Selecciona tu Sede Principal <span class="text-error font-extrabold">*</span>
-</span>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
-<label class="cursor-pointer group">
-<input class="peer sr-only" name="parkLocation" required="" type="radio" value="real_plaza"/>
-<div class="h-full p-space-md rounded-lg bg-surface peer-checked:bg-surface-container-high peer-checked:shadow-md transition flex items-start gap-space-sm">
-<div class="w-5 h-5 rounded-full bg-surface-container-lowest peer-checked:bg-primary flex items-center justify-center mt-0.5 shadow-sm">
-<div class="w-2.5 h-2.5 rounded-full bg-surface peer-checked:bg-on-primary"></div>
-</div>
-<div class="flex-1">
-<p class="font-label-lg text-label-lg text-on-surface">Sede Real Plaza (Cajamarca)</p>
-<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Circuitos todoterreno mecánicos, dinos mecatrónicos gigantes y zona snack.</p>
-<span class="inline-block mt-2 font-label-sm text-label-sm text-primary uppercase">Horario: 10:00 AM - 10:00 PM</span>
-</div>
-</div>
-</label>
-<label class="cursor-pointer group">
-<input class="peer sr-only" name="parkLocation" required="" type="radio" value="mega_plaza"/>
-<div class="h-full p-space-md rounded-lg bg-surface peer-checked:bg-surface-container-high peer-checked:shadow-md transition flex items-start gap-space-sm">
-<div class="w-5 h-5 rounded-full bg-surface-container-lowest peer-checked:bg-primary flex items-center justify-center mt-0.5 shadow-sm">
-<div class="w-2.5 h-2.5 rounded-full bg-surface peer-checked:bg-on-primary"></div>
-</div>
-<div class="flex-1">
-<p class="font-label-lg text-label-lg text-on-surface">Sede Mega Plaza (Cajamarca)</p>
-<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">Pista de carreras Dino-Karts, excavación fósil guiada y DinoShop.</p>
-<span class="inline-block mt-2 font-label-sm text-label-sm text-primary uppercase">Horario: 10:00 AM - 10:00 PM</span>
-</div>
-</div>
-</label>
-</div>
-</div>
-<!-- Cantidad de Pequeños Exploradores -->
-<div class="flex flex-col gap-1.5">
-<label class="font-label-lg text-label-lg text-on-surface flex items-center justify-between" for="kidsCount">
-<span>Cantidad Estimada de Niños / Exploradores a vincular <span class="text-error font-extrabold">*</span></span>
-<span class="font-label-sm text-label-sm text-error">Requerido</span>
-</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline">family_restroom</span>
-<select class="w-full h-12 pl-11 pr-10 bg-surface rounded-DEFAULT font-body-md text-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container shadow-inner appearance-none transition cursor-pointer" id="kidsCount" name="cantidad_ninos" required="">
-<option disabled="" selected="" value="">Selecciona cantidad (Mínimo 1)</option>
-<option value="1">1 Niño / Explorador</option>
-<option value="2">2 Niños / Exploradores</option>
-<option value="3">3 Niños / Exploradores</option>
-<option value="4">4 Niños / Exploradores</option>
-<option value="5+">5 o más (Pase Grupal o Cumpleaños)</option>
-</select>
-<span class="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-outline">expand_more</span>
-</div>
 </div>
 </div>
 </div>
@@ -381,24 +328,12 @@
 
   function handleRegistrationSubmit() {
     const form = document.getElementById('dinoRegistrationForm');
-    const email = document.getElementById('email').value.trim();
-    const confirmEmail = document.getElementById('confirmEmail').value.trim();
     const pass = document.getElementById('password').value;
     const confirmPass = document.getElementById('confirmPassword').value;
-    const emailMatchNotice = document.getElementById('emailMatchNotice');
     const toast = document.getElementById('statusToast');
     const toastTitle = document.getElementById('toastTitle');
     const toastMessage = document.getElementById('toastMessage');
     const toastIcon = document.getElementById('toastIcon');
-
-    // Validación estricta de emails idénticos
-    if (email !== confirmEmail) {
-      emailMatchNotice.classList.remove('hidden');
-      document.getElementById('confirmEmail').focus();
-      return;
-    } else {
-      emailMatchNotice.classList.add('hidden');
-    }
 
     // Validación estricta de passwords idénticos
     if (pass !== confirmPass) {
@@ -419,15 +354,4 @@
     submitBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-2xl">sync</span><span>Creando tu cuenta...</span>`;
     form.submit();
   }
-
-  // Comprobar coincidencia de email en tiempo real
-  document.getElementById('confirmEmail').addEventListener('input', function() {
-    const email = document.getElementById('email').value.trim();
-    const notice = document.getElementById('emailMatchNotice');
-    if (this.value.trim() && this.value.trim() !== email) {
-      notice.classList.remove('hidden');
-    } else {
-      notice.classList.add('hidden');
-    }
-  });
 </script></main><footer class="w-full py-space-lg bg-surface-container-low"><div class="max-w-7xl mx-auto px-margin lg:px-margin-desktop flex flex-col sm:flex-row items-center justify-between gap-space-md text-center text-on-surface-variant font-label-md text-label-md"><div class="flex items-center gap-space-xs justify-center"><span class="font-label-lg text-label-lg text-primary">Dino Park</span><span>© 2024 Todos los derechos reservados.</span></div><div class="flex flex-wrap items-center justify-center gap-space-lg"><a class="hover:text-primary transition-colors" data-path="terms-conditions" href="#">Términos</a><a class="hover:text-primary transition-colors" data-path="privacy-policy" href="#">Privacidad</a><a class="hover:text-primary transition-colors" data-path="customer-support" href="#">Ayuda &amp; Soporte</a><a class="hover:text-primary transition-colors flex items-center gap-space-xs" data-path="reclamaciones" href="#"><span class="material-symbols-outlined text-[16px]">menu_book</span>Libro de Reclamaciones</a></div></div></footer></body></html>

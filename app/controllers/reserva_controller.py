@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from flask import Blueprint, jsonify, request, session, render_template
+from sqlalchemy.orm import joinedload, selectinload
 
 from app.controllers.decoradores import login_requerido
 from app.database import db
@@ -125,7 +126,8 @@ def listar_turnos():
             ), 400
 
         consulta = consulta.filter(
-            db.func.date(Turno.fecha) == dia.date()
+            Turno.fecha >= dia,
+            Turno.fecha < dia + timedelta(days=1)
         )
 
     # --------------------------------------------------------
@@ -237,19 +239,25 @@ def crear_reserva():
 
         total = Decimal('0')
 
+        if any(
+            not isinstance(item, dict)
+            or not item.get('id_flota')
+            or not item.get('id_turno')
+            for item in items
+        ):
+            raise ErrorNegocio(
+                'Cada item necesita id_flota e id_turno'
+            )
+
+        # Siempre en el mismo orden: dos reservas que bloquean los
+        # mismos turnos no se quedan esperándose entre sí (deadlock)
+        items = sorted(items, key=lambda i: int(i['id_turno']))
+
         # ----------------------------------------------------
         # PROCESAR ATRACCIONES
         # ----------------------------------------------------
 
         for item in items:
-
-            if (
-                not item.get('id_flota')
-                or not item.get('id_turno')
-            ):
-                raise ErrorNegocio(
-                    'Cada item necesita id_flota e id_turno'
-                )
 
             # -----------------------------------------------
             # BUSCAR FLOTA
@@ -264,9 +272,14 @@ def crear_reserva():
             # BUSCAR TURNO
             # -----------------------------------------------
 
+            # FOR UPDATE: si otro cliente reserva este mismo turno
+            # al mismo tiempo, espera a que esta reserva termine y
+            # luego cuenta los cupos ya actualizados. Sin esto, los
+            # dos podían llevarse el último cupo.
             turno = db.session.get(
                 Turno,
-                item['id_turno']
+                item['id_turno'],
+                with_for_update=True
             )
 
             if flota is None or turno is None:
@@ -394,9 +407,19 @@ def mis_reservas():
     if cliente is None:
         return jsonify([])
 
+    reservas = (
+        Reserva.query
+        .filter_by(id_cliente=cliente.id_cliente)
+        .options(
+            selectinload(Reserva.detalles)
+            .joinedload(DetalleReserva.flota)
+        )
+        .all()
+    )
+
     return jsonify([
         _reserva_a_dict(r)
-        for r in cliente.reservas
+        for r in reservas
     ])
 
 

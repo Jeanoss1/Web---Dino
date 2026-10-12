@@ -111,20 +111,22 @@
 </div>
 <div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
 <!-- Continuar con Google -->
-<button class="w-full h-12 px-space-md rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-space-sm transition-all duration-150 shadow-sm" type="button">
+<a class="w-full h-12 px-space-md rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-space-sm transition-all duration-150 shadow-sm" href="{{ url_for('auth.oauth_iniciar', proveedor='google', accion='ingresar') }}">
 <svg class="w-5 h-5" viewbox="0 0 24 24">
 <path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" fill="#4285F4"></path>
 <path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.27 21.39 7.34 24 12 24z" fill="#34A853"></path>
 <path d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.17 0 10.02 0 12s.45 3.83 1.25 5.42l4.03-3.15z" fill="#FBBC05"></path>
 <path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.27 2.61 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" fill="#EA4335"></path>
 </svg>
-<span>Google</span>
-</button>
-<!-- Ingreso Rápido SMS / WhatsApp -->
-<button class="w-full h-12 px-space-md rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-space-sm transition-all duration-150 shadow-sm" type="button">
-<span class="material-symbols-outlined text-[20px] text-primary">sms</span>
-<span>DNI + Código SMS</span>
-</button>
+<span>Continuar con Google</span>
+</a>
+<!-- Continuar con Facebook -->
+<a class="w-full h-12 px-space-md rounded-lg bg-[#1877F2] hover:bg-[#166FE5] text-white font-label-lg text-label-lg flex items-center justify-center gap-space-sm transition-all duration-150 shadow-sm" href="{{ url_for('auth.oauth_iniciar', proveedor='facebook', accion='ingresar') }}">
+<svg class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24">
+<path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"></path>
+</svg>
+<span>Continuar con Facebook</span>
+</a>
 </div>
 <!-- 4. Pie de formulario y Enlaces Clave -->
 <div class="mt-space-lg pt-space-md border-t border-surface-variant/40 w-full flex flex-col items-center gap-space-md text-center">
@@ -139,10 +141,13 @@
 <!-- Acceso personal / operadores POS -->
 <div class="w-full bg-surface-container/60 rounded-lg p-space-sm flex items-center justify-between text-left">
 <div class="flex items-center gap-space-sm">
-<span class="material-symbols-outlined text-primary text-[22px]">point_of_sale</span>
+<div class="flex -space-x-2 shrink-0">
+<img alt="Administrador" class="w-9 h-9 rounded-full bg-surface-container-lowest p-1.5 ring-2 ring-surface-container" src="{{ url_for('static', filename='img/Administrador.png') }}" title="Administrador"/>
+<img alt="Caja" class="w-9 h-9 rounded-full bg-surface-container-lowest p-1.5 ring-2 ring-surface-container" src="{{ url_for('static', filename='img/Caja.png') }}" title="Caja"/>
+</div>
 <div class="flex flex-col">
 <span class="font-label-md text-label-md text-on-surface">Personal del Parque &amp; Taquillas</span>
-<span class="font-label-sm text-label-sm text-on-surface-variant">Operadores de pista, cajeros y escáner</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Administradores y cajeros: ingresan con su correo arriba</span>
 </div>
 </div>
 <a class="font-label-md text-label-md text-primary bg-surface-container-lowest px-3 py-1.5 rounded-full hover:bg-primary hover:text-on-primary transition-all shadow-sm" href="#">

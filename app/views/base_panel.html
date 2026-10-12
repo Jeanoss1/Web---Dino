@@ -48,19 +48,16 @@ tailwind.config = {
 </script>
 </head>
 <body class="bg-surface font-body-md text-on-surface">
+{% from '_usuario.html' import encabezado_portal, avatar, tarjeta_usuario with context %}
 
 {# Barra lateral (escritorio) #}
 <aside class="hidden lg:flex fixed left-0 top-0 h-full w-72 bg-surface-container-lowest z-50 flex-col pt-space-md pb-space-lg shadow-[0_4px_20px_rgba(13,69,50,0.06)]">
-  <div class="px-space-lg pb-space-lg flex items-center gap-space-sm">
-    <img alt="Logo Dino Park" class="h-10 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
-    <div class="flex flex-col">
-      <span class="font-headline-sm text-headline-sm text-primary tracking-tight leading-none">Dino Park</span>
-      <span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider mt-1">Portal Exploradores</span>
-    </div>
-  </div>
+  {{ encabezado_portal() }}
+  {{ tarjeta_usuario() }}
   <nav class="flex-1 px-space-md space-y-space-xs">
     {% set activo = "bg-surface-container text-on-surface font-bold relative after:content-[''] after:absolute after:left-0 after:top-2 after:bottom-2 after:w-1.5 after:bg-primary after:rounded-r-full" %}
     {% set normal = "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface" %}
+    {% if session.get('rol') not in ('administrador', 'cajero') %}
     <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] {{ activo if pagina_activa == 'reserva' else normal }}" href="/disponibilidad">
       <span class="material-symbols-outlined text-primary">confirmation_number</span>
       <span class="font-label-lg text-label-lg">Reserva</span>
@@ -69,6 +66,7 @@ tailwind.config = {
       <span class="material-symbols-outlined text-primary">list_alt</span>
       <span class="font-label-lg text-label-lg">Mis Reservas</span>
     </a>
+    {% endif %}
     {% if session.get('rol') in ('administrador', 'cajero') %}
     <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] {{ activo if pagina_activa == 'validaciones' else normal }}" href="/caja/validaciones">
       <span class="material-symbols-outlined text-primary">fact_check</span>
@@ -90,10 +88,15 @@ tailwind.config = {
 
 {# Barra superior (celular) #}
 <div class="lg:hidden sticky top-0 z-40 bg-surface-container-lowest shadow-sm px-space-md py-space-sm flex items-center justify-between gap-space-sm">
-  <img alt="Logo Dino Park" class="h-8 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
+  <div class="flex items-center gap-space-sm shrink-0">
+    <img alt="Logo Dino Park" class="h-8 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
+    {{ avatar('w-8 h-8', 'p-1') }}
+  </div>
   <nav class="flex items-center gap-1 overflow-x-auto">
+    {% if session.get('rol') not in ('administrador', 'cajero') %}
     <a class="px-3 py-2 rounded-full font-label-md text-label-md {{ 'bg-primary text-on-primary' if pagina_activa == 'reserva' else 'text-on-surface-variant' }}" href="/disponibilidad">Reserva</a>
     <a class="px-3 py-2 rounded-full font-label-md text-label-md {{ 'bg-primary text-on-primary' if pagina_activa == 'mis-reservas' else 'text-on-surface-variant' }}" href="/mis-reservas">Mis Reservas</a>
+    {% endif %}
     {% if session.get('rol') in ('administrador', 'cajero') %}
     <a class="px-3 py-2 rounded-full font-label-md text-label-md {{ 'bg-primary text-on-primary' if pagina_activa == 'validaciones' else 'text-on-surface-variant' }}" href="/caja/validaciones">Validar</a>
     {% endif %}

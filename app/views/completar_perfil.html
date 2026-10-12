@@ -1,0 +1,44 @@
+{% extends 'base_panel.html' %}
+{% set pagina_activa = 'perfil' %}
+{% from '_usuario.html' import encabezado_portal, avatar, tarjeta_usuario with context %}
+{% block titulo %}Completa tu perfil · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-xl mx-auto space-y-space-md">
+  <div class="flex items-center gap-space-sm">
+    {{ avatar() }}
+    <div>
+      <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">¡Hola, {{ session.get('nombre', '') }}!</h1>
+      <p class="font-body-md text-body-md text-on-surface-variant">Tu cuenta ya está creada. Solo falta tu documento y teléfono para poder reservar.</p>
+    </div>
+  </div>
+
+  {% with mensajes = get_flashed_messages(with_categories=true) %}
+  {% for categoria, mensaje in mensajes %}
+  <div class="px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold flex items-center gap-space-xs {% if categoria == 'error' %}bg-error-container text-on-error-container{% else %}bg-primary-fixed text-on-primary-fixed{% endif %}">
+    <span class="material-symbols-outlined">{% if categoria == 'error' %}error{% else %}check_circle{% endif %}</span>
+    <span>{{ mensaje }}</span>
+  </div>
+  {% endfor %}
+  {% endwith %}
+
+  <form class="bg-surface-container-lowest rounded-lg shadow-sm p-space-lg flex flex-col gap-space-md" method="POST" action="{{ url_for('auth.completar_perfil') }}">
+    <label class="flex flex-col gap-1.5">
+      <span class="font-label-lg text-label-lg text-on-surface">N° de DNI o Carné de Extranjería <span class="text-secondary">*</span></span>
+      <input class="h-12 px-4 rounded-lg bg-surface-container-low border-0 font-body-md text-body-md focus:ring-2 focus:ring-primary"
+             name="dni" maxlength="12" minlength="8" pattern="[A-Za-z0-9]{8,12}" required inputmode="numeric"
+             value="{{ request.form.get('dni', '') }}" placeholder="Ej. 72345678">
+    </label>
+    <label class="flex flex-col gap-1.5">
+      <span class="font-label-lg text-label-lg text-on-surface">Teléfono celular <span class="text-secondary">*</span></span>
+      <input class="h-12 px-4 rounded-lg bg-surface-container-low border-0 font-body-md text-body-md focus:ring-2 focus:ring-primary"
+             name="telefono" maxlength="15" required inputmode="tel"
+             value="{{ request.form.get('telefono', '') }}" placeholder="Ej. 987654321">
+    </label>
+    <button class="h-12 rounded-full bg-secondary-container hover:bg-secondary text-on-secondary font-label-lg text-label-lg flex items-center justify-center gap-space-sm transition-all" type="submit">
+      <span>Guardar y empezar a reservar</span>
+      <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+    </button>
+  </form>
+</div>
+{% endblock %}
