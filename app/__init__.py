@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, session
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.database import db
 from app.oauth import registrar_proveedores
@@ -13,6 +14,15 @@ load_dotenv()
 def create_app(config=None):
     """`config` sobrescribe valores (lo usan las pruebas de tests/ para su BD)."""
     app = Flask(__name__, template_folder='views')
+
+    # Railway (y cualquier proxy inverso) termina el HTTPS y reenvía la
+    # petición a la app como HTTP plano, agregando cabeceras
+    # X-Forwarded-Proto/X-Forwarded-Host. Sin esto, url_for(_external=True)
+    # (usado por el login de Google/Facebook) arma la URL de callback como
+    # "http://..." y Google la rechaza (redirect_uri_mismatch). Si esas
+    # cabeceras no vienen (ej. en desarrollo local), no cambia nada.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'cambia-esta-clave')
