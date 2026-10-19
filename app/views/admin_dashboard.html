@@ -1,0 +1,36 @@
+{% extends 'base_panel.html' %}
+{% set pagina_activa = 'admin' %}
+{% block titulo %}Panel Admin · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-5xl mx-auto space-y-space-lg">
+  <div class="flex items-center gap-space-sm">
+    <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+      <span class="material-symbols-outlined text-[24px]">admin_panel_settings</span>
+    </div>
+    <div>
+      <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">Panel del administrador</h1>
+      <p class="font-body-md text-body-md text-on-surface-variant">Sedes, atracciones, usuarios, horarios y reportes de todo Dino Park.</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-md">
+    {% for item in [
+      ('store', 'Sedes, zonas y paquetes', 'Activar/desactivar sedes, flota y tarifas por tiempo.', '/admin/sedes'),
+      ('group', 'Usuarios', 'Crear, editar y desactivar cajeros, clientes y administradores.', '/admin/usuarios'),
+      ('calendar_month', 'Horarios de cajeros', 'Asignar turnos laborales semana a semana.', '/admin/horarios'),
+      ('finance', 'Reportes de ventas', 'Diario, semanal o mensual, por sede, cajero y método de pago.', '/admin/reportes'),
+      ('balance', 'Cuadre diario', 'Dinero y minutos (Hoyos Rubio) por cajero, con alertas.', '/admin/cuadre'),
+      ('confirmation_number', 'Vender Entradas', 'Venta directa en caja de entradas por tiempo.', '/caja/entradas'),
+    ] %}
+    <a href="{{ item[3] }}" class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-all flex flex-col gap-space-sm">
+      <div class="w-11 h-11 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+        <span class="material-symbols-outlined text-[22px]">{{ item[0] }}</span>
+      </div>
+      <h2 class="font-title-md text-title-md font-bold text-on-surface">{{ item[1] }}</h2>
+      <p class="font-body-md text-body-md text-on-surface-variant">{{ item[2] }}</p>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

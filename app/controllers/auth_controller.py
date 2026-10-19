@@ -282,6 +282,7 @@ def _abrir_sesion(usuario, recordar):
     )
 
     session['foto'] = usuario.foto_url
+    session['id_sucursal'] = usuario.id_sucursal
 
     session.permanent = recordar
 

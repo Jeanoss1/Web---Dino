@@ -10,9 +10,14 @@ class Flota(db.Model):
     nombre = db.Column(db.String(100), nullable=False)
     tipo = db.Column(db.String(30), nullable=False)
     modelo = db.Column(db.String(100))
-    estado = db.Column(db.String(30), default='disponible')
+    estado = db.Column(db.String(30), default='disponible')  # disponible / mantenimiento / alquilado
     precio_hora = db.Column(db.Numeric(10, 2), default=0)
-    ciclos_uso = db.Column(db.Integer, default=0)
+    ciclos_uso = db.Column(db.Integer, default=0)  # contador de "encendidos" (carros/motos)
+
+    # Alquiler en caja con temporizador (Real Plaza / Mega Plaza)
+    precio_alquiler = db.Column(db.Numeric(10, 2))         # precio fijo por alquiler, ej. S/10
+    duracion_alquiler_minutos = db.Column(db.Integer, default=12)
+    contador_minutos = db.Column(db.Integer, default=0)    # contador de minutos de uso (dinosaurios)
 
     id_sucursal = db.Column(
         db.Integer, db.ForeignKey('sucursales.id_sucursal'), nullable=False
@@ -27,6 +32,14 @@ class Flota(db.Model):
         'polymorphic_on': tipo,
         'polymorphic_identity': 'flota',
     }
+
+    @property
+    def contador_actual(self):
+        """Minutos acumulados (dinosaurios) o veces encendido (carros/motos/otros).
+        Puede venir NULL en filas creadas antes de que existiera la columna
+        (la auto-migración de esquema.py no rellena datos, solo agrega columnas)."""
+        valor = self.contador_minutos if self.tipo == 'dinosaurio' else self.ciclos_uso
+        return valor or 0
 
 
 class Dinosaurio(Flota):

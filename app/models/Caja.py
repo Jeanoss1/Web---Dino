@@ -11,5 +11,10 @@ class Caja(db.Model):
     monto_final = db.Column(db.Numeric(10, 2))
     estado = db.Column(db.String(20), default='abierta')
 
+    # Quién la abrió y en qué sede, para saber a quién pedirle que la
+    # cierre antes de reasignarlo y para exigir lecturas solo en sedes con flota.
+    id_usuario = db.Column(db.Integer, db.ForeignKey('usuarios.id_usuario'), nullable=True)
+    id_sucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id_sucursal'), nullable=True)
+
     # Una caja registra muchos movimientos (crea MovimientoCaja.caja)
     movimientos = db.relationship('MovimientoCaja', backref='caja', lazy=True)

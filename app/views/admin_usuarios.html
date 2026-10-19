@@ -1,0 +1,226 @@
+{% extends 'base_panel.html' %}
+{% set pagina_activa = 'admin' %}
+{% block titulo %}Usuarios · Panel Admin · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-5xl mx-auto space-y-space-lg">
+  <div class="flex flex-wrap items-center justify-between gap-space-sm">
+    <div class="flex items-center gap-space-sm">
+      <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+        <span class="material-symbols-outlined text-[24px]">group</span>
+      </div>
+      <div>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">Usuarios</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">Cajeros, clientes y administradores. Los clientes se registran solos desde /registro.</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-space-sm">
+      <a href="/admin/horarios" class="font-label-lg text-label-lg text-primary px-space-md py-space-sm rounded-full hover:bg-surface-container-high">Horarios / turnos</a>
+      <a href="/admin" class="font-label-lg text-label-lg text-primary px-space-md py-space-sm rounded-full hover:bg-surface-container-high">← Panel Admin</a>
+    </div>
+  </div>
+
+  <div id="alerta" class="hidden px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold"></div>
+
+  <section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
+    <h2 class="font-title-md text-title-md font-bold text-on-surface">Crear cajero o administrador</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-space-sm items-end">
+      <label class="block"><span class="font-label-sm text-label-sm text-on-surface-variant">Nombre</span>
+        <input id="nuevo-nombre" class="w-full rounded-md border-outline-variant text-sm"></label>
+      <label class="block"><span class="font-label-sm text-label-sm text-on-surface-variant">Apellido</span>
+        <input id="nuevo-apellido" class="w-full rounded-md border-outline-variant text-sm"></label>
+      <label class="block"><span class="font-label-sm text-label-sm text-on-surface-variant">Correo</span>
+        <input id="nuevo-correo" type="email" class="w-full rounded-md border-outline-variant text-sm"></label>
+      <label class="block"><span class="font-label-sm text-label-sm text-on-surface-variant">Contraseña</span>
+        <input id="nuevo-clave" type="password" class="w-full rounded-md border-outline-variant text-sm"></label>
+      <label class="block"><span class="font-label-sm text-label-sm text-on-surface-variant">Rol</span>
+        <select id="nuevo-rol" class="w-full rounded-md border-outline-variant text-sm">
+          <option value="cajero">Cajero</option>
+          <option value="administrador">Administrador</option>
+        </select>
+      </label>
+      <label id="label-nueva-sede" class="block">
+        <span class="font-label-sm text-label-sm text-on-surface-variant">Sede (cajero)</span>
+        <select id="nuevo-sede" class="w-full rounded-md border-outline-variant text-sm">
+          <option value="">— Sin asignar —</option>
+        </select>
+      </label>
+    </div>
+    <button id="btn-crear" class="rounded-full bg-primary text-on-primary px-space-lg py-space-sm font-label-lg text-label-lg shadow-md">Crear cuenta</button>
+  </section>
+
+  <section class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+    <div class="flex flex-wrap gap-space-sm p-space-md border-b border-outline-variant/20">
+      <select id="filtro-rol" class="rounded-md border-outline-variant text-sm">
+        <option value="">Todos los roles</option>
+        <option value="cliente">Cliente</option>
+        <option value="cajero">Cajero</option>
+        <option value="administrador">Administrador</option>
+      </select>
+      <select id="filtro-estado" class="rounded-md border-outline-variant text-sm">
+        <option value="">Todos los estados</option>
+        <option value="activo">Activos</option>
+        <option value="inactivo">Inactivos</option>
+      </select>
+      <button id="btn-filtrar" class="rounded-full bg-surface-container text-on-surface px-space-md py-space-xs font-label-md text-label-md font-bold">Filtrar</button>
+    </div>
+    <table class="w-full text-sm">
+      <thead class="bg-surface-container text-on-surface-variant">
+        <tr>
+          <th class="text-left font-label-sm text-label-sm uppercase px-space-md py-space-sm">Nombre</th>
+          <th class="text-left font-label-sm text-label-sm uppercase px-space-md py-space-sm">Correo</th>
+          <th class="text-left font-label-sm text-label-sm uppercase px-space-md py-space-sm">Rol</th>
+          <th class="text-left font-label-sm text-label-sm uppercase px-space-md py-space-sm">Sede</th>
+          <th class="text-left font-label-sm text-label-sm uppercase px-space-md py-space-sm">Estado</th>
+          <th class="text-right font-label-sm text-label-sm uppercase px-space-md py-space-sm">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="cuerpo-tabla"></tbody>
+    </table>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let sedes = [];
+
+function opcionesSede(idSeleccionada) {
+  return '<option value="">— Sin asignar —</option>' + sedes.map(s =>
+    `<option value="${s.id_sucursal}" ${s.id_sucursal === idSeleccionada ? 'selected' : ''}>${esc(s.nombre)}</option>`
+  ).join('');
+}
+
+async function cargarSedes() {
+  const res = await fetch('/api/admin/sedes', { credentials: 'same-origin' });
+  sedes = await res.json();
+  $('nuevo-sede').innerHTML = opcionesSede(null);
+}
+
+function alerta(msg, tipo = 'error') {
+  const el = $('alerta');
+  el.textContent = msg;
+  el.className = 'px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold ' +
+    (tipo === 'error' ? 'bg-error-container text-on-error-container' : 'bg-primary-container/30 text-on-primary-container');
+  setTimeout(() => el.classList.add('hidden'), 5000);
+}
+
+function filaUsuario(u) {
+  return `
+    <tr class="border-t border-outline-variant/20" data-usuario="${u.id_usuario}">
+      <td class="px-space-md py-space-sm">
+        <input class="w-20 rounded border-outline-variant text-sm" data-campo="nombre" value="${esc(u.nombre)}">
+        <input class="w-24 rounded border-outline-variant text-sm" data-campo="apellido" value="${esc(u.apellido)}">
+      </td>
+      <td class="px-space-md py-space-sm">
+        <input class="w-44 rounded border-outline-variant text-sm" data-campo="correo" value="${esc(u.correo)}">
+        ${u.dni ? `<p class="text-xs text-on-surface-variant">DNI ${esc(u.dni)} · ${esc(u.telefono || '-')}</p>` : ''}
+      </td>
+      <td class="px-space-md py-space-sm capitalize">${esc(u.rol)}</td>
+      <td class="px-space-md py-space-sm">
+        ${u.rol === 'cajero'
+          ? `<select class="w-36 rounded border-outline-variant text-sm" data-campo="id_sucursal">${opcionesSede(u.id_sucursal)}</select>`
+          : `<span class="text-on-surface-variant">—</span>`}
+      </td>
+      <td class="px-space-md py-space-sm">
+        <span class="px-2 py-0.5 rounded-full text-xs font-bold ${u.estado ? 'bg-primary-container/30 text-on-primary-container' : 'bg-error-container text-on-error-container'}">
+          ${u.estado ? 'Activo' : 'Inactivo'}
+        </span>
+      </td>
+      <td class="px-space-md py-space-sm text-right space-x-1 whitespace-nowrap">
+        <button type="button" data-guardar="${u.id_usuario}" class="rounded-full bg-surface-container px-space-sm py-1 text-xs font-bold">Guardar</button>
+        <button type="button" data-clave="${u.id_usuario}" class="rounded-full bg-surface-container px-space-sm py-1 text-xs font-bold">Clave</button>
+        <button type="button" data-estado="${u.id_usuario}" class="rounded-full px-space-sm py-1 text-xs font-bold ${u.estado ? 'bg-error-container text-on-error-container' : 'bg-primary-container/30 text-on-primary-container'}">
+          ${u.estado ? 'Desactivar' : 'Activar'}
+        </button>
+      </td>
+    </tr>`;
+}
+
+async function cargar() {
+  const params = new URLSearchParams();
+  if ($('filtro-rol').value) params.set('rol', $('filtro-rol').value);
+  if ($('filtro-estado').value) params.set('estado', $('filtro-estado').value);
+
+  const res = await fetch('/api/admin/usuarios?' + params.toString(), { credentials: 'same-origin' });
+  if (res.status === 401 || res.status === 403) { location.href = '/iniciar-sesion'; return; }
+  const usuarios = await res.json();
+  $('cuerpo-tabla').innerHTML = usuarios.map(filaUsuario).join('') ||
+    '<tr><td colspan="6" class="px-space-md py-space-md text-center text-on-surface-variant">Sin resultados.</td></tr>';
+}
+
+$('btn-filtrar').addEventListener('click', cargar);
+
+$('nuevo-rol').addEventListener('change', e => {
+  $('label-nueva-sede').classList.toggle('hidden', e.target.value !== 'cajero');
+});
+
+$('btn-crear').addEventListener('click', async () => {
+  const cuerpo = {
+    nombre: $('nuevo-nombre').value.trim(),
+    apellido: $('nuevo-apellido').value.trim(),
+    correo: $('nuevo-correo').value.trim(),
+    contrasena: $('nuevo-clave').value,
+    rol: $('nuevo-rol').value,
+    id_sucursal: $('nuevo-sede').value || null,
+  };
+  const res = await fetch('/api/admin/usuarios', {
+    method: 'POST', credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo),
+  });
+  const json = await res.json();
+  if (!res.ok) { alerta(json.error || 'No se pudo crear la cuenta'); return; }
+  alerta(`Cuenta creada: ${json.correo}`, 'ok');
+  ['nombre', 'apellido', 'correo', 'clave'].forEach(c => $('nuevo-' + c).value = '');
+  $('nuevo-sede').value = '';
+  cargar();
+});
+
+document.addEventListener('click', async e => {
+  const g = e.target.closest('[data-guardar]');
+  if (g) {
+    const fila = e.target.closest('[data-usuario]');
+    const cuerpo = {};
+    fila.querySelectorAll('[data-campo]').forEach(el => cuerpo[el.dataset.campo] = el.value.trim());
+    const res = await fetch(`/api/admin/usuarios/${g.dataset.guardar}`, {
+      method: 'PUT', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo),
+    });
+    const json = await res.json();
+    if (!res.ok) { alerta(json.error || 'No se pudo guardar'); return; }
+    alerta('Usuario actualizado.', 'ok');
+    return;
+  }
+
+  const est = e.target.closest('[data-estado]');
+  if (est) {
+    const res = await fetch(`/api/admin/usuarios/${est.dataset.estado}/estado`, {
+      method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}',
+    });
+    const json = await res.json();
+    if (!res.ok) { alerta(json.error || 'No se pudo cambiar el estado'); return; }
+    alerta(`Ahora está ${json.estado ? 'activo' : 'inactivo'}.`, 'ok');
+    cargar();
+    return;
+  }
+
+  const clave = e.target.closest('[data-clave]');
+  if (clave) {
+    const nueva = prompt('Nueva contraseña (mínimo 8 caracteres):');
+    if (!nueva) return;
+    const res = await fetch(`/api/admin/usuarios/${clave.dataset.clave}/clave`, {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contrasena: nueva }),
+    });
+    const json = await res.json();
+    if (!res.ok) { alerta(json.error || 'No se pudo cambiar la contraseña'); return; }
+    alerta('Contraseña actualizada.', 'ok');
+  }
+});
+
+(async () => { await cargarSedes(); cargar(); })();
+</script>
+{% endblock %}

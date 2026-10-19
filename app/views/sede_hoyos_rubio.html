@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Dino Park · Sede Hoyos Rubio</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}}::-webkit-scrollbar{display:none;}</style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "on-secondary-container": "#612400", "secondary-fixed-dim": "#ffb693", "on-error-container": "#93000a",
+        "surface-variant": "#b8efd3", "tertiary-fixed-dim": "#7fd8ae", "on-tertiary-fixed": "#002114",
+        "on-secondary-fixed": "#351000", "error-container": "#ffdad6", "tertiary-fixed": "#9bf5c9",
+        "outline-variant": "#bbcac0", "primary-fixed": "#75fac5", "primary-container": "#2dbe8d",
+        "background": "#e7fff1", "surface-container-low": "#ccffe5", "inverse-surface": "#003827",
+        "inverse-primary": "#56ddaa", "on-secondary": "#ffffff", "on-primary-fixed-variant": "#005139",
+        "on-tertiary-container": "#00472f", "secondary-container": "#ff7a30", "outline": "#6c7a72",
+        "error": "#ba1a1a", "surface-container-highest": "#b8efd3", "primary": "#006c4d", "surface": "#e7fff1",
+        "on-primary-container": "#004731", "surface-bright": "#e7fff1", "secondary-fixed": "#ffdbcc",
+        "surface-container": "#c3fadf", "on-error": "#ffffff", "surface-dim": "#afe6cb", "surface-tint": "#006c4d",
+        "on-surface": "#002115", "secondary": "#a04100", "on-secondary-fixed-variant": "#7a2f00",
+        "primary-fixed-dim": "#56ddaa", "surface-container-lowest": "#ffffff", "on-background": "#002115",
+        "on-tertiary-fixed-variant": "#005137", "tertiary": "#006c4a", "surface-container-high": "#bdf4d9",
+        "tertiary-container": "#61b991", "on-surface-variant": "#3d4a43", "inverse-on-surface": "#c6fde1",
+        "on-primary": "#ffffff", "on-primary-fixed": "#002115", "on-tertiary": "#ffffff"
+      },
+      borderRadius: { DEFAULT: "1rem", lg: "2rem", xl: "3rem", full: "9999px" },
+      spacing: { "space-xl": "2.5rem", "margin-desktop": "2.5rem", gutter: "1rem", "space-xs": "0.25rem",
+        "space-sm": "0.5rem", margin: "1rem", "gutter-desktop": "1.5rem", "space-lg": "1.5rem", "space-md": "1rem" },
+      fontFamily: { "headline-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"],
+        "body-md": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"],
+        "display-lg": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"],
+        "headline-sm": ["Plus Jakarta Sans"] },
+      fontSize: { "headline-lg": ["32px", {lineHeight:"40px",fontWeight:"700"}], "headline-md": ["24px", {lineHeight:"32px",fontWeight:"700"}],
+        "body-lg": ["16px", {lineHeight:"24px",fontWeight:"400"}], "body-md": ["14px", {lineHeight:"20px",fontWeight:"400"}],
+        "label-lg": ["14px", {lineHeight:"18px",fontWeight:"700"}], "title-md": ["18px", {lineHeight:"26px",fontWeight:"600"}],
+        "display-lg": ["48px", {lineHeight:"56px",fontWeight:"800"}], "label-md": ["12px", {lineHeight:"16px",fontWeight:"700"}],
+        "label-sm": ["11px", {lineHeight:"14px",fontWeight:"800"}], "headline-sm": ["20px", {lineHeight:"28px",fontWeight:"700"}] }
+    }
+  }
+}
+</script>
+</head>
+<body class="bg-surface font-body-md text-on-surface">
+
+<header class="sticky top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-[0_4px_16px_rgba(13,69,50,0.07)]">
+  <div class="h-20 max-w-7xl mx-auto px-margin lg:px-margin-desktop flex items-center justify-between">
+    <a class="flex items-center gap-space-sm" href="/">
+      <img alt="Logo Dino Park" class="h-16 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
+    </a>
+    <nav class="hidden md:flex items-center gap-space-md bg-surface-container-lowest/80 px-space-md py-space-xs rounded-full shadow-[0_2px_8px_rgba(13,69,50,0.04)]">
+      <a class="font-label-lg text-label-lg px-space-md py-space-xs rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" href="/">Inicio</a>
+      <a class="font-label-lg text-label-lg px-space-md py-space-xs rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" href="/#sedes">Sedes</a>
+      <a class="font-label-lg text-label-lg px-space-md py-space-xs rounded-full bg-surface-container-high text-on-surface font-bold" href="{{ url_for('entrada.pagina_hoyos_rubio') }}">Hoyos Rubio</a>
+    </nav>
+    <div class="flex items-center gap-space-sm">
+      {% if session.get('id_usuario') %}
+      <a class="hidden sm:inline-flex items-center justify-center font-label-lg text-label-lg text-error px-space-md py-space-sm rounded-full hover:bg-error-container transition-all min-h-[48px]" href="{{ url_for('auth.cerrar_sesion') }}">Salir</a>
+      {% else %}
+      <a class="hidden sm:inline-flex items-center justify-center font-label-lg text-label-lg text-primary px-space-lg py-space-sm rounded-full hover:bg-surface-container-low hover:text-on-surface transition-all min-h-[48px]" href="{{ url_for('auth.iniciar_sesion') }}">Iniciar Sesión</a>
+      <a class="inline-flex items-center justify-center font-label-lg text-label-lg bg-secondary-container text-on-secondary px-space-lg py-space-sm rounded-full shadow-[0_4px_12px_rgba(255,122,48,0.25)] hover:bg-secondary transition-all min-h-[48px]" href="{{ url_for('auth.registro') }}">Registrarse</a>
+      {% endif %}
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-margin lg:px-margin-desktop py-space-xl">
+
+{% if not sede %}
+  <div class="bg-surface-container-lowest rounded-xl p-space-xl text-center">
+    <h1 class="font-headline-md text-headline-md text-on-surface font-bold">Sede Hoyos Rubio</h1>
+    <p class="font-body-md text-body-md text-on-surface-variant mt-space-sm">Esta sede todavía no está disponible.</p>
+  </div>
+{% else %}
+
+  <div class="mb-space-xl">
+    <div class="inline-flex items-center gap-space-xs bg-surface-container-high px-space-md py-space-xs rounded-full mb-space-xs">
+      <span class="material-symbols-outlined text-primary text-[18px]">schedule</span>
+      <span class="font-label-md text-label-md text-on-surface uppercase">Entrada por Tiempo</span>
+    </div>
+    <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Sede Hoyos Rubio</h1>
+    <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mt-space-xs">
+      Dos zonas de diversión por tiempo determinado: el inflable Aventura Jurásica y el Arenero Dino.
+      Todos los precios incluyen IGV.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter-desktop">
+    {% for entrada in zonas %}
+    {% set zona = entrada.zona %}
+    <section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-[0_4px_16px_rgba(13,69,50,0.07)]">
+      <h2 class="font-headline-md text-headline-md text-on-surface font-bold">{{ zona.nombre }}</h2>
+      {% if zona.descripcion %}
+      <p class="font-body-md text-body-md text-on-surface-variant mb-space-md">{{ zona.descripcion }}</p>
+      {% endif %}
+
+      <div class="space-y-space-sm mt-space-md">
+        {% for p in entrada.paquetes %}
+        <div class="bg-surface-container p-space-md rounded-lg flex items-center justify-between gap-space-sm">
+          <div>
+            <p class="font-label-lg text-label-lg text-on-surface">{{ p.nombre }}</p>
+            <p class="font-label-sm text-label-sm text-on-surface-variant">
+              {% if p.duracion_minutos %}{{ p.duracion_minutos }} min · {% endif %}
+              {% if p.minimo_cantidad and p.minimo_cantidad > 1 %}mínimo {{ p.minimo_cantidad }} niños{% else %}por niño{% endif %}
+            </p>
+          </div>
+          <span class="font-headline-sm text-headline-sm text-secondary font-extrabold whitespace-nowrap">S/ {{ '%.2f'|format(p.precio) }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+
+  <section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-[0_4px_16px_rgba(13,69,50,0.07)] mt-space-xl">
+    <h2 class="font-headline-md text-headline-md text-on-surface font-bold mb-space-md">Reservar con Yape</h2>
+
+    {% if not session.get('id_usuario') %}
+    <p class="font-body-md text-body-md text-on-surface-variant">
+      <a class="text-primary font-bold" href="{{ url_for('auth.iniciar_sesion') }}">Inicia sesión</a>
+      o <a class="text-primary font-bold" href="{{ url_for('auth.registro') }}">crea una cuenta</a> para reservar tu entrada.
+    </p>
+    {% elif session.get('rol') != 'cliente' %}
+    <p class="font-body-md text-body-md text-on-surface-variant">Esta reserva es para clientes. El personal vende entradas directamente en caja.</p>
+    {% else %}
+
+    <div id="paso-elegir">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+        <label class="block">
+          <span class="font-label-md text-label-md text-on-surface-variant">Paquete</span>
+          <select id="select-paquete" class="mt-1 w-full rounded-lg border-outline-variant">
+            {% for entrada in zonas %}
+            {% for p in entrada.paquetes %}
+            <option
+              value="{{ p.id_paquete }}"
+              data-precio="{{ p.precio }}"
+              data-es-por-ninio="{{ p.es_por_ninio|int }}"
+              data-minimo="{{ p.minimo_cantidad or 1 }}"
+              data-tipo="{{ p.tipo }}">
+              {{ entrada.zona.nombre }} — {{ p.nombre }} (S/ {{ '%.2f'|format(p.precio) }})
+            </option>
+            {% endfor %}
+            {% endfor %}
+          </select>
+        </label>
+        <label class="block">
+          <span class="font-label-md text-label-md text-on-surface-variant">Cantidad de niños</span>
+          <input id="input-cantidad" type="number" min="1" value="1" class="mt-1 w-full rounded-lg border-outline-variant">
+        </label>
+      </div>
+
+      <label id="label-nino-5" class="hidden flex items-center gap-space-xs mt-space-md">
+        <input id="check-nino-5" type="checkbox" class="rounded">
+        <span class="font-body-md text-body-md text-on-surface">El niño que acompaña el adulto tiene hasta 5 años</span>
+      </label>
+
+      <div class="flex items-center justify-between mt-space-md">
+        <div>
+          <span class="font-body-md text-body-md text-on-surface-variant block">Total</span>
+          <span id="texto-total" class="font-headline-md text-headline-md text-secondary font-extrabold">S/ 0.00</span>
+        </div>
+        <button id="btn-reservar" class="inline-flex items-center gap-space-xs font-label-lg text-label-lg bg-primary text-on-primary px-space-lg py-space-sm rounded-full shadow-md hover:bg-on-primary-container transition-all min-h-[48px]">
+          Reservar
+        </button>
+      </div>
+      <p id="texto-error" class="font-label-sm text-label-sm text-error mt-space-sm hidden"></p>
+    </div>
+
+    <div id="paso-pago" class="hidden">
+      <p class="font-body-md text-body-md text-on-surface">Yapea el total a <strong>{{ yape_numero_formato }}</strong> y sube la captura del pago.</p>
+      <input id="input-comprobante" type="file" accept="image/png,image/jpeg,image/webp" class="mt-space-md">
+      <button id="btn-subir-comprobante" class="mt-space-md inline-flex items-center gap-space-xs font-label-lg text-label-lg bg-primary text-on-primary px-space-lg py-space-sm rounded-full shadow-md hover:bg-on-primary-container transition-all min-h-[48px]">
+        Enviar comprobante
+      </button>
+      <p id="texto-error-pago" class="font-label-sm text-label-sm text-error mt-space-sm hidden"></p>
+    </div>
+
+    <div id="paso-listo" class="hidden text-center py-space-md">
+      <span class="material-symbols-outlined text-primary text-[48px]">task_alt</span>
+      <p class="font-title-md text-title-md text-on-surface font-bold mt-space-sm">¡Comprobante enviado!</p>
+      <p class="font-body-md text-body-md text-on-surface-variant">Un cajero validará tu pago. Puedes ver el estado en <a class="text-primary font-bold" href="/mis-reservas">Mis Reservas</a>.</p>
+    </div>
+
+    {% endif %}
+  </section>
+
+{% endif %}
+</main>
+
+<script>
+const idSucursal = {{ sede.id_sucursal if sede else 'null' }};
+
+const select = document.getElementById('select-paquete');
+const inputCantidad = document.getElementById('input-cantidad');
+const labelNino5 = document.getElementById('label-nino-5');
+const checkNino5 = document.getElementById('check-nino-5');
+const textoTotal = document.getElementById('texto-total');
+const textoError = document.getElementById('texto-error');
+const btnReservar = document.getElementById('btn-reservar');
+
+let idReservaActual = null;
+
+function opcionActual() {
+  if (!select) return null;
+  return select.options[select.selectedIndex];
+}
+
+function actualizarVista() {
+  const opcion = opcionActual();
+  if (!opcion) return;
+
+  const esPackGuia = opcion.dataset.tipo === 'pack_guia';
+  labelNino5.classList.toggle('hidden', !esPackGuia);
+
+  const precio = parseFloat(opcion.dataset.precio);
+  const esPorNinio = opcion.dataset.esPorNinio === '1';
+  const cantidad = Math.max(1, parseInt(inputCantidad.value || '1', 10));
+  const total = esPorNinio ? precio * cantidad : precio;
+  textoTotal.textContent = `S/ ${total.toFixed(2)}`;
+}
+
+if (select) {
+  select.addEventListener('change', actualizarVista);
+  inputCantidad.addEventListener('input', actualizarVista);
+  actualizarVista();
+}
+
+if (btnReservar) {
+  btnReservar.addEventListener('click', async () => {
+    const opcion = opcionActual();
+    textoError.classList.add('hidden');
+
+    const item = {
+      id_paquete: parseInt(opcion.value, 10),
+      cantidad: Math.max(1, parseInt(inputCantidad.value || '1', 10)),
+    };
+    if (opcion.dataset.tipo === 'pack_guia') {
+      item.nino_hasta_5 = checkNino5.checked;
+    }
+
+    const resp = await fetch('/api/reservas-entrada', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_sucursal: idSucursal, items: [item] }),
+    });
+    const datos = await resp.json();
+
+    if (!resp.ok) {
+      textoError.textContent = datos.error || 'No se pudo crear la reserva';
+      textoError.classList.remove('hidden');
+      return;
+    }
+
+    idReservaActual = datos.id_reserva_entrada;
+    document.getElementById('paso-elegir').classList.add('hidden');
+    document.getElementById('paso-pago').classList.remove('hidden');
+  });
+}
+
+const btnSubir = document.getElementById('btn-subir-comprobante');
+if (btnSubir) {
+  btnSubir.addEventListener('click', async () => {
+    const input = document.getElementById('input-comprobante');
+    const textoErrorPago = document.getElementById('texto-error-pago');
+    textoErrorPago.classList.add('hidden');
+
+    if (!input.files.length) {
+      textoErrorPago.textContent = 'Selecciona la captura de tu pago';
+      textoErrorPago.classList.remove('hidden');
+      return;
+    }
+
+    const form = new FormData();
+    form.append('comprobante', input.files[0]);
+
+    const resp = await fetch(`/api/reservas-entrada/${idReservaActual}/comprobante`, {
+      method: 'POST',
+      body: form,
+    });
+    const datos = await resp.json();
+
+    if (!resp.ok) {
+      textoErrorPago.textContent = datos.error || 'No se pudo enviar el comprobante';
+      textoErrorPago.classList.remove('hidden');
+      return;
+    }
+
+    document.getElementById('paso-pago').classList.add('hidden');
+    document.getElementById('paso-listo').classList.remove('hidden');
+  });
+}
+</script>
+</body>
+</html>

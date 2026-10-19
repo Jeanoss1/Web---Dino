@@ -8,6 +8,8 @@ from app.models.Rol import Rol
 from app.models.usuario import Usuario
 from app.models.Sucursal import Sucursal
 from app.models.Flota import Dinosaurio, Carro, Moto
+from app.models.Zona import Zona
+from app.models.PaqueteTarifa import PaqueteTarifa
 
 
 def cargar_datos_iniciales():
@@ -32,6 +34,13 @@ def cargar_datos_iniciales():
     db.session.commit()
 
     _cargar_turnos()
+
+    db.session.commit()
+
+    # Va después de todo lo anterior a propósito: así nunca corre antes de
+    # que Real Plaza/Mega Plaza ya tengan sus id_sucursal 1/2 asignados
+    # (los 98 casos de app/pruebas/casos.py dependen de esos IDs).
+    _cargar_sede_hoyos_rubio()
 
     db.session.commit()
 
@@ -233,3 +242,101 @@ def _cargar_turnos():
                     id_flota=unidad.id_flota,
                 )
             )
+
+
+def _cargar_sede_hoyos_rubio():
+    """Sede Hoyos Rubio: no alquila flota, vende entrada por tiempo a dos
+    zonas (inflable y arenero). Se puede ejecutar varias veces: si la sede
+    ya existe, no vuelve a crear nada."""
+
+    if Sucursal.query.filter_by(nombre='Hoyos Rubio').first():
+        return
+
+    sede = Sucursal(
+        nombre='Hoyos Rubio',
+        direccion='Jr. Hoyos Rubio (Cajamarca)',
+        estado='activa',
+        # Monto de ejemplo: el administrador lo ajusta desde /admin/sedes.
+        monto_adicional_exceso=10.00,
+    )
+    db.session.add(sede)
+    db.session.flush()
+
+    aventura = Zona(
+        id_sucursal=sede.id_sucursal,
+        nombre='Aventura Jurásica',
+        descripcion='Zona inflable',
+    )
+    arenero = Zona(
+        id_sucursal=sede.id_sucursal,
+        nombre='Arenero Dino',
+        descripcion='Zona de arenero',
+    )
+    db.session.add_all([aventura, arenero])
+    db.session.flush()
+
+    db.session.add_all([
+        # --- Aventura Jurásica ---
+        PaqueteTarifa(
+            id_zona=aventura.id_zona,
+            nombre='Expedición Individual - Ruta larga',
+            tipo='individual', duracion_minutos=40, precio=30.00,
+            es_por_ninio=True, minimo_cantidad=1, orden=1,
+        ),
+        PaqueteTarifa(
+            id_zona=aventura.id_zona,
+            nombre='Expedición Individual - Ruta corta',
+            tipo='individual', duracion_minutos=20, precio=20.00,
+            es_por_ninio=True, minimo_cantidad=1, orden=2,
+        ),
+        PaqueteTarifa(
+            id_zona=aventura.id_zona,
+            nombre='Pack Friends / Hermanos - 40 min',
+            tipo='pack_friends', duracion_minutos=40, precio=28.50,
+            es_por_ninio=True, minimo_cantidad=2, orden=3,
+        ),
+        PaqueteTarifa(
+            id_zona=aventura.id_zona,
+            nombre='Pack Friends / Hermanos - 20 min',
+            tipo='pack_friends', duracion_minutos=20, precio=18.50,
+            es_por_ninio=True, minimo_cantidad=2, orden=4,
+        ),
+        PaqueteTarifa(
+            id_zona=aventura.id_zona,
+            nombre='Pack Escolar - 40 min',
+            tipo='pack_escolar', duracion_minutos=40, precio=25.00,
+            es_por_ninio=True, minimo_cantidad=15, orden=5,
+        ),
+        PaqueteTarifa(
+            id_zona=aventura.id_zona,
+            nombre='Pack Guía / Acompañante Adulto',
+            tipo='pack_guia', duracion_minutos=None, precio=10.00,
+            es_por_ninio=True, minimo_cantidad=1, orden=6,
+        ),
+
+        # --- Arenero Dino ---
+        PaqueteTarifa(
+            id_zona=arenero.id_zona,
+            nombre='Entrada Arenero - 20 min',
+            tipo='general', duracion_minutos=20, precio=15.00,
+            es_por_ninio=True, minimo_cantidad=1, orden=1,
+        ),
+        PaqueteTarifa(
+            id_zona=arenero.id_zona,
+            nombre='Entrada Arenero - 30 min',
+            tipo='general', duracion_minutos=30, precio=20.00,
+            es_por_ninio=True, minimo_cantidad=1, orden=2,
+        ),
+        PaqueteTarifa(
+            id_zona=arenero.id_zona,
+            nombre='Pack Friends - 20 min',
+            tipo='pack_friends', duracion_minutos=20, precio=12.50,
+            es_por_ninio=True, minimo_cantidad=2, orden=3,
+        ),
+        PaqueteTarifa(
+            id_zona=arenero.id_zona,
+            nombre='Pack Friends - 30 min',
+            tipo='pack_friends', duracion_minutos=30, precio=17.50,
+            es_por_ninio=True, minimo_cantidad=2, orden=4,
+        ),
+    ])

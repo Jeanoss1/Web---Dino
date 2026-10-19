@@ -336,13 +336,15 @@ def cp_01_28(ctx, r):
 # HU02 – Consulta de disponibilidad y reserva de turnos
 # =====================================================================
 @caso('CP-02-01', 29, 'HU02', 'Listar sedes activas',
-      'id 1 Real Plaza y id 2 Mega Plaza con sus direcciones')
+      'id 1 Real Plaza, id 2 Mega Plaza e id 3 Hoyos Rubio con sus direcciones')
 def cp_02_01(ctx, r):
     r.http(ctx.nuevo_cliente().get('/api/sedes'), 200, [
         {'id_sucursal': 1, 'nombre': 'Real Plaza',
          'direccion': 'Real Plaza Cajamarca (Nivel 2, Explanada Jurásica)'},
         {'id_sucursal': 2, 'nombre': 'Mega Plaza',
          'direccion': 'Mega Plaza Cajamarca (Primer Nivel, Zona Recreativa Central)'},
+        {'id_sucursal': 3, 'nombre': 'Hoyos Rubio',
+         'direccion': 'Jr. Hoyos Rubio (Cajamarca)'},
     ])
 
 
@@ -1027,3 +1029,176 @@ def cp_06_12(ctx, r):
 def cp_06_13(ctx, r):
     r.http(ctx.cliente('admin').get('/api/flota/99/mantenimientos'),
            404, {'error': 'La unidad de flota no existe'})
+
+
+# =====================================================================
+# HU08 – El menú de caja depende de la sede del cajero
+# (flota por turno en Real Plaza/Mega Plaza, entrada por tiempo en Hoyos
+# Rubio). Van al final a propósito: reasignan la sede del cajero de
+# pruebas, y ningún caso anterior depende de ese valor.
+# =====================================================================
+
+@caso('CP-08-01', 99, 'HU08', 'Cajero asignado a Real Plaza ve flota, no entradas',
+      '/caja/flota muestra "Vender / Alquilar Flota" y no "Vender Entradas"; hay flota alquilable')
+def cp_08_01(ctx, r):
+    ctx.sql("UPDATE usuarios SET id_sucursal = 1 WHERE correo = :c", c=CAJERO[0])
+
+    cliente = ctx.nuevo_cliente()
+    ctx.login(cliente, *CAJERO)
+
+    pagina = cliente.get('/caja/flota')
+    r.ver('HTTP /caja/flota', pagina.status_code, 200)
+    r.ver('Muestra "Vender / Alquilar Flota"', b'Vender / Alquilar Flota' in pagina.data, True)
+    r.ver('No muestra "Vender Entradas"', b'Vender Entradas' in pagina.data, False)
+
+    alquilable = cliente.get('/api/flota/alquilable?id_sucursal=1').get_json() or []
+    r.ver('Hay flota alquilable en Real Plaza', len(alquilable) > 0, True)
+
+
+@caso('CP-08-02', 100, 'HU08', 'Cajero asignado a Hoyos Rubio ve entradas, no flota',
+      '/caja/entradas muestra "Vender Entradas" y no "Vender / Alquilar Flota"; hay zonas activas')
+def cp_08_02(ctx, r):
+    id_hoyos_rubio = ctx.valor(
+        "SELECT id_sucursal FROM sucursales WHERE nombre = 'Hoyos Rubio'")
+    ctx.sql("UPDATE usuarios SET id_sucursal = :s WHERE correo = :c",
+            s=id_hoyos_rubio, c=CAJERO[0])
+
+    cliente = ctx.nuevo_cliente()
+    ctx.login(cliente, *CAJERO)
+
+    pagina = cliente.get('/caja/entradas')
+    r.ver('HTTP /caja/entradas', pagina.status_code, 200)
+    r.ver('Muestra "Vender Entradas"', b'Vender Entradas' in pagina.data, True)
+    r.ver('No muestra "Vender / Alquilar Flota"', b'Vender / Alquilar Flota' in pagina.data, False)
+
+    zonas = cliente.get(f'/api/sedes/{id_hoyos_rubio}/zonas').get_json() or []
+    r.ver('Hay zonas activas en Hoyos Rubio', len(zonas) > 0, True)
+
+
+# =====================================================================
+# HU09 – Reasignar la sede de un cajero (con caja abierta de por medio) y
+# lecturas manuales obligatorias al abrir/cerrar caja en sedes con flota.
+# También van al final: dependen del cajero de pruebas y de que ninguna
+# caja quede abierta para los casos anteriores.
+# =====================================================================
+
+def _id_sucursal_por_nombre(ctx, nombre):
+    return ctx.valor("SELECT id_sucursal FROM sucursales WHERE nombre = :n", n=nombre)
+
+
+def _id_cajero_pruebas(ctx):
+    return ctx.valor("SELECT id_usuario FROM usuarios WHERE correo = :c", c=CAJERO[0])
+
+
+def _unidades_flota_de(ctx, id_sucursal):
+    filas = ctx.sql("SELECT id_flota FROM flota WHERE id_sucursal = :s", s=id_sucursal)
+    return [f[0] for f in filas]
+
+
+def _cajero_logueado(ctx):
+    """Cliente nuevo + login: la sede se lee de la BD recién al iniciar sesión,
+    así que hace falta un login fresco cada vez que cambia."""
+    cliente = ctx.nuevo_cliente()
+    ctx.login(cliente, *CAJERO)
+    return cliente
+
+
+@caso('CP-09-01', 101, 'HU09', 'Admin reasigna la sede de un cajero sin caja abierta',
+      'HTTP 200; el cajero queda asignado a Real Plaza en la BD')
+def cp_09_01(ctx, r):
+    id_real_plaza = _id_sucursal_por_nombre(ctx, 'Real Plaza')
+    id_cajero = _id_cajero_pruebas(ctx)
+
+    resp = ctx.cliente('admin').put(f'/api/admin/usuarios/{id_cajero}', json={'id_sucursal': id_real_plaza})
+    r.ver('HTTP', resp.status_code, 200)
+    r.ver('BD id_sucursal', ctx.valor(
+        "SELECT id_sucursal FROM usuarios WHERE id_usuario = :u", u=id_cajero), id_real_plaza)
+
+
+@caso('CP-09-02', 102, 'HU09', 'Abrir caja en sede con flota sin registrar todas las lecturas',
+      'HTTP 400 "No se puede abrir la caja: Falta registrar la lectura de..."')
+def cp_09_02(ctx, r):
+    cliente = _cajero_logueado(ctx)
+    id_real_plaza = _id_sucursal_por_nombre(ctx, 'Real Plaza')
+
+    resp = ctx.api(cliente, '/api/caja/abrir', {'monto_inicial': 50, 'id_sucursal': id_real_plaza, 'lecturas': []})
+    r.ver('HTTP', resp.status_code, 400)
+    r.mensaje(resp, 'No se puede abrir la caja: Falta registrar la lectura de')
+    r.ver('Caja abierta en BD', ctx.valor("SELECT count(*) FROM cajas WHERE estado = 'abierta'"), 0)
+
+
+@caso('CP-09-03', 103, 'HU09', 'Abrir caja en sede con flota con todas las lecturas completas',
+      'HTTP 201; se crea una lectura de apertura por cada unidad de Real Plaza')
+def cp_09_03(ctx, r):
+    cliente = _cajero_logueado(ctx)
+    id_real_plaza = _id_sucursal_por_nombre(ctx, 'Real Plaza')
+    unidades = _unidades_flota_de(ctx, id_real_plaza)
+    lecturas = [{'id_flota': f, 'lectura_manual': 0} for f in unidades]
+
+    resp = ctx.api(cliente, '/api/caja/abrir', {'monto_inicial': 50, 'id_sucursal': id_real_plaza, 'lecturas': lecturas})
+    r.ver('HTTP', resp.status_code, 201)
+    datos = resp.get_json() or {}
+    r.ver('id_sucursal de la caja', datos.get('id_sucursal'), id_real_plaza)
+    r.ver('Lecturas de apertura en BD', ctx.valor(
+        "SELECT count(*) FROM lecturas_flota WHERE id_caja = :c AND momento = 'apertura'",
+        c=datos.get('id_caja')), len(unidades))
+
+
+@caso('CP-09-04', 104, 'HU09', 'No se puede reasignar la sede de un cajero con la caja abierta',
+      'HTTP 409 "...tiene la caja abierta en Real Plaza..."; la sede en BD no cambia')
+def cp_09_04(ctx, r):
+    id_cajero = _id_cajero_pruebas(ctx)
+    id_mega_plaza = _id_sucursal_por_nombre(ctx, 'Mega Plaza')
+    id_real_plaza = _id_sucursal_por_nombre(ctx, 'Real Plaza')
+
+    resp = ctx.cliente('admin').put(f'/api/admin/usuarios/{id_cajero}', json={'id_sucursal': id_mega_plaza})
+    r.ver('HTTP', resp.status_code, 409)
+    r.mensaje(resp, 'tiene la caja abierta en Real Plaza')
+    r.ver('BD id_sucursal sin cambios', ctx.valor(
+        "SELECT id_sucursal FROM usuarios WHERE id_usuario = :u", u=id_cajero), id_real_plaza)
+
+
+@caso('CP-09-05', 105, 'HU09', 'Cerrar caja en sede con flota sin lecturas de cierre',
+      'HTTP 400 "No se puede cerrar la caja: Falta registrar la lectura de..."; caja sigue abierta')
+def cp_09_05(ctx, r):
+    cliente = _cajero_logueado(ctx)
+    resp = ctx.api(cliente, '/api/caja/cerrar', {'lecturas': []})
+    r.ver('HTTP', resp.status_code, 400)
+    r.mensaje(resp, 'No se puede cerrar la caja: Falta registrar la lectura de')
+    r.ver('Caja sigue abierta en BD', ctx.valor("SELECT count(*) FROM cajas WHERE estado = 'abierta'"), 1)
+
+
+@caso('CP-09-06', 106, 'HU09', 'Cerrar caja con lecturas completas; ahora sí procede el cambio de sede',
+      'HTTP 200 al cerrar; luego HTTP 200 al reasignar la sede a Mega Plaza')
+def cp_09_06(ctx, r):
+    cliente = _cajero_logueado(ctx)
+    id_real_plaza = _id_sucursal_por_nombre(ctx, 'Real Plaza')
+    unidades = _unidades_flota_de(ctx, id_real_plaza)
+    lecturas = [{'id_flota': f, 'lectura_manual': 0} for f in unidades]
+
+    resp = ctx.api(cliente, '/api/caja/cerrar', {'lecturas': lecturas})
+    r.ver('HTTP cerrar', resp.status_code, 200)
+    r.ver('Lecturas de cierre en BD', ctx.valor(
+        "SELECT count(*) FROM lecturas_flota WHERE momento = 'cierre'"), len(unidades))
+
+    id_cajero = _id_cajero_pruebas(ctx)
+    id_mega_plaza = _id_sucursal_por_nombre(ctx, 'Mega Plaza')
+    resp2 = ctx.cliente('admin').put(f'/api/admin/usuarios/{id_cajero}', json={'id_sucursal': id_mega_plaza})
+    r.ver('HTTP reasignar sede', resp2.status_code, 200)
+    r.ver('BD id_sucursal actualizada', ctx.valor(
+        "SELECT id_sucursal FROM usuarios WHERE id_usuario = :u", u=id_cajero), id_mega_plaza)
+
+
+@caso('CP-09-07', 107, 'HU09', 'En Hoyos Rubio, abrir y cerrar caja no exige lecturas',
+      'HTTP 201 al abrir sin lecturas y HTTP 200 al cerrar sin lecturas')
+def cp_09_07(ctx, r):
+    id_cajero = _id_cajero_pruebas(ctx)
+    id_hoyos_rubio = _id_sucursal_por_nombre(ctx, 'Hoyos Rubio')
+    ctx.sql("UPDATE usuarios SET id_sucursal = :s WHERE id_usuario = :u", s=id_hoyos_rubio, u=id_cajero)
+
+    cliente = _cajero_logueado(ctx)
+    resp = ctx.api(cliente, '/api/caja/abrir', {'monto_inicial': 30, 'id_sucursal': id_hoyos_rubio, 'lecturas': []})
+    r.ver('HTTP abrir', resp.status_code, 201)
+
+    resp2 = ctx.api(cliente, '/api/caja/cerrar', {'lecturas': []})
+    r.ver('HTTP cerrar', resp2.status_code, 200)

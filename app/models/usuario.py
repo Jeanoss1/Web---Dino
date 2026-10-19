@@ -18,6 +18,10 @@ class Usuario(db.Model):
     proveedor = db.Column(db.String(20))         # 'google' / 'facebook'
     foto_url = db.Column(db.Text)                # foto de perfil autorizada
 
+    # Solo para cajeros: a qué sede está asignado (determina si vende
+    # flota por turno o entrada por tiempo). Null en clientes/administradores.
+    id_sucursal = db.Column(db.Integer, db.ForeignKey('sucursales.id_sucursal'))
+
     # NOTA: no se declara relationship aquí. El atributo `rol` llega
     # automáticamente por el backref definido en Rol.py
     # (usuarios = db.relationship('Usuario', backref='rol', ...)).

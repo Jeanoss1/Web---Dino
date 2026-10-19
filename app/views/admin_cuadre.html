@@ -1,0 +1,156 @@
+{% extends 'base_panel.html' %}
+{% set pagina_activa = 'admin' %}
+{% block titulo %}Cuadre Diario · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-5xl mx-auto space-y-space-lg">
+  <div class="flex flex-wrap items-center justify-between gap-space-sm">
+    <div class="flex items-center gap-space-sm">
+      <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+        <span class="material-symbols-outlined text-[24px]">balance</span>
+      </div>
+      <div>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">Cuadre diario</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">Dinero (Yape/efectivo) y minutos vendidos vs. usados (Hoyos Rubio) por cajero.</p>
+      </div>
+    </div>
+    <a href="/admin" class="font-label-lg text-label-lg text-primary px-space-md py-space-sm rounded-full hover:bg-surface-container-high">← Panel Admin</a>
+  </div>
+
+  <div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-wrap items-end gap-space-sm">
+    <label class="block">
+      <span class="font-label-sm text-label-sm text-on-surface-variant">Fecha</span>
+      <input type="date" id="filtro-fecha" class="rounded-md border-outline-variant text-sm">
+    </label>
+    <label class="block">
+      <span class="font-label-sm text-label-sm text-on-surface-variant">Sede</span>
+      <select id="filtro-sede" class="rounded-md border-outline-variant text-sm">
+        <option value="">Todas</option>
+      </select>
+    </label>
+    <button id="btn-filtrar" class="rounded-full bg-primary text-on-primary px-space-md py-space-xs font-label-md text-label-md font-bold min-h-[40px]">Ver</button>
+  </div>
+
+  <div id="banner-alertas" class="hidden px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold bg-error-container text-on-error-container"></div>
+
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm">
+    <div class="bg-surface-container-lowest rounded-xl p-space-md text-center">
+      <p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Vendido total</p>
+      <p id="kpi-total" class="font-headline-sm text-headline-sm font-black text-secondary">S/ 0.00</p>
+    </div>
+    <div class="bg-surface-container-lowest rounded-xl p-space-md text-center">
+      <p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Yape</p>
+      <p id="kpi-yape" class="font-headline-sm text-headline-sm font-black text-on-surface">S/ 0.00</p>
+    </div>
+    <div class="bg-surface-container-lowest rounded-xl p-space-md text-center">
+      <p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Efectivo</p>
+      <p id="kpi-efectivo" class="font-headline-sm text-headline-sm font-black text-on-surface">S/ 0.00</p>
+    </div>
+    <div class="bg-surface-container-lowest rounded-xl p-space-md text-center">
+      <p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Alertas de minutos</p>
+      <p id="kpi-alertas" class="font-headline-sm text-headline-sm font-black text-error">0</p>
+    </div>
+  </div>
+
+  <section class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+    <h2 class="font-title-md text-title-md font-bold text-on-surface px-space-md pt-space-md">Minutos vendidos vs. usados (Hoyos Rubio), por cajero</h2>
+    <table class="w-full text-sm mt-space-sm">
+      <thead class="bg-surface-container text-on-surface-variant">
+        <tr>
+          <th class="text-left font-label-sm text-label-sm uppercase px-space-md py-space-sm">Cajero</th>
+          <th class="text-right font-label-sm text-label-sm uppercase px-space-md py-space-sm">Vendidos</th>
+          <th class="text-right font-label-sm text-label-sm uppercase px-space-md py-space-sm">Usados</th>
+          <th class="text-right font-label-sm text-label-sm uppercase px-space-md py-space-sm">Diferencia</th>
+          <th class="text-right font-label-sm text-label-sm uppercase px-space-md py-space-sm">En curso</th>
+        </tr>
+      </thead>
+      <tbody id="cuerpo-tabla"></tbody>
+    </table>
+  </section>
+
+  <section class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+    <h2 class="font-title-md text-title-md font-bold text-on-surface px-space-md pt-space-md">Lecturas manuales de contador (apertura/cierre de caja)</h2>
+    <table class="w-full text-sm mt-space-sm">
+      <thead class="bg-surface-container text-on-surface-variant">
+        <tr>
+          <th class="text-left font-label-sm text-label-sm uppercase px-space-md py-space-sm">Caja</th>
+          <th class="text-left font-label-sm text-label-sm uppercase px-space-md py-space-sm">Cajero</th>
+          <th class="text-left font-label-sm text-label-sm uppercase px-space-md py-space-sm">Unidad</th>
+          <th class="text-left font-label-sm text-label-sm uppercase px-space-md py-space-sm">Momento</th>
+          <th class="text-right font-label-sm text-label-sm uppercase px-space-md py-space-sm">Lectura manual</th>
+          <th class="text-right font-label-sm text-label-sm uppercase px-space-md py-space-sm">Contador sistema</th>
+          <th class="text-right font-label-sm text-label-sm uppercase px-space-md py-space-sm">Diferencia</th>
+        </tr>
+      </thead>
+      <tbody id="cuerpo-lecturas"></tbody>
+    </table>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const soles = n => 'S/ ' + Number(n).toFixed(2);
+
+async function cargarSedes() {
+  const res = await fetch('/api/admin/sedes', { credentials: 'same-origin' });
+  const sedes = await res.json();
+  $('filtro-sede').innerHTML += sedes.map(s => `<option value="${s.id_sucursal}">${esc(s.nombre)}</option>`).join('');
+}
+
+async function cargarCuadre() {
+  const params = new URLSearchParams();
+  if ($('filtro-fecha').value) params.set('fecha', $('filtro-fecha').value);
+  if ($('filtro-sede').value) params.set('id_sucursal', $('filtro-sede').value);
+
+  const res = await fetch('/api/admin/cuadre?' + params.toString(), { credentials: 'same-origin' });
+  if (res.status === 401 || res.status === 403) { location.href = '/iniciar-sesion'; return; }
+  const r = await res.json();
+  if (!res.ok) { alert(r.error || 'No se pudo cargar el cuadre'); return; }
+
+  $('kpi-total').textContent = soles(r.dinero.resumen.total);
+  const yape = r.dinero.por_metodo.find(m => m.metodo_pago === 'yape');
+  const efectivo = r.dinero.por_metodo.find(m => m.metodo_pago === 'efectivo');
+  $('kpi-yape').textContent = soles(yape ? yape.total : 0);
+  $('kpi-efectivo').textContent = soles(efectivo ? efectivo.total : 0);
+  $('kpi-alertas').textContent = r.total_alertas;
+
+  $('banner-alertas').classList.toggle('hidden', r.total_alertas === 0);
+  if (r.total_alertas > 0) {
+    $('banner-alertas').textContent = `${r.total_alertas} cajero(s) con diferencias de minutos o entradas sin cerrar.`;
+  }
+
+  $('cuerpo-tabla').innerHTML = r.minutos.length
+    ? r.minutos.map(m => `
+      <tr class="border-t border-outline-variant/20 ${m.alerta ? 'bg-error-container/20' : ''}">
+        <td class="px-space-md py-space-sm font-bold">${esc(m.cajero)}</td>
+        <td class="px-space-md py-space-sm text-right">${m.minutos_vendidos} min</td>
+        <td class="px-space-md py-space-sm text-right">${m.minutos_usados} min</td>
+        <td class="px-space-md py-space-sm text-right ${m.alerta ? 'text-error font-bold' : ''}">${m.diferencia > 0 ? '+' : ''}${m.diferencia} min</td>
+        <td class="px-space-md py-space-sm text-right">${m.en_curso}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="5" class="px-space-md py-space-md text-on-surface-variant">Sin entradas de Hoyos Rubio ese día.</td></tr>';
+
+  $('cuerpo-lecturas').innerHTML = r.lecturas.length
+    ? r.lecturas.map(l => `
+      <tr class="border-t border-outline-variant/20 ${l.alerta ? 'bg-error-container/20' : ''}">
+        <td class="px-space-md py-space-sm">#${l.id_caja}</td>
+        <td class="px-space-md py-space-sm font-bold">${esc(l.cajero)}</td>
+        <td class="px-space-md py-space-sm">${esc(l.unidad)}</td>
+        <td class="px-space-md py-space-sm capitalize">${esc(l.momento)}</td>
+        <td class="px-space-md py-space-sm text-right">${l.lectura_manual}</td>
+        <td class="px-space-md py-space-sm text-right">${l.contador_sistema}</td>
+        <td class="px-space-md py-space-sm text-right ${l.alerta ? 'text-error font-bold' : ''}">${l.diferencia > 0 ? '+' : ''}${l.diferencia}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="7" class="px-space-md py-space-md text-on-surface-variant">Sin lecturas registradas ese día.</td></tr>';
+}
+
+$('btn-filtrar').addEventListener('click', cargarCuadre);
+
+$('filtro-fecha').value = new Date().toISOString().slice(0, 10);
+cargarSedes();
+cargarCuadre();
+</script>
+{% endblock %}
