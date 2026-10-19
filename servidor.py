@@ -31,4 +31,12 @@ if __name__ == '__main__':
         backlog=2048,            # conexiones en espera en el sistema operativo
         channel_timeout=60,      # cierra conexiones inactivas
         ident='DinoPark',
+        # Railway (y cualquier proxy inverso) termina el HTTPS y reenvía la
+        # petición como HTTP plano agregando cabeceras X-Forwarded-*.
+        # Waitress las descarta por defecto (clear_untrusted_proxy_headers);
+        # sin esto, url_for(_external=True) arma URLs "http://" en vez de
+        # "https://" (ej. el callback de Google OAuth, que Google rechaza).
+        trusted_proxy='*',
+        trusted_proxy_headers={'x-forwarded-proto', 'x-forwarded-host', 'x-forwarded-for'},
+        clear_untrusted_proxy_headers=True,
     )
