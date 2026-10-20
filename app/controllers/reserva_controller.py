@@ -1,7 +1,9 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
-from flask import Blueprint, jsonify, request, session, render_template
+from flask import (
+    Blueprint, current_app, jsonify, request, session, render_template
+)
 from sqlalchemy.orm import joinedload, selectinload
 
 from app.controllers.decoradores import login_requerido
@@ -81,6 +83,32 @@ def _cliente_actual():
 
 
 # ============================================================
+# HORA ACTUAL EN PERÚ
+# ============================================================
+# Los turnos se guardan con la hora de Perú (sin zona horaria),
+# pero el servidor de Railway corre en UTC: por eso no se usa
+# datetime.now(). Perú no tiene horario de verano (siempre UTC-5).
+# ============================================================
+
+HORA_PERU = timezone(timedelta(hours=-5))
+
+
+def _ahora_peru():
+    return datetime.now(HORA_PERU).replace(tzinfo=None)
+
+
+def _turno_pasado(turno, ahora):
+    """Un turno que ya empezó no se puede reservar.
+
+    PERMITIR_TURNOS_PASADOS solo lo activan los casos de prueba
+    (app/pruebas), que reservan los turnos de 10:00 a 13:00 de hoy
+    a cualquier hora del día."""
+    if current_app.config.get('PERMITIR_TURNOS_PASADOS'):
+        return False
+    return turno.horario_inicio <= ahora
+
+
+# ============================================================
 # LISTAR TURNOS DISPONIBLES
 # ============================================================
 
@@ -93,11 +121,18 @@ def listar_turnos():
 
     ?fecha=AAAA-MM-DD
     ?id_flota=1
+    ?todos=1   también los ocupados y los que ya pasaron
+               (la página de reserva los muestra tachados)
     """
 
-    consulta = Turno.query.filter_by(
-        estado='disponible'
-    )
+    todos = request.args.get('todos') == '1'
+
+    consulta = Turno.query
+
+    if not todos:
+        consulta = consulta.filter_by(
+            estado='disponible'
+        )
 
     # --------------------------------------------------------
     # FILTRO POR FLOTA
@@ -133,6 +168,17 @@ def listar_turnos():
     # --------------------------------------------------------
     # RESPUESTA
     # --------------------------------------------------------
+    # 'motivo': None si se puede reservar, 'ocupado' o 'pasado'
+    # --------------------------------------------------------
+
+    ahora = _ahora_peru()
+
+    def _motivo(t):
+        if t.estado != 'disponible':
+            return 'ocupado'
+        if _turno_pasado(t, ahora):
+            return 'pasado'
+        return None
 
     return jsonify([
         {
@@ -148,6 +194,10 @@ def listar_turnos():
             ),
 
             'capacidad': t.capacidad,
+
+            'disponible': _motivo(t) is None,
+
+            'motivo': _motivo(t),
         }
 
         for t in consulta.order_by(
@@ -306,6 +356,11 @@ def crear_reserva():
             ):
                 raise ErrorNegocio(
                     f'{flota.nombre} no está disponible en ese turno'
+                )
+
+            if _turno_pasado(turno, _ahora_peru()):
+                raise ErrorNegocio(
+                    'Ese turno ya pasó, elige un horario más tarde'
                 )
 
             # -----------------------------------------------

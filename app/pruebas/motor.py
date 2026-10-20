@@ -252,6 +252,9 @@ def _crear_app_pruebas(url, carpeta):
         'UPLOAD_FOLDER': carpeta,
         'TESTING': True,
         'SEMBRAR_DATOS': False,
+        # Los casos reservan los turnos de 10:00 a 13:00 de hoy,
+        # se ejecuten a la hora que se ejecuten
+        'PERMITIR_TURNOS_PASADOS': True,
     })
     with app.app_context():
         db.create_all()

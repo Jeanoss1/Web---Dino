@@ -532,9 +532,16 @@ async function cargarTurnos() {
 
   try {
     const fecha = document.getElementById('input-fecha').value;
-    const params = new URLSearchParams({ id_flota: state.idFlota });
+    // todos=1: también los ocupados y los que ya pasaron, para mostrarlos tachados
+    const params = new URLSearchParams({ id_flota: state.idFlota, todos: '1' });
     if (fecha) params.set('fecha', fecha);
     state.turnos = await apiGet(`${API.turnos}?${params.toString()}`);
+    // Si el turno elegido se ocupó o ya pasó, se quita la selección
+    if (state.idTurno && !state.turnos.some(t => t.id_turno === state.idTurno && t.disponible)) {
+      state.idTurno = null;
+      state.turnoSeleccionado = null;
+      renderResumen();
+    }
   } catch (e) {
     cont.innerHTML = `<p class="font-body-md text-body-md text-error col-span-full">${e.message}</p>`;
     return;
@@ -557,7 +564,36 @@ function renderTurnos() {
     return;
   }
 
+  if (!state.turnos.some(t => t.disponible)) {
+    const aviso = document.createElement('p');
+    aviso.className = 'font-body-md text-body-md text-on-surface-variant col-span-full';
+    aviso.textContent = 'Ya no quedan turnos libres para esta fecha. Prueba con otro día.';
+    cont.appendChild(aviso);
+  }
+
   state.turnos.forEach(t => {
+    // Ocupado o ya pasado: tachado y sin poder seleccionarse
+    if (!t.disponible) {
+      const div = document.createElement('div');
+      div.className = 'p-space-sm rounded-md flex flex-col justify-between cursor-not-allowed opacity-60 bg-surface-container-low border border-outline-variant/30';
+      div.setAttribute('aria-disabled', 'true');
+      div.title = t.motivo === 'pasado' ? 'Este turno ya pasó' : 'Este turno ya está reservado';
+      div.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="font-label-md text-label-md font-bold text-on-surface-variant line-through">
+            ${formatearHora(t.horario_inicio)} - ${formatearHora(t.horario_fin)}
+          </span>
+          <span class="material-symbols-outlined text-on-surface-variant text-[16px]">${t.motivo === 'pasado' ? 'schedule' : 'block'}</span>
+        </div>
+        <div class="mt-2 flex items-center justify-between text-xs text-on-surface-variant">
+          <span class="line-through">Cupo: ${t.capacidad}</span>
+          <span class="font-bold ${t.motivo === 'pasado' ? 'text-on-surface-variant' : 'text-error'}">${t.motivo === 'pasado' ? 'Ya pasó' : 'Ocupado'}</span>
+        </div>
+      `;
+      cont.appendChild(div);
+      return;
+    }
+
     const activo = t.id_turno === state.idTurno;
     const div = document.createElement('div');
     div.className = `p-space-sm rounded-md flex flex-col justify-between cursor-pointer transition-colors ${
@@ -730,6 +766,7 @@ function copiarNumero() {
 
 // ---------- INIT ----------
 document.getElementById('input-fecha').value = hoyISO();
+document.getElementById('input-fecha').min = hoyISO();   // no deja elegir días pasados
 document.getElementById('input-fecha').addEventListener('change', () => {
   if (state.idFlota) cargarTurnos();
 });
