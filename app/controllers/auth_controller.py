@@ -285,7 +285,7 @@ def _abrir_sesion(usuario, recordar):
 
     session.permanent = recordar
 
-    # Las cuentas creadas con Google/Facebook aún no tienen DNI ni teléfono
+    # Las cuentas creadas con Google aún no tienen DNI ni teléfono
     if (
         session['rol'] == 'cliente'
         and not Cliente.query.filter_by(correo=usuario.correo).first()
@@ -320,15 +320,14 @@ def _abrir_sesion(usuario, recordar):
 
 
 # ============================================================
-# GOOGLE / FACEBOOK
+# GOOGLE
 # ============================================================
 # /auth/google/ingresar   -> botón de "Iniciar sesión"
 # /auth/google/registrar  -> botón de "Crear cuenta"
-# (igual para facebook)
 # ============================================================
 
 ACCIONES = ('ingresar', 'registrar')
-NOMBRE_PROVEEDOR = {'google': 'Google', 'facebook': 'Facebook'}
+NOMBRE_PROVEEDOR = {'google': 'Google'}
 
 
 @auth_bp.route('/auth/<proveedor>/<accion>')
@@ -426,7 +425,7 @@ def oauth_callback(proveedor):
             apellido=(perfil['apellido'] or '')[:100],
             correo=correo,
             # Clave aleatoria que nadie conoce: esta cuenta entra
-            # solo con Google/Facebook
+            # solo con Google
             contrasena=generate_password_hash(
                 secrets.token_urlsafe(32)
             ),
@@ -463,7 +462,7 @@ def oauth_callback(proveedor):
 
 
 # ============================================================
-# COMPLETAR PERFIL (DNI y teléfono tras registrarse con Google/Facebook)
+# COMPLETAR PERFIL (DNI y teléfono tras registrarse con Google)
 # ============================================================
 
 @auth_bp.route(

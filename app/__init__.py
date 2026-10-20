@@ -33,9 +33,8 @@ def create_app(config=None):
     # El navegador guarda en caché logos e imágenes de static/ por 1 día
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(days=1)
 
-    # --- Inicio de sesión con Google / Facebook (vacío = botón desactivado) ---
-    for clave in ('GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET',
-                  'FACEBOOK_CLIENT_ID', 'FACEBOOK_CLIENT_SECRET'):
+    # --- Inicio de sesión con Google (vacío = botón desactivado) ---
+    for clave in ('GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'):
         app.config[clave] = os.getenv(clave, '')
 
     # --- Pagos con Yape ---

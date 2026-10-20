@@ -14,8 +14,8 @@ class Usuario(db.Model):
     contrasena = db.Column(db.String(200), nullable=False)
     estado = db.Column(db.Boolean, default=True)
 
-    # Solo para cuentas creadas con Google o Facebook
-    proveedor = db.Column(db.String(20))         # 'google' / 'facebook'
+    # Solo para cuentas creadas con Google
+    proveedor = db.Column(db.String(20))         # 'google'
     foto_url = db.Column(db.Text)                # foto de perfil autorizada
 
     # NOTA: no se declara relationship aquí. El atributo `rol` llega
