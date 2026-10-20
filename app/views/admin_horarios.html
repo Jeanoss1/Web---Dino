@@ -1,0 +1,178 @@
+{% extends 'base_panel.html' %}
+{% set pagina_activa = 'admin' %}
+{% block titulo %}Horarios de Cajeros · Panel Admin · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-6xl mx-auto space-y-space-lg">
+  <div class="flex flex-wrap items-center justify-between gap-space-sm">
+    <div class="flex items-center gap-space-sm">
+      <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+        <span class="material-symbols-outlined text-[24px]">calendar_month</span>
+      </div>
+      <div>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">Horarios de cajeros</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">Asigna el turno laboral de cada cajero, día por día.</p>
+      </div>
+    </div>
+    <a href="/admin" class="font-label-lg text-label-lg text-primary px-space-md py-space-sm rounded-full hover:bg-surface-container-high">← Panel Admin</a>
+  </div>
+
+  <div id="alerta" class="hidden px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold"></div>
+
+  <section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
+    <h2 class="font-title-md text-title-md font-bold text-on-surface">Nuevo turno laboral</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-space-sm items-end">
+      <label class="block"><span class="font-label-sm text-label-sm text-on-surface-variant">Nombre</span>
+        <input id="turno-nombre" placeholder="Mañana completo" class="w-full rounded-md border-outline-variant text-sm"></label>
+      <label class="block"><span class="font-label-sm text-label-sm text-on-surface-variant">Tipo</span>
+        <select id="turno-tipo" class="w-full rounded-md border-outline-variant text-sm">
+          <option value="completo">Completo (8h)</option>
+          <option value="medio">Medio (4h)</option>
+        </select>
+      </label>
+      <label class="block"><span class="font-label-sm text-label-sm text-on-surface-variant">Hora inicio</span>
+        <input id="turno-inicio" type="time" class="w-full rounded-md border-outline-variant text-sm"></label>
+      <label class="block"><span class="font-label-sm text-label-sm text-on-surface-variant">Hora fin</span>
+        <input id="turno-fin" type="time" class="w-full rounded-md border-outline-variant text-sm"></label>
+      <button id="btn-crear-turno" class="rounded-full bg-primary text-on-primary px-space-md py-space-sm font-label-lg text-label-lg shadow-md">Crear</button>
+    </div>
+  </section>
+
+  <section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
+    <div class="flex flex-wrap items-center justify-between gap-space-sm">
+      <div class="flex items-center gap-space-sm">
+        <button id="btn-anterior" class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <span id="texto-semana" class="font-label-lg text-label-lg"></span>
+        <button id="btn-siguiente" class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
+      <div class="flex gap-space-sm">
+        <button id="btn-copiar" class="rounded-full bg-surface-container text-on-surface px-space-md py-space-xs font-label-md text-label-md font-bold">Copiar semana anterior</button>
+        <button id="btn-guardar" class="rounded-full bg-primary text-on-primary px-space-md py-space-xs font-label-md text-label-md font-bold">Guardar</button>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm border-collapse">
+        <thead>
+          <tr>
+            <th class="text-left font-label-sm text-label-sm uppercase px-space-sm py-space-sm">Cajero</th>
+            <th id="encabezados-dias" class="contents"></th>
+          </tr>
+        </thead>
+        <tbody id="cuerpo-grilla"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const NOMBRES_DIA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+let semanaRef = new Date();
+let turnos = [];
+
+function alerta(msg, tipo = 'error') {
+  const el = $('alerta');
+  el.textContent = msg;
+  el.className = 'px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold ' +
+    (tipo === 'error' ? 'bg-error-container text-on-error-container' : 'bg-primary-container/30 text-on-primary-container');
+  setTimeout(() => el.classList.add('hidden'), 5000);
+}
+
+function aIso(d) { return d.toISOString().slice(0, 10); }
+
+async function cargarTurnos() {
+  const res = await fetch('/api/admin/turnos-laborales', { credentials: 'same-origin' });
+  turnos = await res.json();
+}
+
+$('btn-crear-turno').addEventListener('click', async () => {
+  const cuerpo = {
+    nombre: $('turno-nombre').value.trim(),
+    tipo: $('turno-tipo').value,
+    hora_inicio: $('turno-inicio').value,
+    hora_fin: $('turno-fin').value,
+  };
+  const res = await fetch('/api/admin/turnos-laborales', {
+    method: 'POST', credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo),
+  });
+  const json = await res.json();
+  if (!res.ok) { alerta(json.error || 'No se pudo crear el turno'); return; }
+  alerta(`Turno "${json.nombre}" creado.`, 'ok');
+  $('turno-nombre').value = '';
+  await cargarTurnos();
+  cargarGrilla();
+});
+
+function opcionesTurno(seleccionado) {
+  return '<option value="">— Libre —</option>' + turnos.map(t =>
+    `<option value="${t.id_turno_laboral}" ${t.id_turno_laboral === seleccionado ? 'selected' : ''}>${esc(t.nombre)} (${t.hora_inicio}-${t.hora_fin})</option>`
+  ).join('');
+}
+
+async function cargarGrilla() {
+  const res = await fetch('/api/admin/horarios?semana=' + aIso(semanaRef), { credentials: 'same-origin' });
+  if (res.status === 401 || res.status === 403) { location.href = '/iniciar-sesion'; return; }
+  const datos = await res.json();
+
+  const lunes = new Date(datos.lunes + 'T00:00:00');
+  $('texto-semana').textContent = `Semana del ${lunes.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })}`;
+
+  const mapa = {};
+  datos.asignaciones.forEach(a => { mapa[`${a.id_usuario}|${a.fecha}`] = a.id_turno_laboral; });
+
+  $('cuerpo-grilla').innerHTML = datos.cajeros.map(c => `
+    <tr class="border-t border-outline-variant/20">
+      <td class="px-space-sm py-space-sm font-label-md text-label-md font-bold whitespace-nowrap">${esc(c.nombre)}</td>
+      ${datos.dias.map((dia, i) => `
+        <td class="px-1 py-space-sm">
+          <select class="w-full rounded border-outline-variant text-xs" data-usuario="${c.id_usuario}" data-fecha="${dia}">
+            ${opcionesTurno(mapa[`${c.id_usuario}|${dia}`])}
+          </select>
+        </td>`).join('')}
+    </tr>`).join('') ||
+    '<tr><td class="px-space-sm py-space-md text-on-surface-variant">No hay cajeros activos.</td></tr>';
+
+  document.getElementById('encabezados-dias').outerHTML =
+    datos.dias.map((d, i) => `<th class="text-center font-label-sm text-label-sm uppercase px-1 py-space-sm">${NOMBRES_DIA[i]}</th>`).join('');
+}
+
+$('btn-anterior').addEventListener('click', () => { semanaRef.setDate(semanaRef.getDate() - 7); cargarGrilla(); });
+$('btn-siguiente').addEventListener('click', () => { semanaRef.setDate(semanaRef.getDate() + 7); cargarGrilla(); });
+
+$('btn-guardar').addEventListener('click', async () => {
+  const asignaciones = Array.from(document.querySelectorAll('[data-usuario][data-fecha]')).map(sel => ({
+    id_usuario: parseInt(sel.dataset.usuario, 10),
+    fecha: sel.dataset.fecha,
+    id_turno_laboral: sel.value ? parseInt(sel.value, 10) : null,
+  }));
+  const res = await fetch('/api/admin/horarios', {
+    method: 'POST', credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ asignaciones }),
+  });
+  if (!res.ok) { alerta('No se pudo guardar el horario'); return; }
+  alerta('Horario guardado.', 'ok');
+});
+
+$('btn-copiar').addEventListener('click', async () => {
+  const res = await fetch('/api/admin/horarios/copiar-semana-anterior', {
+    method: 'POST', credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ semana: aIso(semanaRef) }),
+  });
+  const json = await res.json();
+  if (!res.ok) { alerta(json.error || 'No se pudo copiar'); return; }
+  alerta(`Se copiaron ${json.copiadas} asignaciones.`, 'ok');
+  cargarGrilla();
+});
+
+(async () => { await cargarTurnos(); cargarGrilla(); })();
+</script>
+{% endblock %}

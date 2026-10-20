@@ -64,15 +64,30 @@ function pintarTabs() {
   });
 }
 
+// Trae y junta las dos sedes (flota: Real Plaza/Mega Plaza, entrada: Hoyos
+// Rubio) en una sola lista, como se veía antes de que existiera Hoyos Rubio.
 async function cargar() {
   pintarTabs();
   try {
-    const res = await fetch('/api/caja/reservas?estado=' + tab, { credentials: 'same-origin' });
-    if (res.status === 401) { location.href = '/iniciar-sesion?next=/caja/validaciones'; return; }
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.error || 'Error');
-    if (tab === 'por_validar') $('cuenta').textContent = json.length ? '(' + json.length + ')' : '';
-    render(json);
+    const [resFlota, resEntrada] = await Promise.all([
+      fetch('/api/caja/reservas?estado=' + tab, { credentials: 'same-origin' }),
+      fetch('/api/caja/reservas-entrada?estado=' + tab, { credentials: 'same-origin' }),
+    ]);
+    if (resFlota.status === 401 || resEntrada.status === 401) {
+      location.href = '/iniciar-sesion?next=/caja/validaciones'; return;
+    }
+    const jsonFlota = await resFlota.json();
+    const jsonEntrada = await resEntrada.json();
+    if (!resFlota.ok) throw new Error(jsonFlota.error || 'Error');
+    if (!resEntrada.ok) throw new Error(jsonEntrada.error || 'Error');
+
+    const combinadas = [
+      ...jsonFlota.map(r => ({ ...r, _modelo: 'flota', _id: r.id_reserva, _sede: 'Real Plaza / Mega Plaza' })),
+      ...jsonEntrada.map(r => ({ ...r, _modelo: 'entrada', _id: r.id_reserva_entrada, _sede: 'Hoyos Rubio' })),
+    ].sort((a, b) => new Date(a.fecha_reserva) - new Date(b.fecha_reserva));
+
+    if (tab === 'por_validar') $('cuenta').textContent = combinadas.length ? '(' + combinadas.length + ')' : '';
+    render(combinadas);
   } catch (e) {
     $('lista').innerHTML = `<p class="text-error font-body-md text-body-md">${esc(e.message)}</p>`;
   }
@@ -86,19 +101,26 @@ function render(reservas) {
   }
   $('lista').innerHTML = reservas.map(r => {
     const c = r.comprobante;
-    const detalles = r.detalles.map(d => `
+    const id = r._id;
+    const detalles = r._modelo === 'flota'
+      ? r.detalles.map(d => `
       <div class="flex items-center justify-between gap-2 text-sm">
         <span class="font-bold">${esc(d.unidad)}</span>
         <span class="text-on-surface-variant">${esc(fechaCorta(d.inicio))} · ${hora(d.inicio)} - ${hora(d.fin)}</span>
+      </div>`).join('')
+      : r.detalles.map(d => `
+      <div class="flex items-center justify-between gap-2 text-sm">
+        <span class="font-bold">${esc(d.paquete)}</span>
+        <span class="text-on-surface-variant">${d.cantidad} niño(s) · ${soles(d.subtotal)}</span>
       </div>`).join('');
 
     const botones = tab === 'por_validar' ? `
       <div class="space-y-space-xs">
-        <input type="text" maxlength="200" id="motivo-${r.id_reserva}" placeholder="Motivo si rechazas (ej. el monto no coincide)"
+        <input type="text" maxlength="200" id="motivo-${r._modelo}-${id}" placeholder="Motivo si rechazas (ej. el monto no coincide)"
           class="w-full text-sm rounded-md bg-surface-container-low border border-outline-variant/50 px-3 py-2 min-h-[44px]">
         <div class="grid grid-cols-2 gap-space-sm">
-          <button type="button" data-rechazar="${r.id_reserva}" class="min-h-[48px] rounded-full bg-error-container text-on-error-container font-label-lg text-label-lg">Rechazar</button>
-          <button type="button" data-aceptar="${r.id_reserva}" class="min-h-[48px] rounded-full bg-primary text-on-primary font-label-lg text-label-lg shadow-md">Aceptar</button>
+          <button type="button" data-rechazar="${r._modelo}:${id}" class="min-h-[48px] rounded-full bg-error-container text-on-error-container font-label-lg text-label-lg">Rechazar</button>
+          <button type="button" data-aceptar="${r._modelo}:${id}" class="min-h-[48px] rounded-full bg-primary text-on-primary font-label-lg text-label-lg shadow-md">Aceptar</button>
         </div>
       </div>` : `
       <div class="flex items-center gap-1 text-primary font-label-md text-label-md font-bold">
@@ -113,13 +135,14 @@ function render(reservas) {
           ${c ? `<p class="text-xs text-on-surface-variant mt-1">Subida: ${esc(fechaHora(c.fecha_subida))}</p>` : ''}
         </div>
         <div class="md:col-span-5 space-y-space-xs">
-          <div class="flex items-center gap-2">
-            <span class="font-title-md text-title-md font-bold">Reserva #${r.id_reserva}</span>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="font-title-md text-title-md font-bold">Reserva #${id}</span>
+            <span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full ${r._modelo === 'entrada' ? 'bg-tertiary-container text-on-tertiary-container' : 'bg-secondary-container text-on-secondary'}">${esc(r._sede)}</span>
           </div>
           <p class="text-sm"><b>${esc(r.cliente.nombre)}</b><br>
              DNI ${esc(r.cliente.dni)} · Cel. ${esc(r.cliente.telefono || '-')}</p>
           <div class="space-y-1 pt-space-xs border-t border-outline-variant/30">${detalles}</div>
-          <p class="text-xs text-on-surface-variant">${r.cantidad_personas} persona(s)</p>
+          ${r._modelo === 'flota' ? `<p class="text-xs text-on-surface-variant">${r.cantidad_personas} persona(s)</p>` : ''}
         </div>
         <div class="md:col-span-4 space-y-space-sm">
           <div class="p-space-sm rounded-lg bg-surface-container text-center">
@@ -132,16 +155,18 @@ function render(reservas) {
   }).join('');
 }
 
-async function accion(id, tipo) {
+async function accion(modelo, id, tipo) {
   const cuerpo = {};
   if (tipo === 'rechazar') {
-    const motivo = ($('motivo-' + id).value || '').trim();
-    if (!motivo) { alerta('Escribe el motivo del rechazo.'); $('motivo-' + id).focus(); return; }
+    const campo = $('motivo-' + modelo + '-' + id);
+    const motivo = (campo.value || '').trim();
+    if (!motivo) { alerta('Escribe el motivo del rechazo.'); campo.focus(); return; }
     cuerpo.motivo = motivo;
   } else if (!confirm(`¿Confirmas que recibiste el pago de la reserva #${id}?`)) {
     return;
   }
-  const res = await fetch(`/api/reservas/${id}/${tipo === 'aceptar' ? 'aceptar' : 'rechazar'}`, {
+  const base = modelo === 'flota' ? '/api/reservas' : '/api/reservas-entrada';
+  const res = await fetch(`${base}/${id}/${tipo === 'aceptar' ? 'aceptar' : 'rechazar'}`, {
     method: 'POST', credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo),
   });
@@ -155,9 +180,9 @@ document.addEventListener('click', e => {
   const t = e.target.closest('[data-tab]');
   if (t) { tab = t.dataset.tab; cargar(); return; }
   const a = e.target.closest('[data-aceptar]');
-  if (a) { accion(a.dataset.aceptar, 'aceptar'); return; }
+  if (a) { const [modelo, id] = a.dataset.aceptar.split(':'); accion(modelo, id, 'aceptar'); return; }
   const r = e.target.closest('[data-rechazar]');
-  if (r) { accion(r.dataset.rechazar, 'rechazar'); return; }
+  if (r) { const [modelo, id] = r.dataset.rechazar.split(':'); accion(modelo, id, 'rechazar'); return; }
   const v = e.target.closest('[data-ver]');
   if (v) { $('visor-img').src = v.dataset.ver; $('visor').classList.remove('hidden'); return; }
   if (e.target.id === 'visor' || e.target.closest('#cerrar-visor')) $('visor').classList.add('hidden');

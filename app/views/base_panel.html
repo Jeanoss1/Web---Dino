@@ -72,6 +72,30 @@ tailwind.config = {
       <span class="material-symbols-outlined text-primary">fact_check</span>
       <span class="font-label-lg text-label-lg">Validar pagos</span>
     </a>
+    {% set sede_tipo = tipo_sede_actual() %}
+    {% if session.get('rol') == 'administrador' or sede_tipo == 'flota' %}
+    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] {{ activo if pagina_activa == 'alquiler-flota' else normal }}" href="/caja/flota">
+      <span class="material-symbols-outlined text-primary">directions_car</span>
+      <span class="font-label-lg text-label-lg">Vender / Alquilar Flota</span>
+    </a>
+    {% endif %}
+    {% if session.get('rol') == 'administrador' or sede_tipo == 'entrada' %}
+    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] {{ activo if pagina_activa == 'entradas' else normal }}" href="/caja/entradas">
+      <span class="material-symbols-outlined text-primary">confirmation_number</span>
+      <span class="font-label-lg text-label-lg">Vender Entradas</span>
+    </a>
+    {% endif %}
+    {% if session.get('rol') == 'cajero' and sede_tipo is none %}
+    <div class="px-space-md py-space-sm font-label-sm text-label-sm text-on-surface-variant">
+      Pide al administrador que te asigne una sede.
+    </div>
+    {% endif %}
+    {% endif %}
+    {% if session.get('rol') == 'administrador' %}
+    <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] {{ activo if pagina_activa == 'admin' else normal }}" href="/admin">
+      <span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+      <span class="font-label-lg text-label-lg">Panel Admin</span>
+    </a>
     {% endif %}
     <a class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all min-h-[48px] {{ normal }}" href="/">
       <span class="material-symbols-outlined text-primary">home</span>
@@ -99,6 +123,16 @@ tailwind.config = {
     {% endif %}
     {% if session.get('rol') in ('administrador', 'cajero') %}
     <a class="px-3 py-2 rounded-full font-label-md text-label-md {{ 'bg-primary text-on-primary' if pagina_activa == 'validaciones' else 'text-on-surface-variant' }}" href="/caja/validaciones">Validar</a>
+    {% set sede_tipo_m = tipo_sede_actual() %}
+    {% if session.get('rol') == 'administrador' or sede_tipo_m == 'flota' %}
+    <a class="px-3 py-2 rounded-full font-label-md text-label-md {{ 'bg-primary text-on-primary' if pagina_activa == 'alquiler-flota' else 'text-on-surface-variant' }}" href="/caja/flota">Flota</a>
+    {% endif %}
+    {% if session.get('rol') == 'administrador' or sede_tipo_m == 'entrada' %}
+    <a class="px-3 py-2 rounded-full font-label-md text-label-md {{ 'bg-primary text-on-primary' if pagina_activa == 'entradas' else 'text-on-surface-variant' }}" href="/caja/entradas">Entradas</a>
+    {% endif %}
+    {% endif %}
+    {% if session.get('rol') == 'administrador' %}
+    <a class="px-3 py-2 rounded-full font-label-md text-label-md {{ 'bg-primary text-on-primary' if pagina_activa == 'admin' else 'text-on-surface-variant' }}" href="/admin">Admin</a>
     {% endif %}
     <a class="px-3 py-2 rounded-full font-label-md text-label-md text-error" href="/cerrar-sesion">Salir</a>
   </nav>

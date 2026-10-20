@@ -1,11 +1,13 @@
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 
 from app.controllers.decoradores import rol_requerido
 from app.database import db
 from app.models.Caja import Caja
+from app.models.Flota import Flota
+from app.models.LecturaFlota import LecturaFlota
 from app.models.MovimientoCaja import MovimientoCaja
 
 
@@ -13,6 +15,31 @@ caja_bp = Blueprint('caja', __name__)
 
 
 ROLES_CAJA = ('administrador', 'cajero')
+
+
+def _unidades_que_requieren_lectura(id_sucursal):
+    """Toda la flota de la sede (sin importar su estado): el conteo físico
+    hay que registrarlo igual aunque la unidad esté en mantenimiento."""
+    if not id_sucursal:
+        return []
+    return Flota.query.filter_by(id_sucursal=id_sucursal).order_by(Flota.id_flota).all()
+
+
+def _validar_lecturas(unidades, lecturas_enviadas):
+    """Devuelve (mapa_id_flota->lectura_manual, error) revisando que venga
+    una lectura numérica por cada unidad de la sede."""
+    mapa = {}
+    for item in lecturas_enviadas:
+        try:
+            mapa[int(item['id_flota'])] = int(item['lectura_manual'])
+        except (KeyError, TypeError, ValueError):
+            return None, 'Cada lectura debe indicar id_flota y lectura_manual (número entero)'
+
+    faltantes = [u.nombre for u in unidades if u.id_flota not in mapa]
+    if faltantes:
+        return None, 'Falta registrar la lectura de: ' + ', '.join(faltantes)
+
+    return mapa, None
 
 
 def _caja_a_dict(c):
@@ -37,6 +64,8 @@ def _caja_a_dict(c):
     return {
         'id_caja': c.id_caja,
         'estado': c.estado,
+        'id_usuario': c.id_usuario,
+        'id_sucursal': c.id_sucursal,
         'fecha_apertura': c.fecha_apertura.isoformat(),
         'fecha_cierre': (
             c.fecha_cierre.isoformat()
@@ -98,13 +127,32 @@ def abrir_caja():
             error='El monto inicial no es válido'
         ), 400
 
+    id_sucursal = datos.get('id_sucursal') or session.get('id_sucursal')
+    unidades = _unidades_que_requieren_lectura(id_sucursal)
+
+    mapa_lecturas = {}
+    if unidades:
+        mapa_lecturas, error = _validar_lecturas(unidades, datos.get('lecturas') or [])
+        if error:
+            return jsonify(error=f'No se puede abrir la caja: {error}'), 400
+
     caja = Caja(
         fecha_apertura=datetime.now(),
         monto_inicial=monto,
-        estado='abierta'
+        estado='abierta',
+        id_usuario=session.get('id_usuario'),
+        id_sucursal=id_sucursal,
     )
 
     db.session.add(caja)
+    db.session.flush()
+
+    for u in unidades:
+        db.session.add(LecturaFlota(
+            id_caja=caja.id_caja, id_flota=u.id_flota, momento='apertura',
+            lectura_manual=mapa_lecturas[u.id_flota], contador_sistema=u.contador_actual,
+        ))
+
     db.session.commit()
 
     return jsonify(
@@ -209,6 +257,20 @@ def cerrar_caja():
         return jsonify(
             error='No hay una caja abierta'
         ), 400
+
+    datos = request.get_json(silent=True) or {}
+    unidades = _unidades_que_requieren_lectura(caja.id_sucursal)
+
+    if unidades:
+        mapa_lecturas, error = _validar_lecturas(unidades, datos.get('lecturas') or [])
+        if error:
+            return jsonify(error=f'No se puede cerrar la caja: {error}'), 400
+
+        for u in unidades:
+            db.session.add(LecturaFlota(
+                id_caja=caja.id_caja, id_flota=u.id_flota, momento='cierre',
+                lectura_manual=mapa_lecturas[u.id_flota], contador_sistema=u.contador_actual,
+            ))
 
     resumen = _caja_a_dict(caja)
 

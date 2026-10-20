@@ -2,7 +2,8 @@ import os
 from datetime import timedelta
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify
+from flask import Flask, jsonify, session
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.database import db
 from app.oauth import registrar_proveedores
@@ -13,6 +14,15 @@ load_dotenv()
 def create_app(config=None):
     """`config` sobrescribe valores (lo usan las pruebas de tests/ para su BD)."""
     app = Flask(__name__, template_folder='views')
+
+    # Railway (y cualquier proxy inverso) termina el HTTPS y reenvía la
+    # petición a la app como HTTP plano, agregando cabeceras
+    # X-Forwarded-Proto/X-Forwarded-Host. Sin esto, url_for(_external=True)
+    # (usado por el login de Google/Facebook) arma la URL de callback como
+    # "http://..." y Google la rechaza (redirect_uri_mismatch). Si esas
+    # cabeceras no vienen (ej. en desarrollo local), no cambia nada.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'cambia-esta-clave')
@@ -65,6 +75,24 @@ def create_app(config=None):
             'nombre_rol': lambda rol: nombres.get(rol, 'Usuario'),
         }
 
+    @app.context_processor
+    def datos_de_sede_cajero():
+        # {{ tipo_sede_actual() }}: 'entrada' (vende por tiempo, ej. Hoyos
+        # Rubio), 'flota' (alquila por turno, ej. Real Plaza) o None (sin
+        # sede asignada), según la sede del cajero en sesión.
+        def tipo_sede_actual():
+            id_sucursal = session.get('id_sucursal')
+            if not id_sucursal:
+                return None
+            from app.models.Zona import Zona
+            from app.models.Flota import Flota
+            if Zona.query.filter_by(id_sucursal=id_sucursal, estado='activa').first():
+                return 'entrada'
+            if Flota.query.filter_by(id_sucursal=id_sucursal).first():
+                return 'flota'
+            return None
+        return {'tipo_sede_actual': tipo_sede_actual}
+
     @app.errorhandler(413)
     def archivo_muy_grande(_):
         return jsonify(error='La imagen supera los 5 MB'), 413
@@ -81,9 +109,14 @@ def create_app(config=None):
     from app.controllers.caja_controller import caja_bp
     from app.controllers.mantenimiento_controller import mantenimiento_bp
     from app.controllers.comprobante_controller import comprobante_bp
+    from app.controllers.entrada_controller import entrada_bp
+    from app.controllers.admin_controller import admin_bp
+    from app.controllers.reportes_controller import reportes_bp
+    from app.controllers.flota_controller import flota_bp
 
     for bp in (home_bp, auth_bp, reserva_bp, venta_bp, caja_bp,
-               mantenimiento_bp, comprobante_bp):
+               mantenimiento_bp, comprobante_bp, entrada_bp, admin_bp,
+               reportes_bp, flota_bp):
         app.register_blueprint(bp)
 
     if app.config['SEMBRAR_DATOS']:

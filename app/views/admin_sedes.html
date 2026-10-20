@@ -1,0 +1,206 @@
+{% extends 'base_panel.html' %}
+{% set pagina_activa = 'admin' %}
+{% block titulo %}Panel Admin · Sedes · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-5xl mx-auto space-y-space-lg">
+  <div class="flex flex-wrap items-center justify-between gap-space-sm">
+    <div class="flex items-center gap-space-sm">
+      <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+        <span class="material-symbols-outlined text-[24px]">admin_panel_settings</span>
+      </div>
+      <div>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">Sedes, zonas y paquetes</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">Activa/desactiva sedes y edita precios, duración y mínimos de cada paquete.</p>
+      </div>
+    </div>
+    <a href="/admin" class="font-label-lg text-label-lg text-primary px-space-md py-space-sm rounded-full hover:bg-surface-container-high">← Panel Admin</a>
+  </div>
+
+  <div id="alerta" class="hidden px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold"></div>
+  <div id="lista-sedes" class="space-y-space-lg">
+    <p class="font-body-md text-body-md text-on-surface-variant">Cargando…</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function alerta(msg, tipo = 'error') {
+  const el = $('alerta');
+  el.textContent = msg;
+  el.className = 'px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold ' +
+    (tipo === 'error' ? 'bg-error-container text-on-error-container' : 'bg-primary-container/30 text-on-primary-container');
+  setTimeout(() => el.classList.add('hidden'), 5000);
+}
+
+function filaPaquete(p) {
+  return `
+    <div class="grid grid-cols-2 sm:grid-cols-6 gap-space-xs items-end p-space-sm rounded-lg bg-surface-container-low" data-paquete="${p.id_paquete}">
+      <div class="col-span-2 sm:col-span-2">
+        <p class="font-label-sm text-label-sm text-on-surface-variant">Paquete</p>
+        <p class="font-label-lg text-label-lg text-on-surface">${esc(p.nombre)}</p>
+      </div>
+      <label class="block">
+        <span class="font-label-sm text-label-sm text-on-surface-variant">Precio (S/)</span>
+        <input type="number" step="0.01" min="0.01" class="w-full rounded-md border-outline-variant text-sm" data-campo="precio" value="${p.precio}">
+      </label>
+      <label class="block">
+        <span class="font-label-sm text-label-sm text-on-surface-variant">Duración (min)</span>
+        <input type="number" min="1" class="w-full rounded-md border-outline-variant text-sm" data-campo="duracion_minutos" value="${p.duracion_minutos ?? ''}">
+      </label>
+      <label class="block">
+        <span class="font-label-sm text-label-sm text-on-surface-variant">Mínimo</span>
+        <input type="number" min="1" class="w-full rounded-md border-outline-variant text-sm" data-campo="minimo_cantidad" value="${p.minimo_cantidad ?? 1}">
+      </label>
+      <div class="flex gap-space-xs">
+        <select data-campo="estado" class="w-full rounded-md border-outline-variant text-sm">
+          <option value="activa" ${p.estado === 'activa' ? 'selected' : ''}>Activo</option>
+          <option value="inactiva" ${p.estado !== 'activa' ? 'selected' : ''}>Inactivo</option>
+        </select>
+        <button type="button" data-guardar-paquete="${p.id_paquete}" class="shrink-0 rounded-full bg-primary text-on-primary px-space-sm font-label-sm text-label-sm font-bold">Guardar</button>
+      </div>
+    </div>`;
+}
+
+function filaZona(z) {
+  return `
+    <div class="space-y-space-xs">
+      <p class="font-title-md text-title-md font-bold text-on-surface">${esc(z.nombre)}</p>
+      <div class="space-y-space-xs">
+        ${z.paquetes.map(filaPaquete).join('')}
+      </div>
+    </div>`;
+}
+
+function tarjetaSede(s) {
+  return `
+    <section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md" data-sede="${s.id_sucursal}">
+      <div class="flex flex-wrap items-end justify-between gap-space-sm">
+        <div>
+          <h2 class="font-headline-sm text-headline-sm font-bold text-on-surface">${esc(s.nombre)}</h2>
+          <p class="font-body-md text-body-md text-on-surface-variant">${esc(s.direccion || '')}</p>
+        </div>
+        <div class="flex items-end gap-space-sm">
+          <label class="block">
+            <span class="font-label-sm text-label-sm text-on-surface-variant">Adicional por exceso de tiempo (S/)</span>
+            <input type="number" step="0.01" min="0" class="w-40 rounded-md border-outline-variant text-sm" data-campo-sede="monto_adicional_exceso" value="${s.monto_adicional_exceso ?? ''}">
+          </label>
+          <select data-campo-sede="estado" class="rounded-md border-outline-variant text-sm">
+            <option value="activa" ${s.estado === 'activa' ? 'selected' : ''}>Activa</option>
+            <option value="inactiva" ${s.estado !== 'activa' ? 'selected' : ''}>Inactiva (próximamente)</option>
+          </select>
+          <button type="button" data-guardar-sede="${s.id_sucursal}" class="rounded-full bg-primary text-on-primary px-space-md py-space-xs font-label-md text-label-md font-bold">Guardar</button>
+        </div>
+      </div>
+      ${s.zonas.length ? s.zonas.map(filaZona).join('') :
+        `<p class="font-body-md text-body-md text-on-surface-variant">Esta sede alquila flota (dinosaurios/carros/motos) por turno:</p>
+         <div id="flota-${s.id_sucursal}" class="space-y-space-xs">Cargando flota…</div>`}
+    </section>`;
+}
+
+function filaFlota(f) {
+  return `
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-space-xs items-end p-space-sm rounded-lg bg-surface-container-low" data-flota="${f.id_flota}">
+      <div class="col-span-2">
+        <p class="font-label-sm text-label-sm text-on-surface-variant">${esc(f.tipo)}${f.modelo ? ' · ' + esc(f.modelo) : ''}</p>
+        <p class="font-label-lg text-label-lg text-on-surface">${esc(f.nombre)}</p>
+      </div>
+      <label class="block">
+        <span class="font-label-sm text-label-sm text-on-surface-variant">Precio/hora (S/)</span>
+        <input type="number" step="0.01" min="0" class="w-full rounded-md border-outline-variant text-sm" data-campo-flota="precio_hora" value="${f.precio_hora}">
+      </label>
+      <label class="block">
+        <span class="font-label-sm text-label-sm text-on-surface-variant">Estado</span>
+        <select data-campo-flota="estado" class="w-full rounded-md border-outline-variant text-sm">
+          <option value="disponible" ${f.estado === 'disponible' ? 'selected' : ''}>Disponible</option>
+          <option value="mantenimiento" ${f.estado === 'mantenimiento' ? 'selected' : ''}>Mantenimiento</option>
+          <option value="inactivo" ${f.estado === 'inactivo' ? 'selected' : ''}>Inactivo</option>
+        </select>
+      </label>
+      <button type="button" data-guardar-flota="${f.id_flota}" class="shrink-0 rounded-full bg-primary text-on-primary px-space-sm py-1.5 font-label-sm text-label-sm font-bold">Guardar</button>
+    </div>`;
+}
+
+async function cargarFlota(idSucursal) {
+  const res = await fetch(`/api/admin/flota?id_sucursal=${idSucursal}`, { credentials: 'same-origin' });
+  const unidades = await res.json();
+  const cont = $('flota-' + idSucursal);
+  if (cont) cont.innerHTML = unidades.map(filaFlota).join('') || '<p class="text-on-surface-variant text-sm">Sin unidades.</p>';
+}
+
+async function cargar() {
+  const res = await fetch('/api/admin/sedes', { credentials: 'same-origin' });
+  if (res.status === 401 || res.status === 403) { location.href = '/iniciar-sesion'; return; }
+  const sedes = await res.json();
+  $('lista-sedes').innerHTML = sedes.map(tarjetaSede).join('');
+  sedes.filter(s => !s.zonas.length).forEach(s => cargarFlota(s.id_sucursal));
+}
+
+document.addEventListener('click', async e => {
+  const bs = e.target.closest('[data-guardar-sede]');
+  if (bs) {
+    const id = bs.dataset.guardarSede;
+    const card = e.target.closest('[data-sede]');
+    const cuerpo = {};
+    card.querySelectorAll('[data-campo-sede]').forEach(el => {
+      const campo = el.dataset.campoSede;
+      cuerpo[campo] = el.value === '' ? null : (campo === 'monto_adicional_exceso' ? parseFloat(el.value) : el.value);
+    });
+    const res = await fetch(`/api/admin/sedes/${id}`, {
+      method: 'PUT', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo),
+    });
+    const json = await res.json();
+    if (!res.ok) { alerta(json.error || 'No se pudo guardar la sede'); return; }
+    alerta('Sede actualizada.', 'ok');
+    return;
+  }
+
+  const bp = e.target.closest('[data-guardar-paquete]');
+  if (bp) {
+    const id = bp.dataset.guardarPaquete;
+    const fila = e.target.closest('[data-paquete]');
+    const cuerpo = {};
+    fila.querySelectorAll('[data-campo]').forEach(el => {
+      const campo = el.dataset.campo;
+      if (campo === 'precio') cuerpo[campo] = parseFloat(el.value);
+      else if (campo === 'duracion_minutos') cuerpo[campo] = el.value === '' ? null : parseInt(el.value, 10);
+      else if (campo === 'minimo_cantidad') cuerpo[campo] = parseInt(el.value, 10);
+      else cuerpo[campo] = el.value;
+    });
+    const res = await fetch(`/api/admin/paquetes/${id}`, {
+      method: 'PUT', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo),
+    });
+    const json = await res.json();
+    if (!res.ok) { alerta(json.error || 'No se pudo guardar el paquete'); return; }
+    alerta('Paquete actualizado.', 'ok');
+    return;
+  }
+
+  const bf = e.target.closest('[data-guardar-flota]');
+  if (bf) {
+    const id = bf.dataset.guardarFlota;
+    const fila = e.target.closest('[data-flota]');
+    const cuerpo = {};
+    fila.querySelectorAll('[data-campo-flota]').forEach(el => {
+      const campo = el.dataset.campoFlota;
+      cuerpo[campo] = campo === 'precio_hora' ? parseFloat(el.value) : el.value;
+    });
+    const res = await fetch(`/api/admin/flota/${id}`, {
+      method: 'PUT', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo),
+    });
+    const json = await res.json();
+    if (!res.ok) { alerta(json.error || 'No se pudo guardar la unidad'); return; }
+    alerta('Unidad de flota actualizada.', 'ok');
+  }
+});
+
+cargar();
+</script>
+{% endblock %}

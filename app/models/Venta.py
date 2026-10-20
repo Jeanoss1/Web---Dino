@@ -17,6 +17,12 @@ class Venta(db.Model):
         db.Integer, db.ForeignKey('usuarios.id_usuario'), nullable=False
     )
 
+    # De qué sede es la venta (para reportes). Nullable: las ventas antiguas
+    # no lo tenían.
+    id_sucursal = db.Column(
+        db.Integer, db.ForeignKey('sucursales.id_sucursal')
+    )
+
     # Una venta contiene uno o más detalles (crea DetalleVenta.venta)
     detalles = db.relationship(
         'DetalleVenta', backref='venta', lazy=True,

@@ -1,0 +1,294 @@
+{% extends 'base_panel.html' %}
+{% set pagina_activa = 'entradas' %}
+{% block titulo %}Vender Entradas · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-6xl mx-auto space-y-space-lg">
+  <div class="flex items-center gap-space-sm">
+    <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+      <span class="material-symbols-outlined text-[24px]">confirmation_number</span>
+    </div>
+    <div>
+      <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">Vender Entradas</h1>
+      <p class="font-body-md text-body-md text-on-surface-variant">Sedes de entrada por tiempo (ej. Hoyos Rubio).</p>
+    </div>
+  </div>
+
+  <div id="alerta" class="hidden px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold"></div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter-desktop">
+
+    <!-- ===================== NUEVA VENTA ===================== -->
+    <section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
+      <h2 class="font-title-md text-title-md font-bold text-on-surface">Nueva venta</h2>
+
+      <label class="block">
+        <span class="font-label-md text-label-md text-on-surface-variant">Sede</span>
+        <select id="select-sede" class="mt-1 w-full rounded-lg border-outline-variant"></select>
+      </label>
+
+      <div id="sin-zonas" class="hidden font-body-md text-body-md text-on-surface-variant">
+        Esta sede no tiene paquetes de entrada configurados.
+      </div>
+
+      <div id="con-zonas" class="space-y-space-md">
+        <label class="block">
+          <span class="font-label-md text-label-md text-on-surface-variant">Paquete</span>
+          <select id="select-paquete" class="mt-1 w-full rounded-lg border-outline-variant"></select>
+        </label>
+
+        <label class="block">
+          <span class="font-label-md text-label-md text-on-surface-variant">Cantidad de niños</span>
+          <input id="input-cantidad" type="number" min="1" value="1" class="mt-1 w-full rounded-lg border-outline-variant">
+        </label>
+
+        <label id="label-nino-5" class="hidden flex items-center gap-space-xs">
+          <input id="check-nino-5" type="checkbox" class="rounded">
+          <span class="font-body-md text-body-md text-on-surface">El niño que acompaña el adulto tiene hasta 5 años</span>
+        </label>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="font-body-md text-body-md text-on-surface-variant block">Total</span>
+            <span id="texto-total" class="font-headline-md text-headline-md text-secondary font-extrabold">S/ 0.00</span>
+          </div>
+        </div>
+
+        <div id="paso-pago" class="hidden space-y-space-sm pt-space-sm border-t border-outline-variant/30">
+          <label class="block">
+            <span class="font-label-md text-label-md text-on-surface-variant">Método de pago</span>
+            <select id="select-metodo" class="mt-1 w-full rounded-lg border-outline-variant">
+              <option value="efectivo">Efectivo</option>
+              <option value="yape">Yape</option>
+            </select>
+          </label>
+          <button id="btn-cobrar" class="w-full inline-flex items-center justify-center gap-space-xs font-label-lg text-label-lg bg-primary text-on-primary px-space-lg py-space-sm rounded-full shadow-md hover:bg-on-primary-container transition-all min-h-[48px]">
+            Cobrar
+          </button>
+        </div>
+
+        <button id="btn-crear-venta" class="w-full inline-flex items-center justify-center gap-space-xs font-label-lg text-label-lg bg-primary text-on-primary px-space-lg py-space-sm rounded-full shadow-md hover:bg-on-primary-container transition-all min-h-[48px]">
+          Registrar venta
+        </button>
+      </div>
+    </section>
+
+    <!-- ===================== ENTRADAS ACTIVAS ===================== -->
+    <section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+      <h2 class="font-title-md text-title-md font-bold text-on-surface mb-space-md">Entradas activas</h2>
+      <div id="lista-activas" class="space-y-space-sm">
+        <p class="font-body-md text-body-md text-on-surface-variant">Cargando…</p>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const soles = n => 'S/ ' + Number(n).toFixed(2);
+
+let ventaActual = null;
+let sedes = [];
+
+function alerta(msg, tipo = 'error') {
+  const el = $('alerta');
+  el.textContent = msg;
+  el.className = 'px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold ' +
+    (tipo === 'error' ? 'bg-error-container text-on-error-container' : 'bg-primary-container/30 text-on-primary-container');
+  setTimeout(() => el.classList.add('hidden'), 6000);
+}
+
+function opcionPaquete() {
+  const sel = $('select-paquete');
+  return sel.options[sel.selectedIndex];
+}
+
+function actualizarTotal() {
+  const opcion = opcionPaquete();
+  if (!opcion || !opcion.value) { $('texto-total').textContent = 'S/ 0.00'; return; }
+  const esPackGuia = opcion.dataset.tipo === 'pack_guia';
+  $('label-nino-5').classList.toggle('hidden', !esPackGuia);
+
+  const precio = parseFloat(opcion.dataset.precio);
+  const esPorNinio = opcion.dataset.esPorNinio === '1';
+  const cantidad = Math.max(1, parseInt($('input-cantidad').value || '1', 10));
+  const total = esPorNinio ? precio * cantidad : precio;
+  $('texto-total').textContent = soles(total);
+}
+
+async function cargarZonas(idSucursal) {
+  const res = await fetch(`/api/sedes/${idSucursal}/zonas`, { credentials: 'same-origin' });
+  const zonas = await res.json();
+  const select = $('select-paquete');
+  select.innerHTML = '';
+
+  let totalPaquetes = 0;
+  zonas.forEach(z => {
+    z.paquetes.forEach(p => {
+      totalPaquetes++;
+      const opt = document.createElement('option');
+      opt.value = p.id_paquete;
+      opt.dataset.precio = p.precio;
+      opt.dataset.esPorNinio = p.es_por_ninio ? '1' : '0';
+      opt.dataset.minimo = p.minimo_cantidad || 1;
+      opt.dataset.tipo = p.tipo;
+      opt.textContent = `${z.nombre} — ${p.nombre} (${soles(p.precio)})`;
+      select.appendChild(opt);
+    });
+  });
+
+  $('sin-zonas').classList.toggle('hidden', totalPaquetes > 0);
+  $('con-zonas').classList.toggle('hidden', totalPaquetes === 0);
+  actualizarTotal();
+}
+
+async function cargarSedes() {
+  // Solo sedes que de verdad venden entrada por tiempo (no Real Plaza/Mega Plaza)
+  const res = await fetch('/api/sedes/con-entradas', { credentials: 'same-origin' });
+  sedes = await res.json();
+  const select = $('select-sede');
+
+  if (!sedes.length) {
+    select.innerHTML = '';
+    $('sin-zonas').classList.remove('hidden');
+    $('con-zonas').classList.add('hidden');
+    return;
+  }
+
+  select.innerHTML = sedes.map(s => `<option value="${s.id_sucursal}">${esc(s.nombre)}</option>`).join('');
+  await cargarZonas(select.value);
+}
+
+$('select-sede').addEventListener('change', e => cargarZonas(e.target.value));
+$('select-paquete').addEventListener('change', actualizarTotal);
+$('input-cantidad').addEventListener('input', actualizarTotal);
+
+$('btn-crear-venta').addEventListener('click', async () => {
+  const opcion = opcionPaquete();
+  if (!opcion || !opcion.value) return;
+
+  const item = {
+    id_paquete: parseInt(opcion.value, 10),
+    cantidad: Math.max(1, parseInt($('input-cantidad').value || '1', 10)),
+  };
+  if (opcion.dataset.tipo === 'pack_guia') item.nino_hasta_5 = $('check-nino-5').checked;
+
+  const res = await fetch('/api/ventas/entradas', {
+    method: 'POST', credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_sucursal: parseInt($('select-sede').value, 10), items: [item] }),
+  });
+  const json = await res.json();
+  if (!res.ok) { alerta(json.error || 'No se pudo registrar la venta'); return; }
+
+  ventaActual = json.id_venta;
+  $('btn-crear-venta').classList.add('hidden');
+  $('paso-pago').classList.remove('hidden');
+});
+
+$('btn-cobrar').addEventListener('click', async () => {
+  const metodo = $('select-metodo').value;
+  const res = await fetch(`/api/ventas/${ventaActual}/pago`, {
+    method: 'POST', credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ metodo_pago: metodo }),
+  });
+  const json = await res.json();
+  if (!res.ok) { alerta(json.error || 'No se pudo cobrar la venta'); return; }
+
+  alerta(`Venta cobrada. Ticket(s): ${(json.tickets || []).join(', ')}`, 'ok');
+  ventaActual = null;
+  $('paso-pago').classList.add('hidden');
+  $('btn-crear-venta').classList.remove('hidden');
+  $('input-cantidad').value = 1;
+  cargarActivas();
+});
+
+// ===================== ENTRADAS ACTIVAS / TEMPORIZADOR =====================
+
+let entradasActivas = [];
+
+function tiempoRestanteTexto(entrada) {
+  if (!entrada.duracion_minutos) return null;
+  const fin = new Date(entrada.hora_inicio).getTime() + entrada.duracion_minutos * 60000;
+  const restanteMs = fin - Date.now();
+  const vencido = restanteMs <= 0;
+  const segundosAbs = Math.floor(Math.abs(restanteMs) / 1000);
+  const mm = String(Math.floor(segundosAbs / 60)).padStart(2, '0');
+  const ss = String(segundosAbs % 60).padStart(2, '0');
+  return { texto: `${vencido ? '-' : ''}${mm}:${ss}`, vencido };
+}
+
+function pintarActivas() {
+  if (!entradasActivas.length) {
+    $('lista-activas').innerHTML = '<p class="font-body-md text-body-md text-on-surface-variant">No hay entradas activas.</p>';
+    return;
+  }
+  $('lista-activas').innerHTML = entradasActivas.map(en => {
+    const t = tiempoRestanteTexto(en);
+    const claveId = `${en.tipo}-${en.id}`;
+    return `
+      <div class="p-space-md rounded-lg border ${t && t.vencido && !en.exceso_cobrado ? 'border-error bg-error-container/20' : 'border-outline-variant/30 bg-surface-container'} flex items-center justify-between gap-space-sm">
+        <div>
+          <p class="font-label-lg text-label-lg text-on-surface">${esc(en.paquete)}</p>
+          <p class="font-label-sm text-label-sm ${t && t.vencido ? 'text-error font-bold' : 'text-on-surface-variant'}">
+            ${t ? (t.vencido ? 'Tiempo cumplido hace ' + t.texto.replace('-', '') : 'Tiempo restante ' + t.texto) : 'Sin duración registrada'}
+          </p>
+        </div>
+        <div class="shrink-0 flex items-center gap-space-xs">
+          ${t && t.vencido && !en.exceso_cobrado
+            ? `<button type="button" data-adicional="${claveId}" class="rounded-full bg-error text-on-error px-space-md py-space-xs font-label-md text-label-md font-bold min-h-[40px]">Cobrar adicional</button>`
+            : en.exceso_cobrado ? '<span class="font-label-sm text-label-sm text-on-surface-variant">Adicional cobrado</span>' : ''}
+          ${!en.exceso_cobrado
+            ? `<button type="button" data-salida="${claveId}" class="rounded-full bg-surface-container-high text-on-surface px-space-md py-space-xs font-label-md text-label-md font-bold min-h-[40px]">Marcar salida</button>`
+            : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function cargarActivas() {
+  const res = await fetch('/api/caja/entradas-activas', { credentials: 'same-origin' });
+  if (!res.ok) return;
+  entradasActivas = await res.json();
+  pintarActivas();
+}
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-adicional]');
+  if (b) {
+    const [tipo, id] = b.dataset.adicional.split('-');
+    const res = await fetch(`/api/caja/entradas-activas/${tipo}/${id}/adicional`, {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}),
+    });
+    const json = await res.json();
+    if (!res.ok) { alerta(json.error || 'No se pudo cobrar el adicional'); return; }
+    alerta(`Adicional cobrado: ${soles(json.adicional)} (ticket ${json.ticket})`, 'ok');
+    cargarActivas();
+    return;
+  }
+
+  const s = e.target.closest('[data-salida]');
+  if (s) {
+    const [tipo, id] = s.dataset.salida.split('-');
+    const res = await fetch(`/api/caja/entradas-activas/${tipo}/${id}/salida`, {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}),
+    });
+    const json = await res.json();
+    if (!res.ok) { alerta(json.error || 'No se pudo registrar la salida'); return; }
+    alerta('Salida registrada.', 'ok');
+    cargarActivas();
+  }
+});
+
+cargarSedes();
+cargarActivas();
+setInterval(pintarActivas, 1000);       // cuenta regresiva en vivo
+setInterval(cargarActivas, 15000);      // trae entradas nuevas de otros cajeros
+</script>
+{% endblock %}

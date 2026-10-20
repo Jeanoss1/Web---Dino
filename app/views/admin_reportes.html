@@ -1,0 +1,165 @@
+{% extends 'base_panel.html' %}
+{% set pagina_activa = 'admin' %}
+{% block titulo %}Reportes de Ventas · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-5xl mx-auto space-y-space-lg">
+  <div class="flex flex-wrap items-center justify-between gap-space-sm">
+    <div class="flex items-center gap-space-sm">
+      <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+        <span class="material-symbols-outlined text-[24px]">finance</span>
+      </div>
+      <div>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">Reporte de ventas</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">Incluye ventas de mostrador y reservas online confirmadas, de las 3 sedes.</p>
+      </div>
+    </div>
+    <a href="/admin" class="font-label-lg text-label-lg text-primary px-space-md py-space-sm rounded-full hover:bg-surface-container-high">← Panel Admin</a>
+  </div>
+
+  <div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-wrap items-end gap-space-sm">
+    <label class="block">
+      <span class="font-label-sm text-label-sm text-on-surface-variant">Sede</span>
+      <select id="filtro-sede" class="rounded-md border-outline-variant text-sm">
+        <option value="">Todas</option>
+      </select>
+    </label>
+    <label class="block">
+      <span class="font-label-sm text-label-sm text-on-surface-variant">Rango</span>
+      <select id="filtro-rango" class="rounded-md border-outline-variant text-sm">
+        <option value="diario">Diario</option>
+        <option value="semanal" selected>Semanal</option>
+        <option value="mensual">Mensual</option>
+        <option value="personalizado">Personalizado</option>
+      </select>
+    </label>
+    <label id="label-referencia" class="block">
+      <span class="font-label-sm text-label-sm text-on-surface-variant">Fecha de referencia</span>
+      <input type="date" id="filtro-referencia" class="rounded-md border-outline-variant text-sm">
+    </label>
+    <label id="label-desde" class="hidden block">
+      <span class="font-label-sm text-label-sm text-on-surface-variant">Desde</span>
+      <input type="date" id="filtro-desde" class="rounded-md border-outline-variant text-sm">
+    </label>
+    <label id="label-hasta" class="hidden block">
+      <span class="font-label-sm text-label-sm text-on-surface-variant">Hasta</span>
+      <input type="date" id="filtro-hasta" class="rounded-md border-outline-variant text-sm">
+    </label>
+    <button id="btn-filtrar" class="rounded-full bg-primary text-on-primary px-space-md py-space-xs font-label-md text-label-md font-bold min-h-[40px]">Filtrar</button>
+  </div>
+
+  <div id="texto-rango" class="font-label-md text-label-md text-on-surface-variant"></div>
+
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm">
+    <div class="bg-surface-container-lowest rounded-xl p-space-md text-center">
+      <p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Total vendido</p>
+      <p id="kpi-total" class="font-headline-sm text-headline-sm font-black text-secondary">S/ 0.00</p>
+    </div>
+    <div class="bg-surface-container-lowest rounded-xl p-space-md text-center">
+      <p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Transacciones</p>
+      <p id="kpi-cantidad" class="font-headline-sm text-headline-sm font-black text-on-surface">0</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter-desktop">
+    <section class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+      <h2 class="font-title-md text-title-md font-bold text-on-surface px-space-md pt-space-md">Por sede</h2>
+      <table class="w-full text-sm mt-space-sm">
+        <tbody id="tabla-sede"></tbody>
+      </table>
+    </section>
+    <section class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+      <h2 class="font-title-md text-title-md font-bold text-on-surface px-space-md pt-space-md">Por cajero</h2>
+      <table class="w-full text-sm mt-space-sm">
+        <tbody id="tabla-cajero"></tbody>
+      </table>
+    </section>
+    <section class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+      <h2 class="font-title-md text-title-md font-bold text-on-surface px-space-md pt-space-md">Yape vs. Efectivo</h2>
+      <table class="w-full text-sm mt-space-sm">
+        <tbody id="tabla-metodo"></tbody>
+      </table>
+    </section>
+    <section class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+      <h2 class="font-title-md text-title-md font-bold text-on-surface px-space-md pt-space-md">Por día</h2>
+      <table class="w-full text-sm mt-space-sm">
+        <tbody id="tabla-dia"></tbody>
+      </table>
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const soles = n => 'S/ ' + Number(n).toFixed(2);
+
+async function cargarSedes() {
+  const res = await fetch('/api/admin/sedes', { credentials: 'same-origin' });
+  const sedes = await res.json();
+  $('filtro-sede').innerHTML += sedes.map(s => `<option value="${s.id_sucursal}">${esc(s.nombre)}</option>`).join('');
+}
+
+function fila(etiqueta, cantidad, total) {
+  return `<tr class="border-t border-outline-variant/20">
+    <td class="px-space-md py-space-sm">${esc(etiqueta)}</td>
+    <td class="px-space-md py-space-sm text-right text-on-surface-variant">${cantidad ?? ''}</td>
+    <td class="px-space-md py-space-sm text-right font-bold">${soles(total)}</td>
+  </tr>`;
+}
+
+function actualizarFiltrosVisibles() {
+  const rango = $('filtro-rango').value;
+  $('label-referencia').classList.toggle('hidden', rango === 'personalizado');
+  $('label-desde').classList.toggle('hidden', rango !== 'personalizado');
+  $('label-hasta').classList.toggle('hidden', rango !== 'personalizado');
+}
+
+$('filtro-rango').addEventListener('change', actualizarFiltrosVisibles);
+
+async function cargarReporte() {
+  const params = new URLSearchParams();
+  if ($('filtro-sede').value) params.set('id_sucursal', $('filtro-sede').value);
+  params.set('rango', $('filtro-rango').value);
+  if ($('filtro-rango').value === 'personalizado') {
+    if ($('filtro-desde').value) params.set('desde', $('filtro-desde').value);
+    if ($('filtro-hasta').value) params.set('hasta', $('filtro-hasta').value);
+  } else if ($('filtro-referencia').value) {
+    params.set('referencia', $('filtro-referencia').value);
+  }
+
+  const res = await fetch('/api/admin/reportes/ventas?' + params.toString(), { credentials: 'same-origin' });
+  if (res.status === 401 || res.status === 403) { location.href = '/iniciar-sesion'; return; }
+  const r = await res.json();
+  if (!res.ok) { alert(r.error || 'No se pudo cargar el reporte'); return; }
+
+  $('texto-rango').textContent = `Del ${r.inicio} al ${r.fin}`;
+  $('kpi-total').textContent = soles(r.resumen.total);
+  $('kpi-cantidad').textContent = r.resumen.cantidad_transacciones;
+
+  $('tabla-sede').innerHTML = r.por_sede.length
+    ? r.por_sede.map(f => fila(f.sede, f.cantidad, f.total)).join('')
+    : '<tr><td class="px-space-md py-space-md text-on-surface-variant">Sin ventas.</td></tr>';
+
+  $('tabla-cajero').innerHTML = r.por_cajero.length
+    ? r.por_cajero.map(f => fila(f.cajero, f.cantidad, f.total)).join('')
+    : '<tr><td class="px-space-md py-space-md text-on-surface-variant">Sin ventas.</td></tr>';
+
+  $('tabla-metodo').innerHTML = r.por_metodo.length
+    ? r.por_metodo.map(f => fila(f.metodo_pago === 'yape' ? 'Yape' : 'Efectivo', f.cantidad, f.total)).join('')
+    : '<tr><td class="px-space-md py-space-md text-on-surface-variant">Sin ventas.</td></tr>';
+
+  $('tabla-dia').innerHTML = r.por_dia.length
+    ? r.por_dia.map(f => fila(f.fecha, null, f.total)).join('')
+    : '<tr><td class="px-space-md py-space-md text-on-surface-variant">Sin ventas.</td></tr>';
+}
+
+$('btn-filtrar').addEventListener('click', cargarReporte);
+
+actualizarFiltrosVisibles();
+cargarSedes();
+cargarReporte();
+</script>
+{% endblock %}

@@ -1,0 +1,344 @@
+{% extends 'base_panel.html' %}
+{% set pagina_activa = 'alquiler-flota' %}
+{% block titulo %}Vender / Alquilar Flota · Dino Park{% endblock %}
+
+{% block contenido %}
+<div class="max-w-6xl mx-auto space-y-space-lg">
+  <div class="flex items-center gap-space-sm">
+    <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+      <span class="material-symbols-outlined text-[24px]">directions_car</span>
+    </div>
+    <div>
+      <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">Vender / Alquilar Flota</h1>
+      <p class="font-body-md text-body-md text-on-surface-variant">Dinosaurios, carros y motos por turno fijo (Real Plaza / Mega Plaza).</p>
+    </div>
+  </div>
+
+  <div id="alerta" class="hidden px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold"></div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter-desktop">
+
+    <!-- ===================== NUEVO ALQUILER ===================== -->
+    <section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
+      <h2 class="font-title-md text-title-md font-bold text-on-surface">Nuevo alquiler</h2>
+
+      <label class="block">
+        <span class="font-label-md text-label-md text-on-surface-variant">Sede</span>
+        <select id="select-sede" class="mt-1 w-full rounded-lg border-outline-variant"></select>
+      </label>
+
+      <div id="sin-unidades" class="hidden font-body-md text-body-md text-on-surface-variant">
+        No hay unidades disponibles en esta sede (todas alquiladas o en mantenimiento).
+      </div>
+
+      <div id="con-unidades" class="space-y-space-md">
+        <label class="block">
+          <span class="font-label-md text-label-md text-on-surface-variant">Unidad</span>
+          <select id="select-unidad" class="mt-1 w-full rounded-lg border-outline-variant"></select>
+        </label>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="font-body-md text-body-md text-on-surface-variant block">Precio</span>
+            <span id="texto-precio" class="font-headline-md text-headline-md text-secondary font-extrabold">S/ 0.00</span>
+          </div>
+          <div class="text-right">
+            <span class="font-body-md text-body-md text-on-surface-variant block">Duración</span>
+            <span id="texto-duracion" class="font-title-md text-title-md font-bold text-on-surface">12 min</span>
+          </div>
+        </div>
+
+        <div id="paso-pago" class="hidden space-y-space-sm pt-space-sm border-t border-outline-variant/30">
+          <label class="block">
+            <span class="font-label-md text-label-md text-on-surface-variant">Método de pago</span>
+            <select id="select-metodo" class="mt-1 w-full rounded-lg border-outline-variant">
+              <option value="efectivo">Efectivo</option>
+              <option value="yape">Yape</option>
+            </select>
+          </label>
+          <button id="btn-cobrar" class="w-full inline-flex items-center justify-center gap-space-xs font-label-lg text-label-lg bg-primary text-on-primary px-space-lg py-space-sm rounded-full shadow-md hover:bg-on-primary-container transition-all min-h-[48px]">
+            Cobrar
+          </button>
+        </div>
+
+        <button id="btn-alquilar" class="w-full inline-flex items-center justify-center gap-space-xs font-label-lg text-label-lg bg-primary text-on-primary px-space-lg py-space-sm rounded-full shadow-md hover:bg-on-primary-container transition-all min-h-[48px]">
+          Registrar alquiler
+        </button>
+      </div>
+    </section>
+
+    <!-- ===================== ALQUILERES ACTIVOS ===================== -->
+    <section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+      <h2 class="font-title-md text-title-md font-bold text-on-surface mb-space-md">Alquileres activos</h2>
+      <div id="lista-activos" class="space-y-space-sm">
+        <p class="font-body-md text-body-md text-on-surface-variant">Cargando…</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===================== CAJA Y LECTURAS MANUALES ===================== -->
+  <section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
+    <h2 class="font-title-md text-title-md font-bold text-on-surface">Caja y lecturas de contador</h2>
+    <div id="estado-caja" class="font-body-md text-body-md text-on-surface-variant">Cargando…</div>
+
+    <div id="bloque-abrir" class="hidden space-y-space-md">
+      <label class="block">
+        <span class="font-label-sm text-label-sm text-on-surface-variant">Monto inicial (S/)</span>
+        <input id="monto-inicial" type="number" step="0.01" min="0" value="0" class="w-40 rounded-md border-outline-variant text-sm">
+      </label>
+      <div id="lecturas-apertura-wrap" class="hidden space-y-space-sm">
+        <p class="font-body-md text-body-md text-on-surface">Antes de abrir, registra la lectura manual del contador físico de cada atracción:</p>
+        <div id="lista-lecturas-apertura" class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm"></div>
+      </div>
+      <button id="btn-abrir-caja" class="rounded-full bg-primary text-on-primary px-space-md py-space-sm font-label-lg text-label-lg shadow-md">Abrir caja</button>
+    </div>
+
+    <div id="bloque-cierre" class="hidden space-y-space-sm">
+      <div id="lecturas-cierre-wrap" class="hidden space-y-space-sm">
+        <p class="font-body-md text-body-md text-on-surface">Para cerrar, registra la lectura manual de cierre de cada atracción:</p>
+        <div id="lista-lecturas-cierre" class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm"></div>
+      </div>
+      <button id="btn-cerrar-caja" class="rounded-full bg-error text-on-error px-space-md py-space-sm font-label-lg text-label-lg font-bold">Cerrar caja</button>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const soles = n => 'S/ ' + Number(n).toFixed(2);
+
+let ventaActual = null;
+let unidades = [];
+let cajaActual = null;
+
+function alerta(msg, tipo = 'error') {
+  const el = $('alerta');
+  el.textContent = msg;
+  el.className = 'px-space-md py-space-sm rounded-lg font-label-md text-label-md font-bold ' +
+    (tipo === 'error' ? 'bg-error-container text-on-error-container' : 'bg-primary-container/30 text-on-primary-container');
+  setTimeout(() => el.classList.add('hidden'), 6000);
+}
+
+function unidadSeleccionada() {
+  const sel = $('select-unidad');
+  return unidades.find(u => u.id_flota === parseInt(sel.value, 10));
+}
+
+function actualizarPrecio() {
+  const u = unidadSeleccionada();
+  if (!u) { $('texto-precio').textContent = 'S/ 0.00'; return; }
+  $('texto-precio').textContent = soles(u.precio_alquiler);
+  $('texto-duracion').textContent = `${u.duracion_alquiler_minutos} min`;
+}
+
+async function cargarUnidades(idSucursal) {
+  const res = await fetch(`/api/flota/alquilable?id_sucursal=${idSucursal}`, { credentials: 'same-origin' });
+  unidades = await res.json();
+  const select = $('select-unidad');
+  select.innerHTML = unidades.map(u => `<option value="${u.id_flota}">${esc(u.nombre)} (${u.tipo})</option>`).join('');
+
+  $('sin-unidades').classList.toggle('hidden', unidades.length > 0);
+  $('con-unidades').classList.toggle('hidden', unidades.length === 0);
+  actualizarPrecio();
+}
+
+async function cargarSedes() {
+  const res = await fetch('/api/sedes/con-flota', { credentials: 'same-origin' });
+  const sedes = await res.json();
+  const select = $('select-sede');
+  select.innerHTML = sedes.map(s => `<option value="${s.id_sucursal}">${esc(s.nombre)}</option>`).join('');
+  if (sedes.length) await cargarUnidades(select.value);
+  return sedes;
+}
+
+$('select-sede').addEventListener('change', e => cargarUnidades(e.target.value));
+$('select-unidad').addEventListener('change', actualizarPrecio);
+
+$('btn-alquilar').addEventListener('click', async () => {
+  const u = unidadSeleccionada();
+  if (!u) return;
+
+  const res = await fetch('/api/ventas/alquiler', {
+    method: 'POST', credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_flota: u.id_flota }),
+  });
+  const json = await res.json();
+  if (!res.ok) { alerta(json.error || 'No se pudo registrar el alquiler'); return; }
+
+  ventaActual = json.id_venta;
+  $('btn-alquilar').classList.add('hidden');
+  $('paso-pago').classList.remove('hidden');
+});
+
+$('btn-cobrar').addEventListener('click', async () => {
+  const metodo = $('select-metodo').value;
+  const res = await fetch(`/api/ventas/${ventaActual}/pago`, {
+    method: 'POST', credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ metodo_pago: metodo }),
+  });
+  const json = await res.json();
+  if (!res.ok) { alerta(json.error || 'No se pudo cobrar el alquiler'); return; }
+
+  alerta(`Alquiler cobrado. Ticket(s): ${(json.tickets || []).join(', ')}`, 'ok');
+  ventaActual = null;
+  $('paso-pago').classList.add('hidden');
+  $('btn-alquilar').classList.remove('hidden');
+  await cargarUnidades($('select-sede').value);
+  cargarActivos();
+});
+
+// ===================== ALQUILERES ACTIVOS / TEMPORIZADOR =====================
+
+let activos = [];
+
+function tiempoRestanteTexto(a) {
+  const fin = new Date(a.hora_inicio).getTime() + a.duracion_minutos * 60000;
+  const restanteMs = fin - Date.now();
+  const vencido = restanteMs <= 0;
+  const segundosAbs = Math.floor(Math.abs(restanteMs) / 1000);
+  const mm = String(Math.floor(segundosAbs / 60)).padStart(2, '0');
+  const ss = String(segundosAbs % 60).padStart(2, '0');
+  return { texto: `${vencido ? '-' : ''}${mm}:${ss}`, vencido };
+}
+
+function pintarActivos() {
+  if (!activos.length) {
+    $('lista-activos').innerHTML = '<p class="font-body-md text-body-md text-on-surface-variant">No hay alquileres activos.</p>';
+    return;
+  }
+  $('lista-activos').innerHTML = activos.map(a => {
+    const t = tiempoRestanteTexto(a);
+    return `
+      <div class="p-space-md rounded-lg border ${t.vencido ? 'border-error bg-error-container/20' : 'border-outline-variant/30 bg-surface-container'} flex items-center justify-between gap-space-sm">
+        <div>
+          <p class="font-label-lg text-label-lg text-on-surface">${esc(a.unidad)} <span class="text-xs text-on-surface-variant">(${esc(a.tipo)})</span></p>
+          <p class="font-label-sm text-label-sm ${t.vencido ? 'text-error font-bold' : 'text-on-surface-variant'}">
+            ${t.vencido ? 'Tiempo cumplido hace ' + t.texto.replace('-', '') : 'Tiempo restante ' + t.texto}
+          </p>
+        </div>
+        <button type="button" data-finalizar="${a.id}" class="shrink-0 rounded-full bg-surface-container-high text-on-surface px-space-md py-space-xs font-label-md text-label-md font-bold min-h-[40px]">Finalizar alquiler</button>
+      </div>`;
+  }).join('');
+}
+
+async function cargarActivos() {
+  const res = await fetch('/api/caja/alquileres-activos', { credentials: 'same-origin' });
+  if (!res.ok) return;
+  activos = await res.json();
+  pintarActivos();
+}
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-finalizar]');
+  if (!b) return;
+  const res = await fetch(`/api/caja/alquileres-activos/${b.dataset.finalizar}/finalizar`, {
+    method: 'POST', credentials: 'same-origin',
+  });
+  const json = await res.json();
+  if (!res.ok) { alerta(json.error || 'No se pudo finalizar el alquiler'); return; }
+  alerta('Alquiler finalizado.', 'ok');
+  cargarActivos();
+  cargarUnidades($('select-sede').value);
+});
+
+// ===================== CAJA Y LECTURAS =====================
+
+let unidadesTodas = [];
+
+async function cargarUnidadesTodas(idSucursal) {
+  if (!idSucursal) { unidadesTodas = []; return; }
+  const res = await fetch(`/api/flota/unidades?id_sucursal=${idSucursal}`, { credentials: 'same-origin' });
+  unidadesTodas = res.ok ? await res.json() : [];
+}
+
+function pintarCamposLectura(contenedorId, unidadesLista) {
+  $(contenedorId).innerHTML = unidadesLista.map(u => `
+    <label class="block" data-unidad-lectura="${u.id_flota}">
+      <span class="font-label-sm text-label-sm text-on-surface-variant">${esc(u.nombre)} (${esc(u.tipo)})</span>
+      <input type="number" min="0" class="w-full rounded-md border-outline-variant text-sm" placeholder="Lectura manual">
+    </label>`).join('');
+}
+
+function leerLecturas(contenedorId) {
+  return Array.from(document.querySelectorAll(`#${contenedorId} [data-unidad-lectura]`))
+    .map(label => ({
+      id_flota: parseInt(label.dataset.unidadLectura, 10),
+      lectura_manual: label.querySelector('input').value,
+    }));
+}
+
+async function cargarCaja() {
+  const res = await fetch('/api/caja/actual', { credentials: 'same-origin' });
+  if (res.status === 404) {
+    cajaActual = null;
+    $('estado-caja').textContent = 'No hay caja abierta.';
+    $('bloque-abrir').classList.remove('hidden');
+    $('bloque-cierre').classList.add('hidden');
+
+    await cargarUnidadesTodas($('select-sede').value);
+    $('lecturas-apertura-wrap').classList.toggle('hidden', unidadesTodas.length === 0);
+    pintarCamposLectura('lista-lecturas-apertura', unidadesTodas);
+    return;
+  }
+  cajaActual = await res.json();
+  $('estado-caja').innerHTML = `Caja #${cajaActual.id_caja} abierta · saldo actual ${soles(cajaActual.saldo_actual)}`;
+  $('bloque-abrir').classList.add('hidden');
+  $('bloque-cierre').classList.remove('hidden');
+
+  await cargarUnidadesTodas(cajaActual.id_sucursal || $('select-sede').value);
+  $('lecturas-cierre-wrap').classList.toggle('hidden', unidadesTodas.length === 0);
+  pintarCamposLectura('lista-lecturas-cierre', unidadesTodas);
+}
+
+$('select-sede').addEventListener('change', async () => {
+  if (!cajaActual) {
+    await cargarUnidadesTodas($('select-sede').value);
+    $('lecturas-apertura-wrap').classList.toggle('hidden', unidadesTodas.length === 0);
+    pintarCamposLectura('lista-lecturas-apertura', unidadesTodas);
+  }
+});
+
+$('btn-abrir-caja').addEventListener('click', async () => {
+  const lecturas = leerLecturas('lista-lecturas-apertura');
+  const res = await fetch('/api/caja/abrir', {
+    method: 'POST', credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      monto_inicial: parseFloat($('monto-inicial').value || '0'),
+      id_sucursal: parseInt($('select-sede').value, 10) || null,
+      lecturas,
+    }),
+  });
+  const json = await res.json();
+  if (!res.ok) { alerta(json.error || 'No se pudo abrir la caja'); return; }
+  alerta('Caja abierta.', 'ok');
+  await cargarCaja();
+});
+
+$('btn-cerrar-caja').addEventListener('click', async () => {
+  const lecturas = leerLecturas('lista-lecturas-cierre');
+  const res = await fetch('/api/caja/cerrar', {
+    method: 'POST', credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lecturas }),
+  });
+  const json = await res.json();
+  if (!res.ok) { alerta(json.error || 'No se pudo cerrar la caja'); return; }
+  alerta(`Caja cerrada. Saldo final: ${soles(json.saldo_actual)}`, 'ok');
+  cargarCaja();
+});
+
+(async () => {
+  await cargarSedes();
+  await cargarCaja();
+  cargarActivos();
+})();
+setInterval(pintarActivos, 1000);
+setInterval(cargarActivos, 15000);
+</script>
+{% endblock %}

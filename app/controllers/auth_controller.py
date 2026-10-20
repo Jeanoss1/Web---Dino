@@ -1,3 +1,4 @@
+import os
 import secrets
 
 from authlib.integrations.base_client import OAuthError
@@ -282,6 +283,7 @@ def _abrir_sesion(usuario, recordar):
     )
 
     session['foto'] = usuario.foto_url
+    session['id_sucursal'] = usuario.id_sucursal
 
     session.permanent = recordar
 
@@ -349,9 +351,16 @@ def oauth_iniciar(proveedor, accion):
 
     session['oauth_accion'] = accion
 
-    return cliente.authorize_redirect(
-        url_for('auth.oauth_callback', proveedor=proveedor, _external=True)
-    )
+    # GOOGLE_REDIRECT_URI es opcional: solo hace falta si, detrás de un proxy
+    # (Railway), url_for(_external=True) no puede armar la URL en https por sí
+    # solo. Si no está definida, se sigue calculando como antes.
+    redirect_uri = None
+    if proveedor == 'google':
+        redirect_uri = os.getenv('GOOGLE_REDIRECT_URI') or None
+    if not redirect_uri:
+        redirect_uri = url_for('auth.oauth_callback', proveedor=proveedor, _external=True)
+
+    return cliente.authorize_redirect(redirect_uri)
 
 
 @auth_bp.route('/auth/<proveedor>/callback')
