@@ -150,9 +150,9 @@ $('btn-siguiente').addEventListener('click', () => { semanaRef.setDate(semanaRef
 
 $('btn-guardar').addEventListener('click', async () => {
   const asignaciones = Array.from(document.querySelectorAll('[data-usuario][data-fecha]')).map(sel => ({
-    id_usuario: parseInt(sel.dataset.usuario, 10),
+    id_usuario: Number.parseInt(sel.dataset.usuario, 10),
     fecha: sel.dataset.fecha,
-    id_turno_laboral: sel.value ? parseInt(sel.value, 10) : null,
+    id_turno_laboral: sel.value ? Number.parseInt(sel.value, 10) : null,
   }));
   const res = await fetch('/api/admin/horarios', {
     method: 'POST', credentials: 'same-origin',

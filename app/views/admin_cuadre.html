@@ -89,16 +89,8 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/admin_filtros.js') }}"></script>
 <script>
-const $ = id => document.getElementById(id);
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const soles = n => 'S/ ' + Number(n).toFixed(2);
-
-async function cargarSedes() {
-  const res = await fetch('/api/admin/sedes', { credentials: 'same-origin' });
-  const sedes = await res.json();
-  $('filtro-sede').innerHTML += sedes.map(s => `<option value="${s.id_sucursal}">${esc(s.nombre)}</option>`).join('');
-}
 
 async function cargarCuadre() {
   const params = new URLSearchParams();

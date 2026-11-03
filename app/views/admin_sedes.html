@@ -148,7 +148,7 @@ document.addEventListener('click', async e => {
     const cuerpo = {};
     card.querySelectorAll('[data-campo-sede]').forEach(el => {
       const campo = el.dataset.campoSede;
-      cuerpo[campo] = el.value === '' ? null : (campo === 'monto_adicional_exceso' ? parseFloat(el.value) : el.value);
+      cuerpo[campo] = el.value === '' ? null : (campo === 'monto_adicional_exceso' ? Number.parseFloat(el.value) : el.value);
     });
     const res = await fetch(`/api/admin/sedes/${id}`, {
       method: 'PUT', credentials: 'same-origin',
@@ -167,9 +167,9 @@ document.addEventListener('click', async e => {
     const cuerpo = {};
     fila.querySelectorAll('[data-campo]').forEach(el => {
       const campo = el.dataset.campo;
-      if (campo === 'precio') cuerpo[campo] = parseFloat(el.value);
-      else if (campo === 'duracion_minutos') cuerpo[campo] = el.value === '' ? null : parseInt(el.value, 10);
-      else if (campo === 'minimo_cantidad') cuerpo[campo] = parseInt(el.value, 10);
+      if (campo === 'precio') cuerpo[campo] = Number.parseFloat(el.value);
+      else if (campo === 'duracion_minutos') cuerpo[campo] = el.value === '' ? null : Number.parseInt(el.value, 10);
+      else if (campo === 'minimo_cantidad') cuerpo[campo] = Number.parseInt(el.value, 10);
       else cuerpo[campo] = el.value;
     });
     const res = await fetch(`/api/admin/paquetes/${id}`, {
@@ -189,7 +189,7 @@ document.addEventListener('click', async e => {
     const cuerpo = {};
     fila.querySelectorAll('[data-campo-flota]').forEach(el => {
       const campo = el.dataset.campoFlota;
-      cuerpo[campo] = campo === 'precio_hora' ? parseFloat(el.value) : el.value;
+      cuerpo[campo] = campo === 'precio_hora' ? Number.parseFloat(el.value) : el.value;
     });
     const res = await fetch(`/api/admin/flota/${id}`, {
       method: 'PUT', credentials: 'same-origin',

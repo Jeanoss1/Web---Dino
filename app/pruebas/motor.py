@@ -251,6 +251,7 @@ def _crear_app_pruebas(url, carpeta):
         'SQLALCHEMY_DATABASE_URI': url.render_as_string(hide_password=False),
         'UPLOAD_FOLDER': carpeta,
         'TESTING': True,
+        'WTF_CSRF_ENABLED': False,   # el cliente de pruebas no envía token CSRF
         'SEMBRAR_DATOS': False,
         # Los casos reservan los turnos de 10:00 a 13:00 de hoy,
         # se ejecuten a la hora que se ejecuten

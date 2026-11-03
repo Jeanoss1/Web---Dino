@@ -1,14 +1,19 @@
+import logging
 import os
+import secrets
 from datetime import timedelta
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, session
+from flask import Flask, jsonify, request, session
+from flask_wtf.csrf import CSRFError, CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.database import db
 from app.oauth import registrar_proveedores
 
 load_dotenv()
+
+csrf = CSRFProtect()
 
 
 def create_app(config=None):
@@ -25,8 +30,19 @@ def create_app(config=None):
 
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'cambia-esta-clave')
+    secret_key = os.getenv('SECRET_KEY')
+    if not secret_key:
+        # Sin SECRET_KEY en el .env se usa una clave aleatoria: la app funciona,
+        # pero las sesiones se cierran cada vez que se reinicia el servidor.
+        logging.getLogger(__name__).warning(
+            'Falta SECRET_KEY en el .env: se usa una clave temporal')
+        secret_key = secrets.token_hex(32)
+    app.config['SECRET_KEY'] = secret_key
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    # El token CSRF dura lo mismo que la sesión (las páginas de caja quedan
+    # abiertas horas; con el límite por defecto de 1 h fallarían sus POST)
+    app.config['WTF_CSRF_TIME_LIMIT'] = None
 
     # --- Rendimiento ---
     # Conexiones a PostgreSQL que se reutilizan entre peticiones. Debe haber
@@ -93,11 +109,19 @@ def create_app(config=None):
             return None
         return {'tipo_sede_actual': tipo_sede_actual}
 
+    @app.errorhandler(CSRFError)
+    def token_csrf_invalido(_):
+        mensaje = 'Tu sesión expiró. Recarga la página e inténtalo de nuevo.'
+        if request.path.startswith('/api/') or request.is_json:
+            return jsonify(error=mensaje), 400
+        return mensaje, 400
+
     @app.errorhandler(413)
     def archivo_muy_grande(_):
         return jsonify(error='La imagen supera los 5 MB'), 413
 
     db.init_app(app)
+    csrf.init_app(app)
     registrar_proveedores(app)
 
     from app import models  # carga todos los modelos

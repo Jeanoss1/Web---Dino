@@ -10,7 +10,7 @@ prefijo de los tickets se toman del día en que se ejecutan las pruebas.
 """
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.pruebas.motor import caso
 
@@ -249,8 +249,8 @@ def cp_01_17(ctx, r):
     cookie = carlos.get_cookie('session')
     dias = None
     if cookie is not None and cookie.expires is not None:
-        vence = cookie.expires.replace(tzinfo=None)
-        dias = (vence - datetime.utcnow()).days
+        vence = cookie.expires.replace(tzinfo=timezone.utc)
+        dias = (vence - datetime.now(timezone.utc)).days
     r.cumple('Cookie persistente (días de vigencia)', dias is not None and 29 <= dias <= 30,
              dias, '29–30')
     navegador_nuevo = ctx.nuevo_cliente()

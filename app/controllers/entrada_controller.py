@@ -13,8 +13,6 @@ Dos formas de vender una entrada:
     una cola separada).
 """
 
-import hashlib
-import os
 import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -37,6 +35,9 @@ from app.models.ReservaEntrada import ReservaEntrada
 from app.models.Sucursal import Sucursal
 from app.models.Venta import Venta
 from app.models.Zona import Zona
+from app.servicios_comprobante import (
+    guardar_captura, rechazar_comprobante, validar_captura
+)
 
 from app.servicios_entrada import ErrorPaquete, calcular_subtotal_paquete
 
@@ -133,17 +134,6 @@ def _cliente_actual():
 
 def _es_personal():
     return session.get('rol') in ROLES_CAJA
-
-
-def _extension_por_firma(cabecera):
-    """Detecta el tipo real de imagen por su contenido (no por el nombre)."""
-    if cabecera.startswith(b'\x89PNG\r\n\x1a\n'):
-        return 'png'
-    if cabecera.startswith(b'\xff\xd8\xff'):
-        return 'jpg'
-    if cabecera[:4] == b'RIFF' and cabecera[8:12] == b'WEBP':
-        return 'webp'
-    return None
 
 
 def _detalles_entrada(r):
@@ -350,26 +340,11 @@ def subir_comprobante_entrada(id_reserva_entrada):
     ):
         return jsonify(error='Reserva no encontrada'), 404
 
-    if reserva.estado == 'cancelada':
-        return jsonify(error='Esta reserva fue cancelada'), 400
-    if reserva.estado == 'confirmada':
-        return jsonify(error='Esta reserva ya está confirmada'), 400
-    if reserva.estado == 'por_validar':
-        return jsonify(error='Ya enviaste un comprobante, el cajero lo está revisando'), 400
+    error, captura = validar_captura(reserva)
+    if error:
+        return jsonify(error=error), 400
+    contenido, extension, huella = captura
 
-    archivo = request.files.get('comprobante')
-    if archivo is None or not archivo.filename:
-        return jsonify(error='Selecciona la captura de tu pago'), 400
-
-    contenido = archivo.read()
-    if not contenido:
-        return jsonify(error='El archivo está vacío'), 400
-
-    extension = _extension_por_firma(contenido[:16])
-    if extension is None:
-        return jsonify(error='Sube una imagen PNG, JPG o WEBP'), 400
-
-    huella = hashlib.sha256(contenido).hexdigest()
     repetido = (
         ComprobanteReservaEntrada.query
         .filter(
@@ -382,11 +357,9 @@ def subir_comprobante_entrada(id_reserva_entrada):
     if repetido:
         return jsonify(error='Esta captura ya fue usada en otra reserva'), 400
 
-    carpeta = current_app.config['UPLOAD_FOLDER']
-    os.makedirs(carpeta, exist_ok=True)
-    nombre = f'entrada{reserva.id_reserva_entrada}_{uuid.uuid4().hex}.{extension}'
-    with open(os.path.join(carpeta, nombre), 'wb') as f:
-        f.write(contenido)
+    nombre = guardar_captura(
+        f'entrada{reserva.id_reserva_entrada}', contenido, extension
+    )
 
     comprobante = ComprobanteReservaEntrada(
         id_reserva_entrada=reserva.id_reserva_entrada, metodo_pago='yape',
@@ -485,17 +458,9 @@ def rechazar_reserva_entrada(id_reserva_entrada):
     if comprobante is None:
         return jsonify(error='Esta reserva no tiene un comprobante por validar'), 400
 
-    datos = request.get_json(silent=True) or {}
-    motivo = (datos.get('motivo') or '').strip()
-    if not motivo:
-        return jsonify(error='Indica el motivo del rechazo'), 400
-
-    comprobante.estado = 'rechazado'
-    comprobante.motivo_rechazo = motivo[:200]
-    comprobante.id_validador = session['id_usuario']
-    comprobante.fecha_validacion = datetime.now()
-    reserva.estado = 'pendiente'
-    db.session.commit()
+    error = rechazar_comprobante(reserva, comprobante)
+    if error:
+        return jsonify(error=error), 400
 
     return jsonify(_reserva_entrada_a_dict(reserva, con_cliente=True))
 

@@ -124,7 +124,7 @@ function alerta(msg, tipo = 'error') {
 
 function unidadSeleccionada() {
   const sel = $('select-unidad');
-  return unidades.find(u => u.id_flota === parseInt(sel.value, 10));
+  return unidades.find(u => u.id_flota === Number.parseInt(sel.value, 10));
 }
 
 function actualizarPrecio() {
@@ -176,12 +176,7 @@ $('btn-alquilar').addEventListener('click', async () => {
 
 $('btn-cobrar').addEventListener('click', async () => {
   const metodo = $('select-metodo').value;
-  const res = await fetch(`/api/ventas/${ventaActual}/pago`, {
-    method: 'POST', credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ metodo_pago: metodo }),
-  });
-  const json = await res.json();
+  const { res, json } = await pagarVenta(ventaActual, metodo);
   if (!res.ok) { alerta(json.error || 'No se pudo cobrar el alquiler'); return; }
 
   alerta(`Alquiler cobrado. Ticket(s): ${(json.tickets || []).join(', ')}`, 'ok');
@@ -267,7 +262,7 @@ function pintarCamposLectura(contenedorId, unidadesLista) {
 function leerLecturas(contenedorId) {
   return Array.from(document.querySelectorAll(`#${contenedorId} [data-unidad-lectura]`))
     .map(label => ({
-      id_flota: parseInt(label.dataset.unidadLectura, 10),
+      id_flota: Number.parseInt(label.dataset.unidadLectura, 10),
       lectura_manual: label.querySelector('input').value,
     }));
 }
@@ -309,8 +304,8 @@ $('btn-abrir-caja').addEventListener('click', async () => {
     method: 'POST', credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      monto_inicial: parseFloat($('monto-inicial').value || '0'),
-      id_sucursal: parseInt($('select-sede').value, 10) || null,
+      monto_inicial: Number.parseFloat($('monto-inicial').value || '0'),
+      id_sucursal: Number.parseInt($('select-sede').value, 10) || null,
       lecturas,
     }),
   });

@@ -112,9 +112,9 @@ function actualizarTotal() {
   const esPackGuia = opcion.dataset.tipo === 'pack_guia';
   $('label-nino-5').classList.toggle('hidden', !esPackGuia);
 
-  const precio = parseFloat(opcion.dataset.precio);
+  const precio = Number.parseFloat(opcion.dataset.precio);
   const esPorNinio = opcion.dataset.esPorNinio === '1';
-  const cantidad = Math.max(1, parseInt($('input-cantidad').value || '1', 10));
+  const cantidad = Math.max(1, Number.parseInt($('input-cantidad').value || '1', 10));
   const total = esPorNinio ? precio * cantidad : precio;
   $('texto-total').textContent = soles(total);
 }
@@ -171,15 +171,15 @@ $('btn-crear-venta').addEventListener('click', async () => {
   if (!opcion || !opcion.value) return;
 
   const item = {
-    id_paquete: parseInt(opcion.value, 10),
-    cantidad: Math.max(1, parseInt($('input-cantidad').value || '1', 10)),
+    id_paquete: Number.parseInt(opcion.value, 10),
+    cantidad: Math.max(1, Number.parseInt($('input-cantidad').value || '1', 10)),
   };
   if (opcion.dataset.tipo === 'pack_guia') item.nino_hasta_5 = $('check-nino-5').checked;
 
   const res = await fetch('/api/ventas/entradas', {
     method: 'POST', credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id_sucursal: parseInt($('select-sede').value, 10), items: [item] }),
+    body: JSON.stringify({ id_sucursal: Number.parseInt($('select-sede').value, 10), items: [item] }),
   });
   const json = await res.json();
   if (!res.ok) { alerta(json.error || 'No se pudo registrar la venta'); return; }
@@ -191,12 +191,7 @@ $('btn-crear-venta').addEventListener('click', async () => {
 
 $('btn-cobrar').addEventListener('click', async () => {
   const metodo = $('select-metodo').value;
-  const res = await fetch(`/api/ventas/${ventaActual}/pago`, {
-    method: 'POST', credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ metodo_pago: metodo }),
-  });
-  const json = await res.json();
+  const { res, json } = await pagarVenta(ventaActual, metodo);
   if (!res.ok) { alerta(json.error || 'No se pudo cobrar la venta'); return; }
 
   alerta(`Venta cobrada. Ticket(s): ${(json.tickets || []).join(', ')}`, 'ok');
