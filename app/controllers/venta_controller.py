@@ -71,8 +71,11 @@ def crear_venta():
             error='La venta necesita al menos un item'
         ), 400
 
+    id_sucursal = datos.get('id_sucursal') or session.get('id_sucursal')
+
     venta = Venta(
         id_usuario=session['id_usuario'],
+        id_sucursal=id_sucursal,
         estado='pendiente'
     )
 
@@ -198,9 +201,14 @@ def pagar_venta(id_venta):
             error='Esta venta ya está pagada'
         ), 400
 
-    caja = Caja.query.filter_by(
-        estado='abierta'
-    ).first()
+    id_sucursal = venta.id_sucursal or session.get('id_sucursal')
+    caja = None
+    if id_sucursal:
+        caja = Caja.query.filter_by(estado='abierta', id_sucursal=id_sucursal).first()
+    if not caja and session.get('id_usuario'):
+        caja = Caja.query.filter_by(estado='abierta', id_usuario=session.get('id_usuario')).first()
+    if not caja:
+        caja = Caja.query.filter_by(estado='abierta').first()
 
     tickets = []
 

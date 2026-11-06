@@ -90,24 +90,58 @@ def _caja_a_dict(c):
     }
 
 
-def _caja_abierta():
-    return Caja.query.filter_by(
-        estado='abierta'
-    ).first()
+def _caja_abierta(id_sucursal=None, id_usuario=None):
+    """Busca la caja abierta correspondiente al usuario y/o sede."""
+    if id_usuario is None:
+        id_usuario = session.get('id_usuario')
+    if id_sucursal is None:
+        if request:
+            if request.is_json:
+                datos = request.get_json(silent=True) or {}
+                id_sucursal = datos.get('id_sucursal')
+            if not id_sucursal:
+                id_sucursal = request.args.get('id_sucursal')
+        if not id_sucursal:
+            id_sucursal = session.get('id_sucursal')
+
+    # 1. Si el usuario actual tiene su propia caja abierta, esa es su caja activa
+    if id_usuario:
+        caja = Caja.query.filter_by(estado='abierta', id_usuario=id_usuario).first()
+        if caja:
+            return caja
+
+    # 2. Si no, busca la caja abierta de la sucursal indicada
+    if id_sucursal:
+        caja = Caja.query.filter_by(estado='abierta', id_sucursal=id_sucursal).first()
+        if caja:
+            return caja
+
+    # 3. Fallback cuando no hay usuario ni sede especificados
+    if not id_usuario and not id_sucursal:
+        return Caja.query.filter_by(estado='abierta').first()
+
+    # Si es administrador y no tiene caja propia ni sede específica, consultar cualquier caja abierta
+    if session.get('rol') == 'administrador':
+        return Caja.query.filter_by(estado='abierta').first()
+
+    return None
 
 
 @caja_bp.route('/api/caja/abrir', methods=['POST'])
 @rol_requerido(*ROLES_CAJA)
 def abrir_caja():
 
-    if _caja_abierta():
-        return jsonify(
-            error='Ya hay una caja abierta'
-        ), 400
-
     datos = request.get_json(
         silent=True
     ) or {}
+
+    id_sucursal = datos.get('id_sucursal') or session.get('id_sucursal')
+    id_usuario = session.get('id_usuario')
+
+    if _caja_abierta(id_sucursal=id_sucursal, id_usuario=id_usuario):
+        return jsonify(
+            error='Ya hay una caja abierta'
+        ), 400
 
     try:
         monto = Decimal(
@@ -127,7 +161,6 @@ def abrir_caja():
             error='El monto inicial no es válido'
         ), 400
 
-    id_sucursal = datos.get('id_sucursal') or session.get('id_sucursal')
     unidades = _unidades_que_requieren_lectura(id_sucursal)
 
     mapa_lecturas = {}
@@ -140,7 +173,7 @@ def abrir_caja():
         fecha_apertura=datetime.now(),
         monto_inicial=monto,
         estado='abierta',
-        id_usuario=session.get('id_usuario'),
+        id_usuario=id_usuario,
         id_sucursal=id_sucursal,
     )
 
@@ -192,16 +225,16 @@ def registrar_movimiento():
     }
     """
 
-    caja = _caja_abierta()
+    datos = request.get_json(
+        silent=True
+    ) or {}
+
+    caja = _caja_abierta(id_sucursal=datos.get('id_sucursal'))
 
     if caja is None:
         return jsonify(
             error='Primero debes abrir la caja'
         ), 400
-
-    datos = request.get_json(
-        silent=True
-    ) or {}
 
     tipo = datos.get('tipo')
 
@@ -251,14 +284,13 @@ def registrar_movimiento():
 @rol_requerido(*ROLES_CAJA)
 def cerrar_caja():
 
-    caja = _caja_abierta()
+    datos = request.get_json(silent=True) or {}
+    caja = _caja_abierta(id_sucursal=datos.get('id_sucursal'))
 
     if caja is None:
         return jsonify(
             error='No hay una caja abierta'
         ), 400
-
-    datos = request.get_json(silent=True) or {}
     unidades = _unidades_que_requieren_lectura(caja.id_sucursal)
 
     if unidades:

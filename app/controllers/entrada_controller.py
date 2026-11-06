@@ -712,7 +712,15 @@ def cobrar_adicional(tipo, id_detalle):
     db.session.add(pago)
     db.session.flush()
 
-    caja = Caja.query.filter_by(estado='abierta').first()
+    id_sucursal_caja = venta.id_sucursal or id_sucursal or session.get('id_sucursal')
+    caja = None
+    if id_sucursal_caja:
+        caja = Caja.query.filter_by(estado='abierta', id_sucursal=id_sucursal_caja).first()
+    if not caja and session.get('id_usuario'):
+        caja = Caja.query.filter_by(estado='abierta', id_usuario=session.get('id_usuario')).first()
+    if not caja:
+        caja = Caja.query.filter_by(estado='abierta').first()
+
     if caja and metodo.lower() == 'efectivo':
         db.session.add(
             MovimientoCaja(
