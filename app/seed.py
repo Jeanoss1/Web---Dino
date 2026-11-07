@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash
 
 from app.database import db
 from app.models.Rol import Rol
-from app.models.usuario import Usuario
+from app.models.Usuario import Usuario
 from app.models.Sucursal import Sucursal
 from app.models.Flota import Dinosaurio, Carro, Moto
 from app.models.Zona import Zona

@@ -2,44 +2,44 @@
 
 
 
-## HU01 - Gesti髇 de usuarios y autenticaci髇
+## HU01 - Gesti贸n de usuarios y autenticaci贸n
 
 **Como** cliente/usuario del sistema
-**Quiero** poder registrarme, iniciar sesi髇 y gestionar mi cuenta
+**Quiero** poder registrarme, iniciar sesi贸n y gestionar mi cuenta
 **Para** acceder a los servicios del parque Dino Park
 
-### Criterios de Aceptaci髇
+### Criterios de Aceptaci贸n
 
-- [ ] El sistema debe permitir registrar nuevos clientes con nombres, apellidos, DNI, tel閒ono, correo y contrase馻
-- [ ] La contrase馻 debe tener al menos 8 caracteres y coincidir con su confirmaci髇
-- [ ] Debe existir aceptaci髇 obligatoria de t閞minos y declaraci髇
+- [ ] El sistema debe permitir registrar nuevos clientes con nombres, apellidos, DNI, tel茅fono, correo y contrase帽a
+- [ ] La contrase帽a debe tener al menos 8 caracteres y coincidir con su confirmaci贸n
+- [ ] Debe existir aceptaci贸n obligatoria de t茅rminos y declaraci贸n
 - [ ] No se permiten correos ni DNIs duplicados
-- [ ] Los usuarios pueden iniciar sesi髇 con correo o DNI
-- [ ] Soporte para inicio de sesi髇 con 'Recordarme' (sesi髇 persistente)
-- [ ] Las cuentas desactivadas no pueden iniciar sesi髇
-- [ ] Debe existir funcionalidad de cerrar sesi髇
+- [ ] Los usuarios pueden iniciar sesi贸n con correo o DNI
+- [ ] Soporte para inicio de sesi贸n con 'Recordarme' (sesi贸n persistente)
+- [ ] Las cuentas desactivadas no pueden iniciar sesi贸n
+- [ ] Debe existir funcionalidad de cerrar sesi贸n
 - [ ] Debe haber control de acceso por roles (cliente, cajero, administrador)
-- [ ] Los clientes que se registran con Google deben completar su perfil (DNI y tel閒ono) antes de reservar
+- [ ] Los clientes que se registran con Google deben completar su perfil (DNI y tel茅fono) antes de reservar
 
 
-## HU02 - Cat醠ogo, flota y reservas
+## HU02 - Cat谩logo, flota y reservas
 
 **Como** cliente
-**Quiero** consultar el cat醠ogo, flota de atracciones y reservar turnos
+**Quiero** consultar el cat谩logo, flota de atracciones y reservar turnos
 **Para** poder disfrutar de las atracciones del parque
 
-### Criterios de Aceptaci髇
+### Criterios de Aceptaci贸n
 - [ ] El sistema debe listar las sedes activas
 - [ ] Se debe poder visualizar la flota por sede con sus unidades disponibles
-- [ ] Se debe poder filtrar la flota por tipo de atracci髇
+- [ ] Se debe poder filtrar la flota por tipo de atracci贸n
 - [ ] Se deben mostrar los turnos disponibles por unidad y fecha
 - [ ] Las fechas deben mostrarse en formato DD-MM-AAAA
-- [ ] Se debe permitir reservar una o m醩 atracciones en una misma reserva
+- [ ] Se debe permitir reservar una o m谩s atracciones en una misma reserva
 - [ ] No se pueden reservar turnos ya ocupados
 - [ ] No se pueden reservar turnos de unidades en mantenimiento
 - [ ] Un cliente solo puede ver y gestionar sus propias reservas
 - [ ] Se debe permitir cancelar reservas
-- [ ] Se debe mostrar duraci髇 y horario de los turnos
+- [ ] Se debe mostrar duraci贸n y horario de los turnos
 
 
 ## HU03 - Comprobantes de pago
@@ -48,13 +48,13 @@
 **Quiero** subir mi comprobante de pago (Yape, transferencia)
 **Para** que el cajero valide mi reserva
 
-### Criterios de Aceptaci髇
+### Criterios de Aceptaci贸n
 - [ ] Se debe permitir subir comprobante en formato imagen (JPG, PNG) o PDF
-- [ ] El tama駉 del archivo debe tener l韒ite (m醲 8 MB)
-- [ ] No se aceptan archivos renombrados con extensi髇 falsa
+- [ ] El tama帽o del archivo debe tener l铆mite (m谩x 8 MB)
+- [ ] No se aceptan archivos renombrados con extensi贸n falsa
 - [ ] Un cliente puede reutilizar un comprobante subido anteriormente en otra reserva propia
 - [ ] No se puede subir comprobante a una reserva ya confirmada o cancelada
-- [ ] Solo puede haber un comprobante en revisi髇 a la vez por reserva
+- [ ] Solo puede haber un comprobante en revisi贸n a la vez por reserva
 - [ ] Un cliente solo puede ver sus propios comprobantes
 - [ ] El cajero puede aceptar o rechazar el pago
 - [ ] Al rechazar, es obligatorio indicar el motivo
@@ -67,23 +67,23 @@
 **Quiero** registrar ventas de productos de la tienda
 **Para** cobrar y gestionar las compras
 
-### Criterios de Aceptaci髇
-- [ ] Se debe permitir registrar ventas con uno o m醩 items
+### Criterios de Aceptaci贸n
+- [ ] Se debe permitir registrar ventas con uno o m谩s items
 - [ ] Se debe validar que existan items en la venta
 - [ ] Se debe validar que el precio sea mayor a 0
-- [ ] Se debe poder pagar una venta con diferentes m閠odos (efectivo, Yape, etc.)
+- [ ] Se debe poder pagar una venta con diferentes m茅todos (efectivo, Yape, etc.)
 - [ ] No se puede pagar una venta dos veces
-- [ ] Es obligatorio indicar el m閠odo de pago
+- [ ] Es obligatorio indicar el m茅todo de pago
 - [ ] No se puede pagar una venta inexistente
 
 
 ## HU06 - Mantenimiento de unidades
 
 **Como** administrador/cajero con permisos
-**Quiero** gestionar el mantenimiento de las unidades de atracci髇
+**Quiero** gestionar el mantenimiento de las unidades de atracci贸n
 **Para** mantener la flota en buen estado
 
-### Criterios de Aceptaci髇
+### Criterios de Aceptaci贸n
 - [ ] Se puede registrar un mantenimiento preventivo/correctivo a una unidad
 - [ ] Es obligatorio indicar el tipo de mantenimiento
 - [ ] Se debe poder asociar repuestos utilizados al mantenimiento
@@ -93,7 +93,7 @@
 - [ ] Se puede finalizar un mantenimiento en curso
 - [ ] No se puede finalizar un mantenimiento dos veces ni uno inexistente
 - [ ] Se debe llevar el historial de mantenimientos por unidad
-- [ ] Se debe poder consultar repuestos que necesitan reposici髇
+- [ ] Se debe poder consultar repuestos que necesitan reposici贸n
 
 
 ## HU07 - Caja (apertura/cierre/movimientos)
@@ -102,44 +102,44 @@
 **Quiero** gestionar la caja de mi sede
 **Para** llevar el control de ingresos y egresos
 
-### Criterios de Aceptaci髇
+### Criterios de Aceptaci贸n
 - [ ] Se puede abrir caja indicando el monto inicial
-- [ ] No se puede abrir dos cajas simult醤eas en la misma sede/sesi髇 seg鷑 reglas
+- [ ] No se puede abrir dos cajas simult谩neas en la misma sede/sesi贸n seg煤n reglas
 - [ ] Se pueden registrar ingresos y egresos con concepto
-- [ ] Los movimientos deben tener tipo v醠ido (ingreso, egreso)
-- [ ] No se permiten montos cero, negativos o no num閞icos
+- [ ] Los movimientos deben tener tipo v谩lido (ingreso, egreso)
+- [ ] No se permiten montos cero, negativos o no num茅ricos
 - [ ] No se pueden registrar movimientos con la caja cerrada
 - [ ] Se puede cerrar la caja indicando el monto final
 - [ ] El cierre se guarda con su detalle
-- [ ] Despu閟 del cierre, la caja queda cerrada y no se permiten m醩 movimientos
+- [ ] Despu茅s del cierre, la caja queda cerrada y no se permiten m谩s movimientos
 - [ ] No se puede cerrar una caja ya cerrada
 
 
 ## HU08 - Permisos por rol/sede
 
 **Como** administrador
-**Quiero** controlar el acceso seg鷑 rol y sede
+**Quiero** controlar el acceso seg煤n rol y sede
 **Para** garantizar la seguridad del sistema
 
-### Criterios de Aceptaci髇
+### Criterios de Aceptaci贸n
 - [ ] Los cajeros asignados a una sede con flota solo ven flota, no entradas
 - [ ] Los cajeros asignados a una sede sin flota (solo entradas) solo ven entradas, no flota
-- [ ] El acceso a funcionalidades debe estar restringido seg鷑 el rol del usuario
+- [ ] El acceso a funcionalidades debe estar restringido seg煤n el rol del usuario
 
 
-## HU09 - Reglas de caja por sede y reasignaci髇 de cajeros
+## HU09 - Reglas de caja por sede y reasignaci贸n de cajeros
 
 **Como** administrador
 **Quiero** reasignar cajeros entre sedes con reglas de negocio
 **Para** mantener el control operativo
 
-### Criterios de Aceptaci髇
+### Criterios de Aceptaci贸n
 - [ ] Se puede reasignar la sede de un cajero sin caja abierta
 - [ ] No se puede reasignar la sede de un cajero con caja abierta
 - [ ] En sedes con flota, es obligatorio registrar las lecturas de inicio de unidades para abrir caja
 - [ ] En sedes con flota, es obligatorio registrar las lecturas de cierre de unidades para cerrar caja
 - [ ] En sedes sin flota (solo entradas), no se exigen lecturas de unidades para abrir/cerrar caja
-- [ ] El cambio de sede solo es posible despu閟 de cumplir con las lecturas completas cuando aplique
+- [ ] El cambio de sede solo es posible despu茅s de cumplir con las lecturas completas cuando aplique
 
 ---
 

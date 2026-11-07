@@ -14,7 +14,7 @@ from werkzeug.security import generate_password_hash
 from app import create_app
 from app.database import db
 from app.models.Rol import Rol
-from app.models.usuario import Usuario
+from app.models.Usuario import Usuario
 
 
 def pedir_no_vacio(etiqueta):

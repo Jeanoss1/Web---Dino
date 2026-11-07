@@ -20,7 +20,7 @@ from app.models.PaqueteTarifa import PaqueteTarifa
 from app.models.Rol import Rol
 from app.models.Sucursal import Sucursal
 from app.models.TurnoLaboral import TurnoLaboral
-from app.models.usuario import Usuario
+from app.models.Usuario import Usuario
 from app.models.Zona import Zona
 
 

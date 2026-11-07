@@ -23,7 +23,7 @@ from app.database import db
 from app.oauth import cliente_oauth, perfil_del_proveedor
 from app.models.Cliente import Cliente
 from app.models.Rol import Rol
-from app.models.usuario import Usuario
+from app.models.Usuario import Usuario
 
 
 auth_bp = Blueprint(

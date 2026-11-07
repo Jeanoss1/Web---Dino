@@ -16,7 +16,7 @@ from decimal import Decimal
 from app.models.Reserva import Reserva
 from app.models.ReservaEntrada import ReservaEntrada
 from app.models.Sucursal import Sucursal
-from app.models.usuario import Usuario
+from app.models.Usuario import Usuario
 from app.models.Venta import Venta
 
 

@@ -14,7 +14,7 @@ from app.models.DetalleReservaEntrada import DetalleReservaEntrada
 from app.models.DetalleVenta import DetalleVenta
 from app.models.LecturaFlota import LecturaFlota
 from app.models.ReservaEntrada import ReservaEntrada
-from app.models.usuario import Usuario
+from app.models.Usuario import Usuario
 from app.models.Venta import Venta
 from app.servicios_reportes import generar_reporte
 
