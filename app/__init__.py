@@ -5,6 +5,8 @@ from datetime import timedelta
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, session
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import CSRFError, CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -14,6 +16,11 @@ from app.oauth import registrar_proveedores
 load_dotenv()
 
 csrf = CSRFProtect()
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=[],
+    storage_uri='memory://',
+)
 
 
 def create_app(config=None):
@@ -73,6 +80,7 @@ def create_app(config=None):
     app.config['SEMBRAR_DATOS'] = True
     if config:
         app.config.update(config)
+    app.config.setdefault('RATELIMIT_ENABLED', not app.config.get('TESTING', False))
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
     @app.context_processor
@@ -120,8 +128,22 @@ def create_app(config=None):
     def archivo_muy_grande(_):
         return jsonify(error='La imagen supera los 5 MB'), 413
 
+    @app.errorhandler(429)
+    def limite_excedido(_):
+        mensaje = 'Demasiados intentos. Espera unos momentos antes de intentar nuevamente.'
+        if request.path.startswith('/api/') or request.is_json:
+            return jsonify(error=mensaje), 429
+        from flask import flash, render_template
+        flash(mensaje, 'error')
+        if request.endpoint == 'auth.iniciar_sesion':
+            return render_template('iniciar_sesion.html'), 429
+        if request.endpoint == 'auth.registro':
+            return render_template('registro.html'), 429
+        return mensaje, 429
+
     db.init_app(app)
     csrf.init_app(app)
+    limiter.init_app(app)
     registrar_proveedores(app)
 
     from app import models  # carga todos los modelos

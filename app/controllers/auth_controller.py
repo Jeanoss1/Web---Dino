@@ -18,6 +18,7 @@ from werkzeug.security import (
     generate_password_hash
 )
 
+from app import limiter
 from app.controllers.decoradores import login_requerido
 from app.database import db
 from app.oauth import cliente_oauth, perfil_del_proveedor
@@ -54,6 +55,7 @@ def _obtener_rol_cliente():
     '/registro',
     methods=['GET', 'POST']
 )
+@limiter.limit('10 per minute', methods=['POST'])
 def registro():
 
     if request.method == 'GET':
@@ -197,6 +199,7 @@ def registro():
     '/iniciar-sesion',
     methods=['GET', 'POST']
 )
+@limiter.limit('10 per minute', methods=['POST'])
 def iniciar_sesion():
 
     if request.method == 'GET':

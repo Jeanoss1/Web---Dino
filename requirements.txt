@@ -8,5 +8,6 @@ Authlib==1.9.1
 requests==2.34.2
 waitress==3.0.2
 Flask-WTF==1.2.2
+Flask-Limiter==4.1.1
 pytest==9.2.0
 
