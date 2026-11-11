@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from flask import (Blueprint, current_app, jsonify, render_template, request,
-                   send_from_directory, session)
+                   session)
 
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -12,7 +12,7 @@ from app.models.ComprobanteReserva import ComprobanteReserva
 from app.models.DetalleReserva import DetalleReserva
 from app.models.Reserva import Reserva
 from app.servicios_comprobante import (guardar_captura, rechazar_comprobante,
-                                         validar_captura)
+                                       servir_captura, validar_captura)
 
 comprobante_bp = Blueprint('comprobante', __name__)
 
@@ -159,7 +159,7 @@ def ver_comprobante(id_comprobante):
     es_dueno = cliente is not None and comprobante.reserva.id_cliente == cliente.id_cliente
     if not (es_dueno or _es_personal()):
         return jsonify(error='Comprobante no encontrado'), 404
-    return send_from_directory(current_app.config['UPLOAD_FOLDER'], comprobante.archivo)
+    return servir_captura(comprobante.archivo)
 
 
 # ------------------------------------------------------------ lado del cajero

@@ -19,7 +19,7 @@ from decimal import Decimal
 
 from flask import (
     Blueprint, current_app, jsonify, render_template, request,
-    send_from_directory, session
+    session
 )
 
 from app.controllers.decoradores import login_requerido, rol_requerido
@@ -36,7 +36,7 @@ from app.models.Sucursal import Sucursal
 from app.models.Venta import Venta
 from app.models.Zona import Zona
 from app.servicios_comprobante import (
-    guardar_captura, rechazar_comprobante, validar_captura
+    guardar_captura, rechazar_comprobante, servir_captura, validar_captura
 )
 
 from app.servicios_entrada import ErrorPaquete, calcular_subtotal_paquete
@@ -390,7 +390,7 @@ def ver_comprobante_entrada(id_comprobante):
     if not (es_dueno or _es_personal()):
         return jsonify(error='Comprobante no encontrado'), 404
 
-    return send_from_directory(current_app.config['UPLOAD_FOLDER'], comprobante.archivo)
+    return servir_captura(comprobante.archivo)
 
 
 # ============================================================
