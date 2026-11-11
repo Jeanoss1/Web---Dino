@@ -9,6 +9,7 @@ from app.models.Caja import Caja
 from app.models.Flota import Flota
 from app.models.LecturaFlota import LecturaFlota
 from app.models.MovimientoCaja import MovimientoCaja
+from app.tiempo import ahora
 
 
 caja_bp = Blueprint('caja', __name__)
@@ -170,7 +171,7 @@ def abrir_caja():
             return jsonify(error=f'No se puede abrir la caja: {error}'), 400
 
     caja = Caja(
-        fecha_apertura=datetime.now(),
+        fecha_apertura=ahora(),
         monto_inicial=monto,
         estado='abierta',
         id_usuario=id_usuario,
@@ -310,7 +311,7 @@ def cerrar_caja():
         str(resumen['saldo_actual'])
     )
 
-    caja.fecha_cierre = datetime.now()
+    caja.fecha_cierre = ahora()
     caja.estado = 'cerrada'
 
     db.session.commit()

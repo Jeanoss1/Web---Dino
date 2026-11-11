@@ -1,13 +1,12 @@
-from datetime import datetime
-
 from app.database import db
+from app.tiempo import ahora
 
 
 class Venta(db.Model):
     __tablename__ = 'ventas'
 
     id_venta = db.Column(db.Integer, primary_key=True)
-    fecha = db.Column(db.DateTime, default=datetime.now)
+    fecha = db.Column(db.DateTime, default=ahora)
     total = db.Column(db.Numeric(10, 2), default=0)
     tipo_pago = db.Column(db.String(30))
     estado = db.Column(db.String(20), default='pendiente')

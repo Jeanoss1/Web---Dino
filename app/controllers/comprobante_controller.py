@@ -1,4 +1,4 @@
-from datetime import datetime
+from app.tiempo import ahora
 
 from flask import (Blueprint, current_app, jsonify, render_template, request,
                    session)
@@ -197,7 +197,7 @@ def aceptar_reserva(id_reserva):
 
     comprobante.estado = 'aceptado'
     comprobante.id_validador = session['id_usuario']
-    comprobante.fecha_validacion = datetime.now()
+    comprobante.fecha_validacion = ahora()
     reserva.estado = 'confirmada'
     db.session.commit()
     return jsonify(_reserva_a_dict(reserva, con_cliente=True))

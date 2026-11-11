@@ -6,6 +6,8 @@ veía la misma página pública que cualquier visitante)."""
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
+from app.tiempo import hoy
+
 from flask import Blueprint, jsonify, render_template, request, session
 from werkzeug.security import generate_password_hash
 
@@ -628,7 +630,7 @@ def ver_horarios_semana():
     """?semana=AAAA-MM-DD (cualquier día de esa semana; por defecto hoy)."""
     semana = request.args.get('semana')
     try:
-        referencia = datetime.strptime(semana, '%Y-%m-%d').date() if semana else date.today()
+        referencia = datetime.strptime(semana, '%Y-%m-%d').date() if semana else hoy()
     except ValueError:
         return jsonify(error='semana debe tener el formato AAAA-MM-DD'), 400
 

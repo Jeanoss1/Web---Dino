@@ -1,6 +1,5 @@
-from datetime import datetime
-
 from app.database import db
+from app.tiempo import ahora
 
 
 class Pago(db.Model):
@@ -9,7 +8,7 @@ class Pago(db.Model):
     id_pago = db.Column(db.Integer, primary_key=True)
     monto = db.Column(db.Numeric(10, 2), nullable=False)
     metodo_pago = db.Column(db.String(30))
-    fecha_pago = db.Column(db.DateTime, default=datetime.now)
+    fecha_pago = db.Column(db.DateTime, default=ahora)
     estado = db.Column(db.String(20), default='pendiente')
 
     # 1 a 1 con DetalleVenta (crea DetalleVenta.pago)

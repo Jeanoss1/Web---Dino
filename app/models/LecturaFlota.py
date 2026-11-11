@@ -1,6 +1,5 @@
-from datetime import datetime
-
 from app.database import db
+from app.tiempo import ahora
 
 
 class LecturaFlota(db.Model):
@@ -15,7 +14,7 @@ class LecturaFlota(db.Model):
     momento = db.Column(db.String(20), nullable=False)  # 'apertura' / 'cierre'
     lectura_manual = db.Column(db.Integer, nullable=False)
     contador_sistema = db.Column(db.Integer, nullable=False)
-    fecha = db.Column(db.DateTime, default=datetime.now)
+    fecha = db.Column(db.DateTime, default=ahora)
 
     flota = db.relationship('Flota', lazy=True)
     caja = db.relationship('Caja', backref='lecturas', lazy=True)

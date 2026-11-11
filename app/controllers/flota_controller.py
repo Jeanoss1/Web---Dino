@@ -13,6 +13,8 @@ import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+from app.tiempo import ahora
+
 from flask import Blueprint, jsonify, render_template, request, session
 
 from app.controllers.decoradores import rol_requerido
@@ -137,11 +139,11 @@ def crear_venta_alquiler():
     if not unidad.precio_alquiler:
         return jsonify(error=f'{unidad.nombre} no tiene configurado un precio de alquiler'), 400
 
-    ahora = datetime.now()
+    ahora_dt = ahora()
     venta = Venta(id_usuario=session['id_usuario'], id_sucursal=unidad.id_sucursal, estado='pendiente')
     detalle = DetalleVenta(
         precio=unidad.precio_alquiler, cantidad=1,
-        id_flota=unidad.id_flota, hora_inicio=ahora,
+        id_flota=unidad.id_flota, hora_inicio=ahora_dt,
     )
     detalle.calcular_subtotal()
     venta.detalles.append(detalle)
@@ -173,7 +175,7 @@ def _alquiler_activo_a_dict(d):
 @flota_bp.route('/api/caja/alquileres-activos')
 @rol_requerido(*ROLES_CAJA)
 def listar_alquileres_activos():
-    limite = datetime.now() - timedelta(hours=6)
+    limite = ahora() - timedelta(hours=6)
 
     detalles = (
         DetalleVenta.query
@@ -203,7 +205,7 @@ def finalizar_alquiler(id_detalle):
         return jsonify(error='Este alquiler ya fue finalizado'), 400
 
     unidad = detalle.flota
-    detalle.hora_fin = datetime.now()
+    detalle.hora_fin = ahora()
     unidad.estado = 'disponible'
 
     campo = CONTADOR_POR_TIPO.get(unidad.tipo, 'ciclos_uso')

@@ -1,6 +1,5 @@
-from datetime import datetime
-
 from app.database import db
+from app.tiempo import ahora
 
 
 class ReservaEntrada(db.Model):
@@ -10,7 +9,7 @@ class ReservaEntrada(db.Model):
     __tablename__ = 'reservas_entrada'
 
     id_reserva_entrada = db.Column(db.Integer, primary_key=True)
-    fecha_reserva = db.Column(db.DateTime, default=datetime.now)
+    fecha_reserva = db.Column(db.DateTime, default=ahora)
     estado = db.Column(db.String(20), default='pendiente', index=True)
     total = db.Column(db.Numeric(10, 2), default=0)
 

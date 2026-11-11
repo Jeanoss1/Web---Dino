@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
+from app.tiempo import ahora, ZONA_PERU
+
 from flask import (
     Blueprint, current_app, jsonify, request, session, render_template
 )
@@ -90,11 +92,11 @@ def _cliente_actual():
 # datetime.now(). Perú no tiene horario de verano (siempre UTC-5).
 # ============================================================
 
-HORA_PERU = timezone(timedelta(hours=-5))
+HORA_PERU = ZONA_PERU
 
 
 def _ahora_peru():
-    return datetime.now(HORA_PERU).replace(tzinfo=None)
+    return ahora()
 
 
 def _turno_pasado(turno, ahora):

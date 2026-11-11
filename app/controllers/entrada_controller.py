@@ -17,6 +17,8 @@ import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+from app.tiempo import ahora
+
 from flask import (
     Blueprint, current_app, jsonify, render_template, request,
     session
@@ -440,7 +442,7 @@ def aceptar_reserva_entrada(id_reserva_entrada):
 
     comprobante.estado = 'aceptado'
     comprobante.id_validador = session['id_usuario']
-    comprobante.fecha_validacion = datetime.now()
+    comprobante.fecha_validacion = ahora()
     reserva.estado = 'confirmada'
     db.session.commit()
 
@@ -476,10 +478,10 @@ def marcar_ingreso_reserva_entrada(id_reserva_entrada):
     if reserva is None or reserva.estado != 'confirmada':
         return jsonify(error='Esta reserva no está confirmada'), 400
 
-    ahora = datetime.now()
+    ahora_dt = ahora()
     for detalle in reserva.detalles:
         if detalle.hora_inicio is None:
-            detalle.hora_inicio = ahora
+            detalle.hora_inicio = ahora_dt
 
     db.session.commit()
     return jsonify(_reserva_entrada_a_dict(reserva))
@@ -515,7 +517,7 @@ def crear_venta_entrada():
     if not id_sucursal or not items:
         return jsonify(error='Indica la sede y al menos un paquete'), 400
 
-    ahora = datetime.now()
+    ahora_dt = ahora()
     venta = Venta(
         id_usuario=session['id_usuario'],
         id_sucursal=id_sucursal,
@@ -553,7 +555,7 @@ def crear_venta_entrada():
                 cantidad=cantidad if paquete.es_por_ninio else 1,
                 subtotal=subtotal,
                 id_paquete=paquete.id_paquete,
-                hora_inicio=ahora,
+                hora_inicio=ahora_dt,
             )
 
             venta.detalles.append(detalle)
@@ -590,7 +592,7 @@ def listar_entradas_activas():
     """Entradas con el temporizador corriendo (venta en caja ya pagada, o
     reserva online ya confirmada y con ingreso marcado). El frontend calcula
     la cuenta regresiva con duracion_minutos + hora_inicio."""
-    limite = datetime.now() - timedelta(hours=6)
+    limite = ahora() - timedelta(hours=6)
 
     detalles_venta = (
         DetalleVenta.query
@@ -653,7 +655,7 @@ def marcar_salida_entrada(tipo, id_detalle):
     if detalle.hora_fin is not None:
         return jsonify(error='Esta entrada ya registra una salida'), 400
 
-    detalle.hora_fin = datetime.now()
+    detalle.hora_fin = ahora()
     db.session.commit()
     return jsonify(ok=True)
 
@@ -707,7 +709,7 @@ def cobrar_adicional(tipo, id_detalle):
     )
     pago.detalle_venta = detalle_adicional
     pago.ticket = Ticket(
-        codigo=f"T{datetime.now():%y%m%d}-{uuid.uuid4().hex[:6].upper()}"
+        codigo=f"T{ahora():%y%m%d}-{uuid.uuid4().hex[:6].upper()}"
     )
     db.session.add(pago)
     db.session.flush()
@@ -735,7 +737,7 @@ def cobrar_adicional(tipo, id_detalle):
     venta.tipo_pago = metodo
     venta.estado = 'pagada'
     detalle.exceso_cobrado = True
-    detalle.hora_fin = datetime.now()
+    detalle.hora_fin = ahora()
 
     db.session.commit()
 

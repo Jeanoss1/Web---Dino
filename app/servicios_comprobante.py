@@ -16,6 +16,7 @@ from datetime import datetime
 from flask import current_app, jsonify, redirect, request, send_from_directory, session
 
 from app.database import db
+from app.tiempo import ahora
 
 MIME_TYPES = {
     'png': 'image/png',
@@ -261,7 +262,7 @@ def rechazar_comprobante(reserva, comprobante):
     comprobante.estado = 'rechazado'
     comprobante.motivo_rechazo = motivo[:200]
     comprobante.id_validador = session['id_usuario']
-    comprobante.fecha_validacion = datetime.now()
+    comprobante.fecha_validacion = ahora()
     reserva.estado = 'pendiente'
     db.session.commit()
     return None

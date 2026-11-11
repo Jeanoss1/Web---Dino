@@ -1,4 +1,4 @@
-from datetime import datetime
+from app.tiempo import ahora
 
 from flask import Blueprint, jsonify, request
 
@@ -144,7 +144,7 @@ def registrar_mantenimiento():
         id_flota=flota.id_flota,
         tipo=datos['tipo'],
         observacion=datos.get('observacion'),
-        fecha_inicio=datetime.now(),
+        fecha_inicio=ahora(),
         estado='en_proceso',
         repuesto=repuesto,
     )
@@ -182,7 +182,7 @@ def finalizar_mantenimiento(id_mantenimiento):
         ), 400
 
     mantenimiento.estado = 'finalizado'
-    mantenimiento.fecha_fin = datetime.now()
+    mantenimiento.fecha_fin = ahora()
     mantenimiento.flota.estado = 'disponible'
 
     db.session.commit()

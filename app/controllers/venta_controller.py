@@ -2,6 +2,8 @@ import uuid
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
+from app.tiempo import ahora
+
 from flask import Blueprint, jsonify, request, session
 
 from app.controllers.decoradores import rol_requerido
@@ -224,7 +226,7 @@ def pagar_venta(id_venta):
 
         pago.ticket = Ticket(
             codigo=(
-                f"T{datetime.now():%y%m%d}-"
+                f"T{ahora():%y%m%d}-"
                 f"{uuid.uuid4().hex[:6].upper()}"
             )
         )

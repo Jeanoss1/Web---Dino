@@ -8,6 +8,7 @@ from flask import Blueprint, jsonify, render_template, request
 from app.controllers.decoradores import rol_requerido
 from app.servicios_cuadre import cuadre_diario
 from app.servicios_reportes import ErrorReporte, generar_reporte
+from app.tiempo import hoy
 
 
 reportes_bp = Blueprint('reportes', __name__)
@@ -58,7 +59,7 @@ def api_reporte_ventas():
 def api_cuadre():
     """?fecha=AAAA-MM-DD&id_sucursal="""
     try:
-        fecha = _fecha(request.args['fecha'], 'fecha') if request.args.get('fecha') else datetime.now().date()
+        fecha = _fecha(request.args['fecha'], 'fecha') if request.args.get('fecha') else hoy()
     except ErrorReporte as e:
         return jsonify(error=str(e)), 400
 

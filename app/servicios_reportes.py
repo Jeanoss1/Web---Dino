@@ -18,6 +18,7 @@ from app.models.ReservaEntrada import ReservaEntrada
 from app.models.Sucursal import Sucursal
 from app.models.Usuario import Usuario
 from app.models.Venta import Venta
+from app.tiempo import hoy
 
 
 class ErrorReporte(Exception):
@@ -36,7 +37,7 @@ def resolver_rango(rango, referencia=None, desde=None, hasta=None):
             raise ErrorReporte('El rango no puede superar 366 días')
         return desde, hasta
 
-    ref = referencia or date.today()
+    ref = referencia or hoy()
 
     if rango == 'diario':
         return ref, ref

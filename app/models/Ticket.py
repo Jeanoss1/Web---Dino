@@ -1,6 +1,5 @@
-from datetime import datetime
-
 from app.database import db
+from app.tiempo import ahora
 
 
 class Ticket(db.Model):
@@ -8,7 +7,7 @@ class Ticket(db.Model):
 
     id_ticket = db.Column(db.Integer, primary_key=True)
     codigo = db.Column(db.String(50), nullable=False, unique=True)
-    fecha_emision = db.Column(db.DateTime, default=datetime.now)
+    fecha_emision = db.Column(db.DateTime, default=ahora)
     estado = db.Column(db.String(20), default='emitido')
 
     # Nullable: un ticket puede venir de un pago o solo de un movimiento de caja
