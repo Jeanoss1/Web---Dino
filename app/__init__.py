@@ -35,7 +35,13 @@ def create_app(config=None):
     # cabeceras no vienen (ej. en desarrollo local), no cambia nada.
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+    db_url = os.getenv('DATABASE_URL')
+    if not db_url:
+        logging.getLogger(__name__).warning(
+            'Falta DATABASE_URL en el .env: se usa SQLite local (sqlite:///dino_park.db)'
+        )
+        db_url = 'sqlite:///dino_park.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     secret_key = os.getenv('SECRET_KEY')
     if not secret_key:
@@ -80,6 +86,12 @@ def create_app(config=None):
     app.config['SEMBRAR_DATOS'] = True
     if config:
         app.config.update(config)
+
+    # Si se utiliza SQLite (ej. pruebas unitarias o desarrollo offline), limpiar opciones de pool de Postgres
+    uri_actual = str(app.config.get('SQLALCHEMY_DATABASE_URI') or '')
+    if uri_actual.startswith('sqlite') and 'pool_size' in app.config.get('SQLALCHEMY_ENGINE_OPTIONS', {}):
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {}
+
     app.config.setdefault('RATELIMIT_ENABLED', not app.config.get('TESTING', False))
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 

@@ -25,7 +25,10 @@ def resultados():
     carpeta = tempfile.mkdtemp(prefix='dino_pruebas_')
     app = None
     try:
-        url = motor._url_bd_pruebas()
+        try:
+            url = motor._url_bd_pruebas()
+        except motor.ErrorPreparacion as e:
+            pytest.skip(f"Pruebas de base de datos omitidas: {e}")
         try:
             motor._reiniciar_bd(url)
             app = motor._crear_app_pruebas(url, carpeta)
