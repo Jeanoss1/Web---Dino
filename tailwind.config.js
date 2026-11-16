@@ -14,7 +14,7 @@ module.exports = {
         "outline-variant": "#bbcac0", "primary-fixed": "#75fac5", "primary-container": "#2dbe8d",
         "background": "#e7fff1", "surface-container-low": "#ccffe5", "inverse-surface": "#003827",
         "inverse-primary": "#56ddaa", "on-secondary": "#ffffff", "on-primary-fixed-variant": "#005139",
-        "on-tertiary-container": "#00472f", "secondary-container": "#ff7a30", "outline": "#6c7a72",
+        "on-tertiary-container": "#00472f", "secondary-container": "#c2410c", "outline": "#6c7a72",
         "error": "#ba1a1a", "surface-container-highest": "#b8efd3", "primary": "#006c4d", "surface": "#e7fff1",
         "on-primary-container": "#004731", "surface-bright": "#e7fff1", "secondary-fixed": "#ffdbcc",
         "surface-container": "#c3fadf", "on-error": "#ffffff", "surface-dim": "#afe6cb", "surface-tint": "#006c4d",

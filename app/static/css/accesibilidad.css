@@ -1,0 +1,240 @@
+/* Accesibilidad de Dino Park (WCAG 2.2).
+   Se carga después de tailwind.css en todas las páginas. Las clases
+   dp-* las pone accesibilidad.js en <html> según lo que elija el usuario. */
+
+/* ---------- Siempre activo ---------- */
+
+/* Foco visible para quien navega con teclado (WCAG 2.4.7) */
+:focus-visible {
+  outline: 3px solid #0b57d0 !important;
+  outline-offset: 2px !important;
+}
+
+/* Enlace para saltar el menú (WCAG 2.4.1) */
+.dp-saltar {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 10000;
+  padding: 12px 16px;
+  background: #002115;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 8px;
+  text-decoration: underline;
+}
+.dp-saltar:focus { top: 12px; }
+
+/* Texto solo para lectores de pantalla */
+.dp-oculto {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Quien pide menos movimiento en su sistema no ve animaciones (WCAG 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Naranja de los botones con contraste 5,18:1 frente al texto blanco
+   (antes #ff7a30, 2,6:1; WCAG 1.4.3 exige 4,5:1). Coincide con
+   tailwind.config.js para cuando se vuelva a compilar tailwind.css. */
+.bg-secondary-container { background-color: #c2410c; }
+
+/* Clases que aún no están en tailwind.css compilado */
+.list-disc { list-style-type: disc; }
+.pl-6 { padding-left: 1.5rem; }
+.peer:focus-visible ~ .peer-focus-visible\:ring-2 {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #006c4d;
+}
+
+/* ---------- Botón y panel ---------- */
+
+.dp-a11y-boton {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 9998;
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: 9999px;
+  background: #00513a;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(0, 33, 21, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dp-a11y-boton:hover { background: #003827; }
+.dp-a11y-boton .material-symbols-outlined { font-size: 32px; }
+
+.dp-a11y-panel {
+  position: fixed;
+  left: 16px;
+  bottom: 84px;
+  z-index: 9999;
+  width: min(340px, calc(100vw - 32px));
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  background: #fff;
+  color: #002115;
+  border: 2px solid #00513a;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 12px 32px rgba(0, 33, 21, 0.25);
+  font-family: "Plus Jakarta Sans", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.dp-a11y-panel[hidden] { display: none; }
+.dp-a11y-panel h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 800;
+}
+.dp-a11y-panel p.dp-ayuda {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #3d4a43;
+}
+.dp-a11y-grupo {
+  border-top: 1px solid #bbcac0;
+  padding: 10px 0 2px;
+  margin: 0;
+}
+.dp-a11y-grupo legend {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #3d4a43;
+  padding: 0;
+}
+.dp-a11y-opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  margin: 6px 0;
+  padding: 8px 12px;
+  border: 2px solid #bbcac0;
+  border-radius: 12px;
+  background: #f4fff9;
+  color: #002115;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.dp-a11y-opcion:hover { border-color: #00513a; }
+.dp-a11y-opcion[aria-pressed="true"] {
+  background: #00513a;
+  border-color: #00513a;
+  color: #fff;
+}
+.dp-a11y-opcion .dp-estado {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 800;
+}
+.dp-a11y-fila {
+  display: flex;
+  gap: 8px;
+}
+.dp-a11y-fila .dp-a11y-opcion { justify-content: center; }
+.dp-a11y-cerrar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: #002115;
+  cursor: pointer;
+}
+.dp-a11y-cerrar:hover { background: #ccffe5; }
+
+/* Imagen que el narrador está leyendo */
+.dp-leyendo {
+  outline: 4px solid #e69f00 !important;
+  outline-offset: 3px !important;
+}
+/* Marco sobre la imagen narrada, por encima de capas decorativas */
+.dp-marco { position: relative; }
+.dp-marco::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 5px solid #e69f00;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 20;
+}
+html.dp-narrador img[alt]:not([alt=""]) { cursor: help; }
+
+/* ---------- Lectura fácil ----------
+   Fuente Lexend, más espacio entre letras, palabras y líneas, texto
+   alineado a la izquierda y sin cursivas (WCAG 1.4.12, espaciado del
+   texto). No se toca la fuente de los íconos. */
+html.dp-lectura body,
+html.dp-lectura body *:not(.material-symbols-outlined) {
+  font-family: "Lexend", Arial, sans-serif !important;
+  letter-spacing: 0.05em !important;
+  word-spacing: 0.16em !important;
+  font-style: normal !important;
+}
+html.dp-lectura body p,
+html.dp-lectura body li,
+html.dp-lectura body label,
+html.dp-lectura body td {
+  line-height: 1.8 !important;
+  text-align: left !important;
+}
+html.dp-lectura body p { max-width: 70ch; }
+
+/* ---------- Colores alternativos ----------
+   Cambia el par verde/rojo por la paleta Okabe-Ito: azul para lo positivo y
+   bermellón para errores. Los enlaces se subrayan para no depender
+   del color (WCAG 1.4.1). */
+html.dp-colores .text-primary,
+html.dp-colores .text-on-primary-container,
+html.dp-colores .text-tertiary { color: #005a8f !important; }
+html.dp-colores .bg-primary,
+html.dp-colores .bg-tertiary { background-color: #0072b2 !important; }
+html.dp-colores .bg-primary-container,
+html.dp-colores .bg-tertiary-container { background-color: #56b4e9 !important; }
+html.dp-colores .border-primary { border-color: #0072b2 !important; }
+html.dp-colores .text-error { color: #a33b00 !important; }
+html.dp-colores .bg-error { background-color: #d55e00 !important; }
+html.dp-colores .bg-error-container { background-color: #fbe3d1 !important; }
+html.dp-colores .bg-secondary-container { background-color: #8a4b00 !important; }
+html.dp-colores main a,
+html.dp-colores footer a { text-decoration: underline !important; }
+
+/* ---------- Alto contraste ---------- */
+html.dp-contraste body { background: #fff !important; color: #000 !important; }
+html.dp-contraste .text-on-surface-variant,
+html.dp-contraste .text-outline,
+html.dp-contraste .text-on-surface { color: #000 !important; }
+html.dp-contraste .text-primary { color: #00321f !important; }
+html.dp-contraste [class*="bg-surface"],
+html.dp-contraste [class*="bg-background"] { background-color: #fff !important; }
+html.dp-contraste [class*="border-outline"] { border-color: #000 !important; }
+html.dp-contraste a { text-decoration: underline !important; }
+html.dp-contraste .opacity-60 { opacity: 1 !important; }
+
+/* ---------- Tamaño del texto ---------- */
+html.dp-texto-1 body { zoom: 1.12; }
+html.dp-texto-2 body { zoom: 1.25; }
