@@ -22,6 +22,13 @@ def index():
     )
 
 
+@home_bp.route('/privacidad')
+def privacidad():
+    # Política de privacidad: Google la exige en la pantalla de
+    # consentimiento OAuth (https://<dominio>/privacidad)
+    return render_template('privacidad.html')
+
+
 @home_bp.route('/api/sedes')
 def listar_sedes():
 

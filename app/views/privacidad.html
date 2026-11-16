@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+{% include '_head.html' %}
+<title>Política de Privacidad · Dino Park</title>
+</head>
+<body class="bg-surface font-body-md text-on-surface">
+<header class="w-full bg-surface/90 shadow-[0_4px_16px_rgba(13,69,50,0.07)]">
+  <div class="h-20 max-w-4xl mx-auto px-margin lg:px-margin-desktop flex items-center justify-between">
+    <a href="{{ url_for('home.index') }}" class="flex items-center gap-space-sm">
+      <img alt="Dino Park" class="h-16 w-auto object-contain" src="{{ url_for('static', filename='img/Logo_dino.jpg') }}">
+    </a>
+    <a href="{{ url_for('home.index') }}" class="font-label-lg text-label-lg text-primary px-space-lg py-space-sm rounded-full hover:bg-surface-container-low transition-all">Volver al inicio</a>
+  </div>
+</header>
+
+<main class="max-w-4xl mx-auto px-margin lg:px-margin-desktop py-space-xl">
+  <h1 class="font-headline-lg text-headline-lg text-on-surface mb-space-sm">Política de Privacidad</h1>
+  <p class="text-on-surface-variant mb-space-xl">Última actualización: 16 de noviembre de 2026</p>
+
+  <div class="bg-surface-container-lowest rounded-lg shadow-[0_4px_16px_rgba(13,69,50,0.07)] p-space-lg lg:p-space-xl flex flex-col gap-space-lg font-body-lg text-body-lg text-on-surface-variant">
+
+    <section>
+      <h2 class="font-headline-sm text-headline-sm text-on-surface mb-space-sm">1. Responsable</h2>
+      <p>Dino Park Perú S.A.C. ("Dino Park") es responsable del tratamiento de los datos personales que se recogen en este sitio web, de acuerdo con la Ley N.° 29733, Ley de Protección de Datos Personales del Perú, y su reglamento.</p>
+    </section>
+
+    <section>
+      <h2 class="font-headline-sm text-headline-sm text-on-surface mb-space-sm">2. Datos que recopilamos</h2>
+      <ul class="list-disc pl-6 flex flex-col gap-space-xs">
+        <li><strong>Datos de registro:</strong> nombre, apellido, correo electrónico y contraseña (guardada cifrada, nunca en texto plano).</li>
+        <li><strong>Datos de reserva:</strong> DNI, teléfono, sede, fecha y turno elegidos.</li>
+        <li><strong>Comprobantes de pago:</strong> la captura del pago con Yape que subes para validar tu reserva.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="font-headline-sm text-headline-sm text-on-surface mb-space-sm">3. Inicio de sesión con Google</h2>
+      <p class="mb-space-sm">Si eliges "Continuar con Google", solo solicitamos los permisos básicos <code>openid</code>, <code>email</code> y <code>profile</code>. Con ellos recibimos:</p>
+      <ul class="list-disc pl-6 flex flex-col gap-space-xs">
+        <li>Tu nombre y apellido.</li>
+        <li>Tu dirección de correo electrónico.</li>
+        <li>Tu foto de perfil.</li>
+      </ul>
+      <p class="mt-space-sm">Usamos estos datos únicamente para crear tu cuenta, identificarte al iniciar sesión y mostrar tu foto en tu panel. No accedemos a tus contactos, correos, archivos ni a ningún otro dato de tu cuenta de Google, y no publicamos nada en tu nombre. El uso de la información recibida de las API de Google cumple con la <a class="text-primary underline" href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Política de datos de usuario de los servicios de API de Google</a>, incluidos los requisitos de uso limitado.</p>
+    </section>
+
+    <section>
+      <h2 class="font-headline-sm text-headline-sm text-on-surface mb-space-sm">4. Para qué usamos tus datos</h2>
+      <ul class="list-disc pl-6 flex flex-col gap-space-xs">
+        <li>Gestionar tu cuenta y tus reservas.</li>
+        <li>Validar tus pagos y emitir comprobantes.</li>
+        <li>Comunicarnos contigo sobre tus reservas.</li>
+      </ul>
+      <p class="mt-space-sm">No vendemos, alquilamos ni compartimos tus datos con terceros con fines publicitarios.</p>
+    </section>
+
+    <section>
+      <h2 class="font-headline-sm text-headline-sm text-on-surface mb-space-sm">5. Conservación y seguridad</h2>
+      <p>Tus datos se guardan en servidores protegidos y se transmiten siempre mediante conexión cifrada (HTTPS). Los conservamos mientras tu cuenta esté activa o mientras sea necesario para cumplir obligaciones legales y tributarias.</p>
+    </section>
+
+    <section>
+      <h2 class="font-headline-sm text-headline-sm text-on-surface mb-space-sm">6. Cookies</h2>
+      <p>Usamos únicamente una cookie de sesión necesaria para mantener tu inicio de sesión y proteger los formularios. No usamos cookies de publicidad ni de seguimiento.</p>
+    </section>
+
+    <section>
+      <h2 class="font-headline-sm text-headline-sm text-on-surface mb-space-sm">7. Tus derechos</h2>
+      <p>Puedes solicitar en cualquier momento el acceso, rectificación, cancelación u oposición (derechos ARCO) sobre tus datos, así como la eliminación de tu cuenta. También puedes revocar el acceso de Dino Park desde <a class="text-primary underline" href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">la configuración de seguridad de tu cuenta de Google</a>. Para ejercer estos derechos, acércate a cualquiera de nuestras sedes o comunícate al número {{ yape_numero_formato }}.</p>
+    </section>
+
+    <section>
+      <h2 class="font-headline-sm text-headline-sm text-on-surface mb-space-sm">8. Cambios en esta política</h2>
+      <p>Si modificamos esta política, publicaremos la nueva versión en esta misma página indicando la fecha de actualización.</p>
+    </section>
+  </div>
+</main>
+
+<footer class="w-full bg-surface-container-low py-space-xl">
+  <div class="max-w-4xl mx-auto px-margin lg:px-margin-desktop text-center font-body-md text-body-md text-on-surface-variant">
+    © 2024 Dino Park Perú S.A.C. Todos los derechos reservados.
+  </div>
+</footer>
+</body>
+</html>
