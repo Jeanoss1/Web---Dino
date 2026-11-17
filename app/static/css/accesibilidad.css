@@ -48,6 +48,24 @@
    tailwind.config.js para cuando se vuelva a compilar tailwind.css. */
 .bg-secondary-container { background-color: #c2410c; }
 
+/* Texto sobre fotos (tarjetas de sedes): fondo oscuro propio para no
+   depender del degradado ni de la foto (WCAG 1.4.3; WAVE lo marcaba). */
+.dp-leyenda-foto {
+  background-color: rgb(0, 33, 21);
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+
+/* Banner de registro: color sólido de respaldo y degradado más oscuro
+   para que el texto blanco tenga contraste en toda la franja. */
+.dp-banner-cta {
+  background-color: #006c4d;
+  background-image: linear-gradient(to right, #006c4d, #00513a);
+}
+
+/* Etiqueta del banner: el blanco al 20 % no daba contraste con texto blanco */
+.dp-etiqueta-oscura { background-color: #003827; }
+
 /* Clases que aún no están en tailwind.css compilado */
 .list-disc { list-style-type: disc; }
 .pl-6 { padding-left: 1.5rem; }
@@ -184,25 +202,34 @@
 }
 html.dp-narrador img[alt]:not([alt=""]) { cursor: help; }
 
-/* ---------- Lectura fácil ----------
-   Fuente Lexend, más espacio entre letras, palabras y líneas, texto
-   alineado a la izquierda y sin cursivas (WCAG 1.4.12, espaciado del
-   texto). No se toca la fuente de los íconos. */
-html.dp-lectura body,
-html.dp-lectura body *:not(.material-symbols-outlined) {
-  font-family: "Lexend", Arial, sans-serif !important;
-  letter-spacing: 0.05em !important;
-  word-spacing: 0.16em !important;
+/* ---------- Fuente legible ----------
+   Atkinson Hyperlegible: sin serifas y con letras que no se confunden
+   (b/d, I/l/1). Sin cursivas. No se toca la fuente de los íconos. */
+html.dp-fuente body,
+html.dp-fuente body *:not(.material-symbols-outlined) {
+  font-family: "Atkinson Hyperlegible", Arial, sans-serif !important;
   font-style: normal !important;
 }
-html.dp-lectura body p,
-html.dp-lectura body li,
-html.dp-lectura body label,
-html.dp-lectura body td {
-  line-height: 1.8 !important;
+
+/* ---------- Espaciado de texto ----------
+   Valores de WCAG 1.4.12: interlineado de al menos 1,5, letras 0,12 em,
+   palabras 0,16 em y párrafos 2 em. */
+html.dp-espaciado body *:not(.material-symbols-outlined) {
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+}
+html.dp-espaciado body p,
+html.dp-espaciado body li,
+html.dp-espaciado body label,
+html.dp-espaciado body td,
+html.dp-espaciado body dd { line-height: 1.8 !important; }
+html.dp-espaciado body p { margin-bottom: 1em; max-width: 70ch; }
+
+/* ---------- Alinear a la izquierda ----------
+   Quita el texto justificado y centrado de los bloques de lectura. */
+html.dp-izquierda body :is(p, li, td, th, label, blockquote, dd, dt, h1, h2, h3, h4, h5, h6) {
   text-align: left !important;
 }
-html.dp-lectura body p { max-width: 70ch; }
 
 /* ---------- Colores alternativos ----------
    Cambia el par verde/rojo por la paleta Okabe-Ito: azul para lo positivo y
@@ -238,3 +265,77 @@ html.dp-contraste .opacity-60 { opacity: 1 !important; }
 /* ---------- Tamaño del texto ---------- */
 html.dp-texto-1 body { zoom: 1.12; }
 html.dp-texto-2 body { zoom: 1.25; }
+
+/* ---------- Intensidad del color ----------
+   El filtro va en los hijos de body y no en body, porque un filtro en un
+   ancestro rompe los elementos fijos (botón, panel y guía de lectura). */
+html.dp-saturacion-1 body > *:not(.dp-a11y-boton):not(.dp-a11y-panel):not(.dp-guia):not(.dp-saltar) {
+  filter: saturate(0.4);
+}
+html.dp-saturacion-2 body > *:not(.dp-a11y-boton):not(.dp-a11y-panel):not(.dp-guia):not(.dp-saltar) {
+  filter: grayscale(1);
+}
+
+/* ---------- Pausar animaciones ----------
+   Igual que prefers-reduced-motion, pero a pedido desde el panel
+   (WCAG 2.2.2 y 2.3.3). También anula los zoom al pasar el mouse. */
+html.dp-sin-movimiento *,
+html.dp-sin-movimiento *::before,
+html.dp-sin-movimiento *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+html.dp-sin-movimiento [class*="hover:scale"]:hover,
+html.dp-sin-movimiento .group:hover [class*="group-hover:scale"],
+html.dp-sin-movimiento [class*="hover:-translate"]:hover {
+  transform: none !important;
+}
+
+/* ---------- Ocultar imágenes ----------
+   Deja solo el texto. Los íconos de interfaz se mantienen. */
+html.dp-sin-imagenes main img,
+html.dp-sin-imagenes main picture,
+html.dp-sin-imagenes main video,
+html.dp-sin-imagenes footer img { display: none !important; }
+html.dp-sin-imagenes [style*="background-image"] { background-image: none !important; }
+/* Sin la foto, el degradado que la oscurecía ya no hace falta */
+html.dp-sin-imagenes main .absolute.inset-0[class*="bg-gradient-to-t"] { display: none !important; }
+
+/* ---------- Resaltar enlaces y botones ---------- */
+html.dp-enlaces body a,
+html.dp-enlaces body button:not(.dp-a11y-panel button):not(.dp-a11y-boton),
+html.dp-enlaces body [role="button"],
+html.dp-enlaces body input[type="submit"] {
+  outline: 3px solid #e69f00 !important;
+  outline-offset: 2px !important;
+}
+html.dp-enlaces body a { text-decoration: underline !important; text-underline-offset: 3px; }
+
+/* ---------- Cursor grande ----------
+   Flecha negra de 48 px con borde blanco, visible sobre fondos claros y oscuros. */
+html.dp-cursor,
+html.dp-cursor * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24'%3E%3Cpath d='M4 2l15 11.5-6.6 1.2 3.9 6.8-2.8 1.5-3.9-6.8L4 21z' fill='%23000' stroke='%23fff' stroke-width='1.4' stroke-linejoin='round'/%3E%3C/svg%3E") 6 3, auto !important;
+}
+html.dp-cursor :is(a, button, [role="button"], label, select, input[type="checkbox"], input[type="submit"]),
+html.dp-cursor :is(a, button, [role="button"], label) * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24'%3E%3Cpath d='M4 2l15 11.5-6.6 1.2 3.9 6.8-2.8 1.5-3.9-6.8L4 21z' fill='%23c2410c' stroke='%23fff' stroke-width='1.4' stroke-linejoin='round'/%3E%3C/svg%3E") 6 3, pointer !important;
+}
+
+/* ---------- Guía de lectura ----------
+   Franja que sigue al puntero; no recibe clics. */
+.dp-guia { display: none; }
+html.dp-guia-activa .dp-guia {
+  display: block;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 40%;
+  height: 44px;
+  z-index: 9997;
+  pointer-events: none;
+  background: rgba(255, 213, 0, 0.18);
+  border-top: 3px solid #002115;
+  border-bottom: 3px solid #002115;
+}

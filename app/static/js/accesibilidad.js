@@ -1,19 +1,42 @@
 // Panel de accesibilidad de Dino Park.
-// Opciones: lectura fácil, colores alternativos, alto contraste, tamaño del
-// texto y narrador por voz (lee la descripción de las imágenes y el texto
-// de la página con la Web Speech API del navegador, sin servicios externos).
+// Opciones de texto (fuente legible, espaciado, alineación, tamaño), color
+// (colores alternativos, alto contraste, saturación), movimiento y contenido
+// (pausar animaciones, ocultar imágenes), navegación (resaltar enlaces,
+// cursor grande, guía de lectura) y narrador por voz con la Web Speech API
+// del navegador, sin servicios externos.
 // La elección se guarda en el navegador y se aplica en todas las páginas.
 (function () {
   'use strict';
 
   const CLAVE = 'dp-accesibilidad';
-  const INICIAL = { lectura: false, colores: false, contraste: false, texto: 0, narrador: false };
+  const INICIAL = {
+    fuente: false, espaciado: false, izquierda: false, texto: 0,
+    colores: false, contraste: false, saturacion: 0,
+    movimiento: false, sinImagenes: false,
+    enlaces: false, cursor: false, guia: false,
+    narrador: false
+  };
+  // Opción de encendido/apagado -> clase que se pone en <html>
+  const CLASES = {
+    fuente: 'dp-fuente', espaciado: 'dp-espaciado', izquierda: 'dp-izquierda',
+    colores: 'dp-colores', contraste: 'dp-contraste',
+    movimiento: 'dp-sin-movimiento', sinImagenes: 'dp-sin-imagenes',
+    enlaces: 'dp-enlaces', cursor: 'dp-cursor', guia: 'dp-guia-activa',
+    narrador: 'dp-narrador'
+  };
   const voz = window.speechSynthesis || null;
   let cfg = leer();
 
   function leer() {
     try {
-      return Object.assign({}, INICIAL, JSON.parse(localStorage.getItem(CLAVE) || '{}'));
+      const guardado = JSON.parse(localStorage.getItem(CLAVE) || '{}');
+      // La versión anterior tenía una sola opción "lectura" que agrupaba
+      // fuente, espaciado y alineación
+      if (guardado.lectura) {
+        guardado.fuente = guardado.espaciado = guardado.izquierda = true;
+      }
+      delete guardado.lectura;
+      return Object.assign({}, INICIAL, guardado);
     } catch (e) {
       return Object.assign({}, INICIAL);
     }
@@ -26,25 +49,39 @@
   // Se aplica antes de pintar el panel para que la página no "parpadee"
   function aplicar() {
     const html = document.documentElement;
-    html.classList.toggle('dp-lectura', cfg.lectura);
-    html.classList.toggle('dp-colores', cfg.colores);
-    html.classList.toggle('dp-contraste', cfg.contraste);
-    html.classList.toggle('dp-narrador', cfg.narrador);
-    html.classList.remove('dp-texto-1', 'dp-texto-2');
+    Object.keys(CLASES).forEach(k => html.classList.toggle(CLASES[k], !!cfg[k]));
+    html.classList.remove('dp-texto-1', 'dp-texto-2', 'dp-saturacion-1', 'dp-saturacion-2');
     if (cfg.texto > 0) html.classList.add('dp-texto-' + cfg.texto);
-    if (cfg.lectura) cargarFuenteLectura();
+    if (cfg.saturacion > 0) html.classList.add('dp-saturacion-' + cfg.saturacion);
+    if (cfg.fuente) cargarFuenteLegible();
+    pausarVideos();
   }
 
-  function cargarFuenteLectura() {
-    if (document.getElementById('dp-fuente-lexend')) return;
+  function cargarFuenteLegible() {
+    if (document.getElementById('dp-fuente-legible')) return;
     const link = document.createElement('link');
-    link.id = 'dp-fuente-lexend';
+    link.id = 'dp-fuente-legible';
     link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap';
     document.head.appendChild(link);
   }
 
+  function pausarVideos() {
+    if (!cfg.movimiento) return;
+    document.querySelectorAll('video').forEach(v => { v.pause(); v.removeAttribute('autoplay'); });
+  }
+
   aplicar();
+
+  // ---------- Guía de lectura ----------
+  // Franja horizontal que sigue al puntero para no perder el renglón
+
+  let guia = null;
+  function moverGuia(e) {
+    if (!cfg.guia || !guia) return;
+    guia.style.top = (e.clientY - guia.offsetHeight / 2) + 'px';
+  }
+  document.addEventListener('mousemove', moverGuia, { passive: true });
 
   // ---------- Narrador ----------
 
@@ -151,7 +188,7 @@
       if (i >= partes.length) return;
       const p = partes[i++];
       resaltar(p.el);
-      p.el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      p.el.scrollIntoView({ block: 'center', behavior: cfg.movimiento ? 'auto' : 'smooth' });
       hablar(p.texto, siguiente);
     };
     siguiente();
@@ -168,6 +205,10 @@
     const main = document.querySelector('main');
     if (main && !main.id) main.id = 'contenido';
     if (main && !main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1');
+
+    guia = document.createElement('div');
+    guia.className = 'dp-guia';
+    guia.setAttribute('aria-hidden', 'true');
 
     const boton = document.createElement('button');
     boton.type = 'button';
@@ -190,8 +231,10 @@
       <h2 id="dp-a11y-titulo">Accesibilidad</h2>
       <p class="dp-ayuda">Ajusta la página a tu forma de leer. Se guarda en este navegador.</p>
       <fieldset class="dp-a11y-grupo">
-        <legend>Lectura</legend>
-        ${opcion('lectura', 'menu_book', 'Lectura fácil')}
+        <legend>Texto</legend>
+        ${opcion('fuente', 'text_fields', 'Fuente legible')}
+        ${opcion('espaciado', 'format_line_spacing', 'Espaciado de texto')}
+        ${opcion('izquierda', 'format_align_left', 'Alinear a la izquierda')}
         <div class="dp-a11y-fila" role="group" aria-label="Tamaño del texto">
           <button type="button" class="dp-a11y-opcion" data-texto="-1" aria-label="Reducir texto">A−</button>
           <button type="button" class="dp-a11y-opcion" data-texto="0" aria-label="Texto normal">A</button>
@@ -202,6 +245,22 @@
         <legend>Color</legend>
         ${opcion('colores', 'palette', 'Colores alternativos')}
         ${opcion('contraste', 'contrast', 'Alto contraste')}
+        <div class="dp-a11y-fila" role="group" aria-label="Intensidad del color">
+          <button type="button" class="dp-a11y-opcion" data-saturacion="0" aria-label="Color normal">Normal</button>
+          <button type="button" class="dp-a11y-opcion" data-saturacion="1" aria-label="Color suave">Suave</button>
+          <button type="button" class="dp-a11y-opcion" data-saturacion="2" aria-label="Escala de grises">Grises</button>
+        </div>
+      </fieldset>
+      <fieldset class="dp-a11y-grupo">
+        <legend>Movimiento y contenido</legend>
+        ${opcion('movimiento', 'motion_photos_off', 'Pausar animaciones')}
+        ${opcion('sinImagenes', 'hide_image', 'Ocultar imágenes')}
+      </fieldset>
+      <fieldset class="dp-a11y-grupo">
+        <legend>Navegación</legend>
+        ${opcion('enlaces', 'link', 'Resaltar enlaces y botones')}
+        ${opcion('cursor', 'arrow_selector_tool', 'Cursor grande')}
+        ${opcion('guia', 'horizontal_rule', 'Guía de lectura')}
       </fieldset>
       <fieldset class="dp-a11y-grupo">
         <legend>Narrador</legend>
@@ -220,7 +279,7 @@
       </button>
       <p class="dp-oculto" aria-live="polite" id="dp-a11y-aviso"></p>`;
 
-    document.body.append(boton, panel);
+    document.body.append(guia, boton, panel);
 
     const aviso = panel.querySelector('#dp-a11y-aviso');
     const anunciar = t => { aviso.textContent = ''; setTimeout(() => { aviso.textContent = t; }, 50); };
@@ -252,9 +311,14 @@
         const n = Number(b.dataset.texto);
         b.setAttribute('aria-pressed', String(n === 0 ? cfg.texto === 0 : (n > 0 && cfg.texto > 0)));
       });
+      panel.querySelectorAll('[data-saturacion]').forEach(b => {
+        b.setAttribute('aria-pressed', String(Number(b.dataset.saturacion) === cfg.saturacion));
+      });
       aplicar();
       prepararImagenes();
     };
+
+    const NIVELES_COLOR = ['Color normal', 'Color suave', 'Escala de grises'];
 
     panel.addEventListener('click', e => {
       const b = e.target.closest('button');
@@ -271,6 +335,9 @@
         const n = Number(b.dataset.texto);
         cfg.texto = n === 0 ? 0 : Math.max(0, Math.min(2, cfg.texto + n));
         anunciar('Tamaño de texto ' + (cfg.texto === 0 ? 'normal' : 'aumentado ' + cfg.texto));
+      } else if (b.dataset.saturacion) {
+        cfg.saturacion = Number(b.dataset.saturacion);
+        anunciar(NIVELES_COLOR[cfg.saturacion]);
       } else if (b.dataset.accion === 'leer') {
         if (voz) leerPagina(); else anunciar('Tu navegador no permite la lectura en voz alta');
         return;
