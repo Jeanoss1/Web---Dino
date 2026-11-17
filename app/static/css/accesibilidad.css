@@ -67,6 +67,23 @@
 /* Etiqueta del banner: el blanco al 20 % no daba contraste con texto blanco */
 .dp-etiqueta-oscura { background-color: #003827; }
 
+/* Íconos en un cuadro fijo: mientras la fuente de íconos no llega, el
+   nombre del ícono ("toys", "pets"...) no ensancha ni empuja el contenido
+   (evita cambios de diseño, CLS). */
+.material-symbols-outlined {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  line-height: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Logo con ancho explícito (proporción 320x179) para reservar su espacio */
+img.h-20.w-auto[src*="Logo_dino"] { width: 143px; }
+img.h-8.w-auto[src*="Logo_dino"] { width: 57px; }
+
 /* Clases que aún no están en tailwind.css compilado */
 .list-disc { list-style-type: disc; }
 .pl-6 { padding-left: 1.5rem; }
