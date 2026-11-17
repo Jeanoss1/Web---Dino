@@ -47,6 +47,7 @@
    (antes #ff7a30, 2,6:1; WCAG 1.4.3 exige 4,5:1). Coincide con
    tailwind.config.js para cuando se vuelva a compilar tailwind.css. */
 .bg-secondary-container { background-color: #c2410c; }
+.text-secondary-container { color: #c2410c; }
 
 /* Texto sobre fotos (tarjetas de sedes): fondo oscuro propio para no
    depender del degradado ni de la foto (WCAG 1.4.3; WAVE lo marcaba). */
