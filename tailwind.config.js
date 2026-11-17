@@ -30,10 +30,10 @@ module.exports = {
         "space-sm": "0.5rem", margin: "1rem", "gutter-desktop": "1.5rem", "space-lg": "1.5rem", "space-md": "1rem"
       },
       fontFamily: {
-        "headline-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"],
-        "body-md": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "display-lg-mobile": ["Plus Jakarta Sans"],
-        "label-lg": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"], "display-lg": ["Plus Jakarta Sans"],
-        "label-md": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"]
+        "headline-lg": ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"], "headline-md": ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"], "body-lg": ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"],
+        "body-md": ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"], "headline-lg-mobile": ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"], "display-lg-mobile": ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"],
+        "label-lg": ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"], "title-md": ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"], "display-lg": ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"],
+        "label-md": ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"], "label-sm": ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"], "headline-sm": ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"]
       },
       fontSize: {
         "headline-lg": ["32px", { lineHeight: "40px", fontWeight: "700" }],
