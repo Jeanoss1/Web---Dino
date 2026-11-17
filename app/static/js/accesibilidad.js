@@ -73,6 +73,19 @@
 
   aplicar();
 
+  // ---------- Íconos ----------
+  // La hoja de Google Fonts se carga sin bloquear la página; los íconos se
+  // muestran cuando su fuente termina de cargar (o a los 4 s como respaldo).
+  function mostrarIconos() { document.documentElement.classList.add('dp-iconos'); }
+  function fuenteIconosLista() {
+    return document.fonts && [...document.fonts].some(f => /Material Symbols/.test(f.family) && f.status === 'loaded');
+  }
+  if (!document.fonts || fuenteIconosLista()) mostrarIconos();
+  else {
+    document.fonts.addEventListener('loadingdone', () => { if (fuenteIconosLista()) mostrarIconos(); });
+    setTimeout(mostrarIconos, 4000);
+  }
+
   // ---------- Guía de lectura ----------
   // Franja horizontal que sigue al puntero para no perder el renglón
 

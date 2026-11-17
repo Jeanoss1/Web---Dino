@@ -80,6 +80,10 @@
   flex-shrink: 0;
 }
 
+/* Hasta que llega la fuente de íconos se ocultan (sin mover nada);
+   accesibilidad.js agrega dp-iconos cuando la fuente está lista. */
+html:not(.dp-iconos) .material-symbols-outlined { visibility: hidden; }
+
 /* Logo con ancho explícito (proporción 320x179) para reservar su espacio */
 img.h-20.w-auto[src*="Logo_dino"] { width: 143px; }
 img.h-8.w-auto[src*="Logo_dino"] { width: 57px; }
