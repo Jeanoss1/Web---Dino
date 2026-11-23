@@ -399,30 +399,10 @@ def oauth_callback(proveedor):
 
     usuario = Usuario.query.filter_by(correo=correo).first()
 
-    # --------------------------------------------------------
-    # INICIAR SESIÓN: el correo ya debe existir
-    # --------------------------------------------------------
-
-    if accion == 'ingresar' and usuario is None:
-        flash(
-            f'No hay una cuenta con el correo {correo}. '
-            f'Créala con el botón de {nombre_proveedor}.',
-            'error'
-        )
-        return redirect(url_for('auth.registro'))
-
-    # --------------------------------------------------------
-    # SOLO CLIENTES: el personal (Caja / Administrador) entra
-    # siempre con su correo y contraseña
-    # --------------------------------------------------------
-
-    if usuario is not None and (not usuario.rol or usuario.rol.nombre != 'cliente'):
-        flash(
-            f'El acceso con {nombre_proveedor} es solo para clientes. '
-            'El personal ingresa con su correo y contraseña.',
-            'error'
-        )
-        return redirect(url_for('auth.iniciar_sesion'))
+    # Cualquiera puede entrar con Google, desde "Iniciar sesión" o desde
+    # "Crear cuenta": si el correo no existe se crea la cuenta en ese
+    # momento. El rol se toma de la BD (las cuentas nuevas empiezan como
+    # cliente y el administrador lo cambia desde Usuarios).
 
     # --------------------------------------------------------
     # REGISTRO: crea la cuenta con los datos autorizados
