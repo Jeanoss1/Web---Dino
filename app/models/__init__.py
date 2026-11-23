@@ -2,6 +2,7 @@
 
 from app.models.AsignacionTurno import AsignacionTurno
 from app.models.Caja import Caja
+from app.models.CapturaComprobante import CapturaComprobante
 from app.models.Cliente import Cliente
 from app.models.ComprobanteBase import ComprobanteBase
 from app.models.ComprobanteReserva import ComprobanteReserva
@@ -30,6 +31,7 @@ from app.models.Zona import Zona
 __all__ = [
     'AsignacionTurno',
     'Caja',
+    'CapturaComprobante',
     'Carro',
     'Cliente',
     'ComprobanteBase',

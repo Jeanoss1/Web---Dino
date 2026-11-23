@@ -1212,6 +1212,13 @@ def cp_09_07(ctx, r):
 # Van al final: usan la reserva 1 confirmada en CP-03-10 y reasignan la sede
 # del cajero de pruebas.
 # =====================================================================
+URL_VALIDAR_TICKET = '/api/caja/tickets/validar'
+
+
+def _url_usar_ticket(codigo):
+    return f'/api/caja/tickets/{codigo}/usar'
+
+
 def _ticket_reserva(ctx, id_reserva):
     filas = ctx.sql('SELECT codigo, estado, fecha_uso, id_validador FROM tickets '
                     'WHERE id_reserva = :r', r=id_reserva)
@@ -1255,7 +1262,7 @@ def cp_03_17(ctx, r):
 @caso('CP-05-01', 110, 'HU05', 'Cajero de Hoyos Rubio valida un ticket de Real Plaza',
       'HTTP 403 "El ticket corresponde a otra sede"; el ticket sigue emitido')
 def cp_05_01(ctx, r):
-    resp = ctx.api(_cajero_logueado(ctx), '/api/caja/tickets/validar', {'codigo': _codigo_ticket(ctx, 1)})
+    resp = ctx.api(_cajero_logueado(ctx), URL_VALIDAR_TICKET, {'codigo': _codigo_ticket(ctx, 1)})
     r.ver('HTTP', resp.status_code, 403)
     r.mensaje(resp, 'El ticket corresponde a otra sede')
     r.ver('BD estado', (_ticket_reserva(ctx, 1) or [None, None])[1], 'emitido')
@@ -1264,7 +1271,7 @@ def cp_05_01(ctx, r):
 @caso('CP-05-02', 111, 'HU05', 'Validar un código de ticket que no existe',
       'HTTP 404 "El ticket no existe"')
 def cp_05_02(ctx, r):
-    resp = ctx.api(_cajero_logueado(ctx), '/api/caja/tickets/validar', {'codigo': 'T000000-ZZZZZZ'})
+    resp = ctx.api(_cajero_logueado(ctx), URL_VALIDAR_TICKET, {'codigo': 'T000000-ZZZZZZ'})
     r.ver('HTTP', resp.status_code, 404)
     r.mensaje(resp, 'El ticket no existe')
 
@@ -1274,7 +1281,7 @@ def cp_05_02(ctx, r):
 def cp_05_03(ctx, r):
     ctx.sql('UPDATE usuarios SET id_sucursal = :s WHERE id_usuario = :u',
             s=_id_sucursal_por_nombre(ctx, 'Real Plaza'), u=_id_cajero_pruebas(ctx))
-    resp = ctx.api(_cajero_logueado(ctx), '/api/caja/tickets/validar', {'codigo': _codigo_ticket(ctx, 1)})
+    resp = ctx.api(_cajero_logueado(ctx), URL_VALIDAR_TICKET, {'codigo': _codigo_ticket(ctx, 1)})
     r.ver('HTTP', resp.status_code, 200)
     datos = resp.get_json() or {}
     r.campos('Ticket', datos, {'cliente': 'Ana Lucía Torres Vega', 'estado': 'emitido', 'id_reserva': 1})
@@ -1284,7 +1291,7 @@ def cp_05_03(ctx, r):
 @caso('CP-05-04', 113, 'HU05', 'Asignar las unidades y marcar el ticket como usado',
       'HTTP 200 estado usado; BD: fecha_uso registrada y validador = cajero de pruebas')
 def cp_05_04(ctx, r):
-    resp = ctx.api(_cajero_logueado(ctx), f'/api/caja/tickets/{_codigo_ticket(ctx, 1)}/usar', {})
+    resp = ctx.api(_cajero_logueado(ctx), _url_usar_ticket(_codigo_ticket(ctx, 1)), {})
     r.ver('HTTP', resp.status_code, 200)
     r.ver('Estado', (resp.get_json() or {}).get('estado'), 'usado')
     despues = _ticket_reserva(ctx, 1)
@@ -1298,10 +1305,10 @@ def cp_05_04(ctx, r):
 def cp_05_05(ctx, r):
     codigo = _codigo_ticket(ctx, 1)
     cajero = _cajero_logueado(ctx)
-    resp = ctx.api(cajero, '/api/caja/tickets/validar', {'codigo': codigo})
+    resp = ctx.api(cajero, URL_VALIDAR_TICKET, {'codigo': codigo})
     r.ver('Validar (HTTP)', resp.status_code, 409)
     r.mensaje(resp, 'El ticket ya fue utilizado')
-    r.ver('Usar (HTTP)', ctx.api(cajero, f'/api/caja/tickets/{codigo}/usar', {}).status_code, 409)
+    r.ver('Usar (HTTP)', ctx.api(cajero, _url_usar_ticket(codigo), {}).status_code, 409)
 
 
 @caso('CP-05-06', 115, 'HU05', 'Solo se ofrecen unidades disponibles de la sede',
@@ -1353,7 +1360,7 @@ def cp_06_15(ctx, r):
       'HTTP 403 "No tienes permiso para esta acción"')
 def cp_06_16(ctx, r):
     r.http(_cajero_logueado(ctx).get('/api/mantenimientos/alertas'), 403,
-           {'error': 'No tienes permiso para esta acción'})
+           SIN_PERMISO)
 
 
 @caso('CP-07-14', 119, 'HU07', 'El arqueo separa el efectivo del Yape',
@@ -1401,4 +1408,20 @@ def cp_08_04(ctx, r):
       'HTTP 403 "No tienes permiso para esta acción"')
 def cp_08_05(ctx, r):
     r.http(_cajero_logueado(ctx).get('/api/admin/reportes/ventas/pdf'), 403,
-           {'error': 'No tienes permiso para esta acción'})
+           SIN_PERMISO)
+
+
+@caso('CP-03-18', 123, 'HU03', 'La captura se sigue viendo aunque se borre el disco del servidor',
+      'BD: copia de la captura de la reserva 1; tras borrar el archivo del disco, '
+      '/comprobantes/1 responde HTTP 200 con la misma imagen')
+def cp_03_18(ctx, r):
+    archivo = ctx.valor('SELECT archivo FROM comprobantes_reserva WHERE id_comprobante = 1') or ''
+    r.ver('Copia en la BD', ctx.valor(
+        'SELECT count(*) FROM capturas_comprobante WHERE nombre = :n', n=archivo), 1)
+    ruta = os.path.join(ctx.carpeta, archivo)
+    with open(ruta, 'rb') as f:
+        original = f.read()
+    os.remove(ruta)   # como en Render: el disco se borra al volver a desplegar
+    resp = ctx.cliente('ana').get('/comprobantes/1')
+    r.ver('HTTP', resp.status_code, 200)
+    r.ver('Misma imagen', resp.data == original, True)

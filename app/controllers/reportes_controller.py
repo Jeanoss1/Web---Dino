@@ -36,45 +36,46 @@ def pagina_cuadre():
     return render_template('admin_cuadre.html')
 
 
+def _reporte_de_la_consulta():
+    """Arma el reporte con los filtros de la URL (lo usan la vista JSON y el PDF):
+    ?id_sucursal=&rango=diario|semanal|mensual|personalizado&referencia=AAAA-MM-DD&desde=&hasta="""
+    args = request.args
+    fechas = {
+        nombre: _fecha(args[nombre], nombre) if args.get(nombre) else None
+        for nombre in ('referencia', 'desde', 'hasta')
+    }
+    return generar_reporte(
+        id_sucursal=args.get('id_sucursal', type=int),
+        rango=args.get('rango', 'semanal'),
+        **fechas,
+    )
+
+
 @reportes_bp.route('/api/admin/reportes/ventas')
 @rol_requerido('administrador')
 def api_reporte_ventas():
-    """?id_sucursal=&rango=diario|semanal|mensual|personalizado&referencia=AAAA-MM-DD&desde=&hasta="""
-
     try:
-        referencia = _fecha(request.args['referencia'], 'referencia') if request.args.get('referencia') else None
-        desde = _fecha(request.args['desde'], 'desde') if request.args.get('desde') else None
-        hasta = _fecha(request.args['hasta'], 'hasta') if request.args.get('hasta') else None
-
-        reporte = generar_reporte(
-            id_sucursal=request.args.get('id_sucursal', type=int),
-            rango=request.args.get('rango', 'semanal'),
-            referencia=referencia, desde=desde, hasta=hasta,
-        )
+        return jsonify(_reporte_de_la_consulta())
     except ErrorReporte as e:
         return jsonify(error=str(e)), 400
-
-    return jsonify(reporte)
 
 
 @reportes_bp.route('/api/admin/reportes/ventas/pdf')
 @rol_requerido('administrador')
 def api_reporte_ventas_pdf():
     """CA08.4: mismo reporte y mismos filtros que /api/admin/reportes/ventas, en PDF."""
-    rango = request.args.get('rango', 'semanal')
-    id_sucursal = request.args.get('id_sucursal', type=int)
     try:
-        referencia = _fecha(request.args['referencia'], 'referencia') if request.args.get('referencia') else None
-        desde = _fecha(request.args['desde'], 'desde') if request.args.get('desde') else None
-        hasta = _fecha(request.args['hasta'], 'hasta') if request.args.get('hasta') else None
-        reporte = generar_reporte(id_sucursal=id_sucursal, rango=rango,
-                                  referencia=referencia, desde=desde, hasta=hasta)
+        reporte = _reporte_de_la_consulta()
     except ErrorReporte as e:
         return jsonify(error=str(e)), 400
 
+    id_sucursal = request.args.get('id_sucursal', type=int)
     sucursal = db.session.get(Sucursal, id_sucursal) if id_sucursal else None
-    sede = sucursal.nombre if sucursal else None
-    contenido = generar_pdf_reporte(reporte, rango, sede, session.get('nombre') or session.get('correo'))
+    contenido = generar_pdf_reporte(
+        reporte, request.args.get('rango', 'semanal'),
+        sucursal.nombre if sucursal else None,
+        session.get('nombre') or session.get('correo'),
+    )
     nombre = f"reporte_ventas_{reporte['inicio']}_{reporte['fin']}.pdf"
     return Response(contenido, mimetype='application/pdf',
                     headers={'Content-Disposition': f'attachment; filename="{nombre}"'})

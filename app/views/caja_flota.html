@@ -358,12 +358,15 @@ async function postJson(url, cuerpo) {
 function pintarTicket(t, puedeUsar) {
   const filas = (t.unidades || []).map(u =>
     `<li>${esc(u.unidad)} · ${esc(u.fecha)} · ${esc(u.inicio)}–${esc(u.fin)}</li>`).join('');
+  const botonUsar = puedeUsar
+    ? '<button type="button" id="btn-usar-ticket" class="mt-1 rounded-full bg-primary text-on-primary '
+      + 'px-space-md py-space-sm font-label-lg text-label-lg">Asignar unidades y marcar como usado</button>'
+    : '';
   $('resultado-ticket').innerHTML = `
     <div class="p-space-sm rounded-lg bg-surface-container space-y-1">
       <p><b>${esc(t.codigo)}</b> · ${esc(t.cliente)} (DNI ${esc(t.dni)}) · ${soles(t.total)}</p>
       <ul class="list-disc pl-6">${filas}</ul>
-      ${puedeUsar ? `<button type="button" id="btn-usar-ticket"
-          class="mt-1 rounded-full bg-primary text-on-primary px-space-md py-space-sm font-label-lg text-label-lg">Asignar unidades y marcar como usado</button>` : ''}
+      ${botonUsar}
     </div>`;
   if (puedeUsar) {
     $('btn-usar-ticket').addEventListener('click', async () => {

@@ -84,13 +84,46 @@ def _proveedor_almacenamiento():
     return 'local'
 
 
+TIPOS_MIME = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'pdf': 'application/pdf'}
+
+
+def _hay_bd():
+    return 'sqlalchemy' in current_app.extensions
+
+
+def _respaldar_en_bd(nombre, contenido, extension):
+    """Copia la captura en la BD para que no se pierda si el disco del
+    servidor se borra (Render). Se confirma junto con el comprobante."""
+    if not _hay_bd():
+        return
+    from app.models.CapturaComprobante import CapturaComprobante
+    db.session.add(CapturaComprobante(
+        nombre=nombre,
+        tipo_mime=TIPOS_MIME.get(extension.lower(), 'application/octet-stream'),
+        datos=contenido,
+    ))
+
+
+def _captura_desde_bd(nombre):
+    """Respuesta con la captura guardada en la BD, o None si no está."""
+    if not _hay_bd():
+        return None
+    from flask import send_file
+    from app.models.CapturaComprobante import CapturaComprobante
+    copia = db.session.get(CapturaComprobante, nombre)
+    if copia is None:
+        return None
+    return send_file(io.BytesIO(copia.datos), mimetype=copia.tipo_mime, download_name=nombre)
+
+
 def _guardar_local(prefijo, contenido, extension):
-    """Guarda la captura en el disco local dentro de UPLOAD_FOLDER."""
+    """Guarda la captura en el disco local dentro de UPLOAD_FOLDER y una copia en la BD."""
     carpeta = current_app.config['UPLOAD_FOLDER']
     os.makedirs(carpeta, exist_ok=True)
     nombre = f'{prefijo}_{uuid.uuid4().hex}.{extension}'
     with open(os.path.join(carpeta, nombre), 'wb') as f:
         f.write(contenido)
+    _respaldar_en_bd(nombre, contenido, extension)
     return nombre
 
 
@@ -210,6 +243,11 @@ def servir_captura(archivo):
     carpeta_local = current_app.config.get('UPLOAD_FOLDER')
     if carpeta_local and os.path.isfile(os.path.join(carpeta_local, archivo)):
         return send_from_directory(carpeta_local, archivo)
+
+    # 2b. El disco se borró (redespliegue en Render): copia guardada en la BD
+    desde_bd = _captura_desde_bd(archivo)
+    if desde_bd is not None:
+        return desde_bd
 
     # 3. AWS S3 o Cloudflare R2 (si hay bucket configurado o si el nombre inicia con 'comprobantes/' / 's3://')
     bucket = os.getenv('S3_BUCKET_NAME')
