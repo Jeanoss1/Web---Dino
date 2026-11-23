@@ -1,7 +1,10 @@
 """Crea los turnos (horarios reservables) de la flota para los próximos días.
 
-Usa las mismas franjas que app/seed.py: 20 minutos, de 10:00 a 13:00,
+Cubre el horario de atención de Dino Park, de 10:00 a 22:00: un turno de
+20 minutos cada media hora (10:00-10:20, 10:30-10:50 ... 21:30-21:50),
 capacidad 1, para cada unidad de flota de cada sede.
+(app/seed.py solo crea las franjas de 10:00 a 13:00 de un día de ejemplo,
+que son las que usan los casos de prueba.)
 Se puede ejecutar varias veces: no duplica los turnos que ya existen.
 
 Usa la BD de DATABASE_URL (la del .env, o la que pongas en la terminal).
@@ -21,13 +24,12 @@ from app.database import db
 from app.models.Flota import Flota
 from app.models.Turno import Turno
 
+APERTURA, CIERRE = 10, 22   # atención de 10:00 a 22:00
+
 HORARIOS = [
-    (time(10, 0), time(10, 20)),
-    (time(10, 30), time(10, 50)),
-    (time(11, 0), time(11, 20)),
-    (time(11, 30), time(11, 50)),
-    (time(12, 0), time(12, 20)),
-    (time(12, 30), time(12, 50)),
+    (time(hora, minuto), time(hora, minuto + 20))
+    for hora in range(APERTURA, CIERRE)
+    for minuto in (0, 30)
 ]
 
 
