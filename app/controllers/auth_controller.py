@@ -301,12 +301,9 @@ def _abrir_sesion(usuario, recordar):
         )
 
     # --------------------------------------------------------
-    # REDIRECCIÓN SEGÚN ROL
-    # --------------------------------------------------------
-    # Los clientes van directo a la vista de disponibilidad
-    # para reservar turnos. El personal (administrador/cajero)
-    # sigue yendo al home general, a la espera de sus propios
-    # paneles.
+    # REDIRECCIÓN SEGÚN ROL: cada uno va directo a su pantalla
+    # (cliente: reservar; cajero: validar pagos; administrador:
+    # su panel de gestión).
     # --------------------------------------------------------
 
     if session['rol'] == 'cliente':
@@ -317,6 +314,11 @@ def _abrir_sesion(usuario, recordar):
     if session['rol'] == 'cajero':
         return redirect(
             url_for('comprobante.pagina_validaciones')
+        )
+
+    if session['rol'] == 'administrador':
+        return redirect(
+            url_for('admin.pagina_admin')
         )
 
     return redirect(

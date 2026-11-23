@@ -236,9 +236,9 @@ def cp_01_15(ctx, r):
 
 
 @caso('CP-01-16', 16, 'HU01', 'Administrador inicia sesión',
-      'Inicia sesión y redirige a la página de inicio "/"')
+      'Inicia sesión y va directo a su panel "/admin"')
 def cp_01_16(ctx, r):
-    r.redirige(ctx.login(ctx.cliente('admin'), *ADMIN), '/')
+    r.redirige(ctx.login(ctx.cliente('admin'), *ADMIN), '/admin')
 
 
 @caso('CP-01-17', 17, 'HU01', "Sesión persistente con 'Recordarme'",
