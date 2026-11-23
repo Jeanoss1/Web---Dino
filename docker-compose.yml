@@ -1,0 +1,43 @@
+# ---------------------------------------------------------------
+# Dino Park: aplicación web + base de datos PostgreSQL
+# Uso:  docker compose up --build
+# ---------------------------------------------------------------
+services:
+
+  db:
+    image: postgres:16
+    container_name: dinopark_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - datos_postgres:/var/lib/postgresql/data   # los datos sobreviven al apagar
+    ports:
+      - "5433:5432"   # 5433 en tu PC para no chocar con un PostgreSQL local
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    container_name: dinopark_web
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # "db" es el nombre del servicio de arriba: Docker lo resuelve como host
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    ports:
+      - "8000:8000"
+    volumes:
+      - comprobantes:/app/uploads/comprobantes   # capturas de pago Yape
+    depends_on:
+      db:
+        condition: service_healthy   # espera a que PostgreSQL esté listo
+
+volumes:
+  datos_postgres:
+  comprobantes:

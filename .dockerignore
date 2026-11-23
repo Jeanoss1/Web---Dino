@@ -1,0 +1,16 @@
+# Archivos que NO deben copiarse a la imagen
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+.vscode/
+.idea/
+.git/
+.gitignore
+.env
+uploads/comprobantes/
+Dockerfile
+docker-compose.yml
