@@ -46,6 +46,9 @@
       <input type="date" id="filtro-hasta" class="rounded-md border-outline-variant text-sm">
     </label>
     <button id="btn-filtrar" class="rounded-full bg-primary text-on-primary px-space-md py-space-xs font-label-md text-label-md font-bold min-h-[40px]">Filtrar</button>
+    <button id="btn-pdf" type="button" class="rounded-full border-2 border-primary text-primary px-space-md py-space-xs font-label-md text-label-md font-bold min-h-[40px] inline-flex items-center gap-1">
+      <span class="material-symbols-outlined text-[18px]" aria-hidden="true">picture_as_pdf</span>Exportar PDF
+    </button>
   </div>
 
   <div id="texto-rango" class="font-label-md text-label-md text-on-surface-variant"></div>
@@ -115,7 +118,7 @@ function actualizarFiltrosVisibles() {
 
 $('filtro-rango').addEventListener('change', actualizarFiltrosVisibles);
 
-async function cargarReporte() {
+function paramsReporte() {
   const params = new URLSearchParams();
   if ($('filtro-sede').value) params.set('id_sucursal', $('filtro-sede').value);
   params.set('rango', $('filtro-rango').value);
@@ -125,7 +128,16 @@ async function cargarReporte() {
   } else if ($('filtro-referencia').value) {
     params.set('referencia', $('filtro-referencia').value);
   }
+  return params;
+}
 
+// CA08.4: descarga el mismo reporte en PDF
+$('btn-pdf').addEventListener('click', () => {
+  location.href = '/api/admin/reportes/ventas/pdf?' + paramsReporte().toString();
+});
+
+async function cargarReporte() {
+  const params = paramsReporte();
   const res = await fetch('/api/admin/reportes/ventas?' + params.toString(), { credentials: 'same-origin' });
   if (res.status === 401 || res.status === 403) { location.href = '/iniciar-sesion'; return; }
   const r = await res.json();

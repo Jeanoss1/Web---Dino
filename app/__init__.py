@@ -171,10 +171,11 @@ def create_app(config=None):
     from app.controllers.admin_controller import admin_bp
     from app.controllers.reportes_controller import reportes_bp
     from app.controllers.flota_controller import flota_bp
+    from app.controllers.ticket_controller import ticket_bp
 
     for bp in (home_bp, auth_bp, reserva_bp, venta_bp, caja_bp,
                mantenimiento_bp, comprobante_bp, entrada_bp, admin_bp,
-               reportes_bp, flota_bp):
+               reportes_bp, flota_bp, ticket_bp):
         app.register_blueprint(bp)
 
     if app.config['SEMBRAR_DATOS']:

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+{% include '_head.html' %}
+<title>Ticket {{ t.codigo }} · Dino Park</title>
+<style>
+  .tk { max-width: 380px; margin: 24px auto; background: #fff; color: #002115;
+        border: 1px dashed #3d4a43; border-radius: 12px; padding: 20px;
+        font-family: "Plus Jakarta Sans", Arial, sans-serif; font-size: 14px; }
+  .tk-centro { text-align: center; }
+  .tk-logo { width: 120px; height: auto; margin: 0 auto 6px; display: block; }
+  .tk-codigo { font-size: 22px; font-weight: 800; letter-spacing: .06em; margin: 8px 0; }
+  .tk-linea { border-top: 1px dashed #3d4a43; margin: 12px 0; }
+  .tk-fila { display: flex; justify-content: space-between; gap: 12px; margin: 3px 0; }
+  .tk-estado { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 700;
+               background: #ccffe5; color: #00513a; }
+  .tk-estado.usado { background: #fbe3d1; color: #8a4b00; }
+  .tk-nota { font-size: 12px; color: #3d4a43; }
+  .tk-boton { display: block; margin: 0 auto 24px; padding: 10px 20px; border: 0; border-radius: 999px;
+              background: #00513a; color: #fff; font-weight: 700; cursor: pointer; }
+  @media print { .tk-boton, .dp-a11y-boton, .dp-a11y-panel, .dp-saltar { display: none !important; }
+                 .tk { border: 0; margin: 0 auto; } body { background: #fff; } }
+</style>
+</head>
+<body class="bg-surface">
+<main id="contenido">
+  <article class="tk" aria-label="Ticket de acceso {{ t.codigo }}">
+    <div class="tk-centro">
+      <img class="tk-logo" width="320" height="179" alt="Dino Park"
+           src="{{ url_for('static', filename='img/Logo_dino.webp') }}">
+      <strong>{{ empresa.razon_social }}</strong><br>
+      RUC {{ empresa.ruc }}<br>
+      {% if sede %}{{ sede.nombre }}{% if sede.direccion %} · {{ sede.direccion }}{% endif %}{% endif %}
+    </div>
+
+    <div class="tk-linea"></div>
+    <div class="tk-centro">
+      <h1 style="font-size:16px;font-weight:800;margin:0">TICKET DE ACCESO</h1>
+      <div class="tk-codigo">{{ t.codigo }}</div>
+      <span class="tk-estado {{ 'usado' if t.estado == 'usado' else '' }}">
+        {{ 'Usado' if t.estado == 'usado' else 'Válido' }}
+      </span>
+    </div>
+
+    <div class="tk-linea"></div>
+    <div class="tk-fila"><span>Reserva</span><span>N.° {{ t.id_reserva }}</span></div>
+    <div class="tk-fila"><span>Cliente</span><span>{{ t.cliente }}</span></div>
+    <div class="tk-fila"><span>DNI</span><span>{{ t.dni }}</span></div>
+    <div class="tk-fila"><span>Emitido</span><span>{{ t.emitido }}</span></div>
+
+    <div class="tk-linea"></div>
+    {% for u in t.unidades %}
+    <div class="tk-fila"><strong>{{ u.unidad }}</strong><span>{{ u.fecha }}</span></div>
+    <div class="tk-fila tk-nota"><span>Turno</span><span>{{ u.inicio }} – {{ u.fin }}</span></div>
+    {% endfor %}
+
+    <div class="tk-linea"></div>
+    <div class="tk-fila" style="font-size:16px"><strong>Total pagado</strong><strong>S/ {{ '%.2f' | format(t.total) }}</strong></div>
+
+    <div class="tk-linea"></div>
+    <p class="tk-nota tk-centro">Presenta este código en caja antes de tu turno. Válido para un solo uso.<br>
+      Ticket de acceso interno: no es comprobante de pago.</p>
+  </article>
+  <button type="button" class="tk-boton" onclick="window.print()">Imprimir o guardar en PDF</button>
+</main>
+</body>
+</html>

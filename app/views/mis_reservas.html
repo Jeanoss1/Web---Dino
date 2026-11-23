@@ -114,7 +114,11 @@ function render(reservas) {
         <a class="underline font-bold" target="_blank" href="${esc(r.comprobante.url)}">Ver mi captura</a></div>`;
     } else if (r.estado === 'confirmada') {
       accion = `<div class="p-space-sm rounded-lg bg-primary-container/30 font-label-md text-label-md text-on-primary-container flex items-center gap-1">
-        <span class="material-symbols-outlined text-[18px]">verified</span> ¡Pago validado! Tu reserva está confirmada.</div>`;
+        <span class="material-symbols-outlined text-[18px]">verified</span> ¡Pago validado! Tu reserva está confirmada.</div>`
+        + (r.ticket ? `<div class="mt-2 p-space-sm rounded-lg bg-surface-container-lowest font-label-md text-label-md text-on-surface flex flex-wrap items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]" aria-hidden="true">confirmation_number</span>
+            Ticket <b>${esc(r.ticket.codigo)}</b>${r.ticket.estado === 'usado' ? ' (usado)' : ''}
+            <a class="underline font-bold text-primary" target="_blank" href="${esc(r.ticket.url)}">Ver e imprimir ticket</a></div>` : '');
     }
 
     return `

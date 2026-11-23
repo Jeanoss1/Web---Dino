@@ -43,6 +43,28 @@ def _validar_lecturas(unidades, lecturas_enviadas):
     return mapa, None
 
 
+def _cobros_por_metodo(c, ingresos_efectivo):
+    """CA07.2: separa lo cobrado en efectivo (lo que entra a la caja física)
+    de lo cobrado por Yape u otros medios en las ventas de la sede mientras
+    la caja estuvo abierta. Los pagos digitales no suman al saldo de caja."""
+    from app.models.Venta import Venta   # import local: evita ciclo de imports
+
+    hasta = c.fecha_cierre or ahora()
+    ventas = Venta.query.filter(
+        Venta.id_sucursal == c.id_sucursal,
+        Venta.estado == 'pagada',
+        Venta.fecha >= c.fecha_apertura,
+        Venta.fecha <= hasta,
+    ).all()
+    por_metodo = {'efectivo': float(ingresos_efectivo)}
+    for v in ventas:
+        metodo = (v.tipo_pago or 'efectivo').strip().lower()
+        if metodo == 'efectivo':
+            continue   # ya está en los movimientos de caja
+        por_metodo[metodo] = round(por_metodo.get(metodo, 0) + float(v.total or 0), 2)
+    return por_metodo
+
+
 def _caja_a_dict(c):
     ingresos = sum(
         (
@@ -88,6 +110,7 @@ def _caja_a_dict(c):
             + ingresos
             - egresos
         ),
+        'por_metodo': _cobros_por_metodo(c, ingresos),
     }
 
 

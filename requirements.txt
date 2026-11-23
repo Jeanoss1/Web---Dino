@@ -13,3 +13,4 @@ pytest==9.2.0
 boto3==1.44.1
 cloudinary==1.47.0
 
+fpdf2==2.8.3

@@ -796,7 +796,7 @@ def cp_04_03(ctx, r):
 def cp_04_04(ctx, r):
     r.http(ctx.api(ctx.cliente('cajero'), '/api/ventas/1/pago', {'metodo_pago': 'efectivo'}),
            400, {'error': 'Esta venta ya está pagada'})
-    r.ver('Tickets en BD', ctx.valor('SELECT count(*) FROM tickets'), 3)
+    r.ver('Tickets en BD', ctx.valor('SELECT count(*) FROM tickets WHERE id_pago IS NOT NULL'), 3)
 
 
 @caso('CP-04-05', 75, 'HU04', 'Pago sin método',
@@ -1202,3 +1202,203 @@ def cp_09_07(ctx, r):
 
     resp2 = ctx.api(cliente, '/api/caja/cerrar', {'lecturas': []})
     r.ver('HTTP cerrar', resp2.status_code, 200)
+
+
+# =====================================================================
+# Criterios que faltaban (revisión del tablero de GitHub):
+# CA03.3 ticket de la reserva, CA05.4/CA05.5 validación y uso del ticket,
+# CA05.1/CA05.2 unidades alquilables, CA06.3 alerta preventiva,
+# CA07.2 efectivo vs Yape en el arqueo y CA08.4 reporte en PDF.
+# Van al final: usan la reserva 1 confirmada en CP-03-10 y reasignan la sede
+# del cajero de pruebas.
+# =====================================================================
+def _ticket_reserva(ctx, id_reserva):
+    filas = ctx.sql('SELECT codigo, estado, fecha_uso, id_validador FROM tickets '
+                    'WHERE id_reserva = :r', r=id_reserva)
+    return filas[0] if filas else None
+
+
+def _codigo_ticket(ctx, id_reserva):
+    ticket = _ticket_reserva(ctx, id_reserva)
+    return ticket[0] if ticket else 'SIN-TICKET'
+
+
+@caso('CP-03-16', 108, 'HU03', 'Al aceptar el pago de la reserva 1 se emite su ticket',
+      'BD: ticket T<AAMMDD>-XXXXXX emitido para la reserva 1; Ana lo ve en Mis reservas y '
+      'el ticket imprimible muestra razón social, RUC, código y la leyenda de ticket interno')
+def cp_03_16(ctx, r):
+    ticket = _ticket_reserva(ctx, 1)
+    codigo = ticket[0] if ticket else 'SIN-TICKET'
+    r.cumple('Ticket de la reserva 1',
+             bool(re.fullmatch(re.escape(ctx.prefijo_ticket) + r'[0-9A-F]{6}', codigo)),
+             codigo, f'{ctx.prefijo_ticket}XXXXXX')
+    r.ver('Estado del ticket', ticket[1] if ticket else None, 'emitido')
+    de_ana = ctx.cliente('ana').get('/api/mis-reservas').get_json() or []
+    reserva1 = next((x for x in de_ana if x['id_reserva'] == 1), {})
+    r.ver('Ana ve el código', (reserva1.get('ticket') or {}).get('codigo'), codigo)
+    pagina = ctx.cliente('ana').get(f'/tickets/{codigo}')
+    texto = pagina.get_data(as_text=True)
+    r.ver('Página del ticket (HTTP)', pagina.status_code, 200)
+    esperados = ('Dino Park Perú S.A.C.', 'RUC 20608934512', codigo, 'no es comprobante de pago')
+    faltan = [t for t in esperados if t not in texto]
+    r.cumple('Datos impresos', not faltan, faltan or 'todos', 'razón social, RUC, código y leyenda')
+
+
+@caso('CP-03-17', 109, 'HU03', 'La reserva 2 con pago rechazado no tiene ticket',
+      'BD: 0 tickets para la reserva 2; Carlos no puede abrir el ticket de Ana (HTTP 404)')
+def cp_03_17(ctx, r):
+    r.ver('Tickets de la reserva 2', ctx.valor('SELECT count(*) FROM tickets WHERE id_reserva = 2'), 0)
+    resp = ctx.cliente('carlos').get(f'/tickets/{_codigo_ticket(ctx, 1)}')
+    r.ver('Carlos abre el ticket de Ana', resp.status_code, 404)
+
+
+@caso('CP-05-01', 110, 'HU05', 'Cajero de Hoyos Rubio valida un ticket de Real Plaza',
+      'HTTP 403 "El ticket corresponde a otra sede"; el ticket sigue emitido')
+def cp_05_01(ctx, r):
+    resp = ctx.api(_cajero_logueado(ctx), '/api/caja/tickets/validar', {'codigo': _codigo_ticket(ctx, 1)})
+    r.ver('HTTP', resp.status_code, 403)
+    r.mensaje(resp, 'El ticket corresponde a otra sede')
+    r.ver('BD estado', (_ticket_reserva(ctx, 1) or [None, None])[1], 'emitido')
+
+
+@caso('CP-05-02', 111, 'HU05', 'Validar un código de ticket que no existe',
+      'HTTP 404 "El ticket no existe"')
+def cp_05_02(ctx, r):
+    resp = ctx.api(_cajero_logueado(ctx), '/api/caja/tickets/validar', {'codigo': 'T000000-ZZZZZZ'})
+    r.ver('HTTP', resp.status_code, 404)
+    r.mensaje(resp, 'El ticket no existe')
+
+
+@caso('CP-05-03', 112, 'HU05', 'Cajero de Real Plaza valida el ticket de la reserva 1',
+      'HTTP 200: cliente Ana Lucía Torres Vega, unidad Dino Rider #01, estado emitido')
+def cp_05_03(ctx, r):
+    ctx.sql('UPDATE usuarios SET id_sucursal = :s WHERE id_usuario = :u',
+            s=_id_sucursal_por_nombre(ctx, 'Real Plaza'), u=_id_cajero_pruebas(ctx))
+    resp = ctx.api(_cajero_logueado(ctx), '/api/caja/tickets/validar', {'codigo': _codigo_ticket(ctx, 1)})
+    r.ver('HTTP', resp.status_code, 200)
+    datos = resp.get_json() or {}
+    r.campos('Ticket', datos, {'cliente': 'Ana Lucía Torres Vega', 'estado': 'emitido', 'id_reserva': 1})
+    r.ver('Unidad', [u['unidad'] for u in datos.get('unidades', [])], ['Dino Rider #01 (T-Rex Rexy)'])
+
+
+@caso('CP-05-04', 113, 'HU05', 'Asignar las unidades y marcar el ticket como usado',
+      'HTTP 200 estado usado; BD: fecha_uso registrada y validador = cajero de pruebas')
+def cp_05_04(ctx, r):
+    resp = ctx.api(_cajero_logueado(ctx), f'/api/caja/tickets/{_codigo_ticket(ctx, 1)}/usar', {})
+    r.ver('HTTP', resp.status_code, 200)
+    r.ver('Estado', (resp.get_json() or {}).get('estado'), 'usado')
+    despues = _ticket_reserva(ctx, 1)
+    r.ver('BD (estado, con fecha de uso, validador)',
+          (despues[1], despues[2] is not None, despues[3]) if despues else None,
+          ('usado', True, _id_cajero_pruebas(ctx)))
+
+
+@caso('CP-05-05', 114, 'HU05', 'Usar otra vez un ticket ya utilizado',
+      'HTTP 409 "El ticket ya fue utilizado ..." al validar y al usar')
+def cp_05_05(ctx, r):
+    codigo = _codigo_ticket(ctx, 1)
+    cajero = _cajero_logueado(ctx)
+    resp = ctx.api(cajero, '/api/caja/tickets/validar', {'codigo': codigo})
+    r.ver('Validar (HTTP)', resp.status_code, 409)
+    r.mensaje(resp, 'El ticket ya fue utilizado')
+    r.ver('Usar (HTTP)', ctx.api(cajero, f'/api/caja/tickets/{codigo}/usar', {}).status_code, 409)
+
+
+@caso('CP-05-06', 115, 'HU05', 'Solo se ofrecen unidades disponibles de la sede',
+      'Unidad 3 en mantenimiento: no aparece en alquilables y alquilarla da HTTP 400 "no está disponible"')
+def cp_05_06(ctx, r):
+    id_real_plaza = _id_sucursal_por_nombre(ctx, 'Real Plaza')
+    ctx.sql("UPDATE flota SET estado = 'mantenimiento' WHERE id_flota = 3")
+    try:
+        cajero = _cajero_logueado(ctx)
+        unidades = cajero.get(f'/api/flota/alquilable?id_sucursal={id_real_plaza}').get_json() or []
+        r.ver('Unidad 3 ofrecida', any(u['id_flota'] == 3 for u in unidades), False)
+        r.cumple('Hay unidades disponibles para alquilar', bool(unidades),
+                 [u['id_flota'] for u in unidades], 'al menos una')
+        resp = ctx.api(cajero, '/api/ventas/alquiler', {'id_flota': 3})
+        r.ver('Alquilar unidad 3 (HTTP)', resp.status_code, 400)
+        error = (resp.get_json(silent=True) or {}).get('error', '')
+        r.cumple('Mensaje', 'no está disponible' in error, error, '... no está disponible')
+    finally:
+        ctx.sql("UPDATE flota SET estado = 'disponible' WHERE id_flota = 3")
+
+
+@caso('CP-06-14', 116, 'HU06', 'Alerta preventiva al llegar al límite de uso',
+      'Moto #07 con 300 ciclos (límite 300): alerta nivel "limite" con el mensaje de mantenimiento')
+def cp_06_14(ctx, r):
+    ctx.sql('UPDATE flota SET ciclos_uso = 300, contador_ultimo_mantenimiento = NULL WHERE id_flota = 4')
+    resp = ctx.cliente('admin').get('/api/mantenimientos/alertas')
+    r.ver('HTTP', resp.status_code, 200)
+    alerta = next((a for a in (resp.get_json() or []) if a['id_flota'] == 4), None)
+    r.campos('Alerta de la moto #07', alerta or {}, {'nivel': 'limite', 'uso': 300, 'limite': 300,
+                                                     'unidad_medida': 'ciclos'})
+    mensaje = (alerta or {}).get('mensaje', '')
+    r.cumple('Mensaje', 'llegó a su límite de uso' in mensaje, mensaje, '... llegó a su límite de uso ...')
+
+
+@caso('CP-06-15', 117, 'HU06', 'Tras el mantenimiento la alerta desaparece',
+      'Registrar y finalizar un mantenimiento a la moto #07: ya no figura en las alertas')
+def cp_06_15(ctx, r):
+    admin = ctx.cliente('admin')
+    alta = ctx.api(admin, '/api/mantenimientos', {'id_flota': 4, 'tipo': 'preventivo',
+                                                  'observacion': 'Mantenimiento por límite de ciclos'})
+    r.ver('Registrar (HTTP)', alta.status_code, 201)
+    id_mant = (alta.get_json() or {}).get('id_mantenimiento')
+    r.ver('Finalizar (HTTP)', ctx.api(admin, f'/api/mantenimientos/{id_mant}/finalizar', {}).status_code, 200)
+    alertas = admin.get('/api/mantenimientos/alertas').get_json() or []
+    r.ver('Moto #07 en alertas', any(a['id_flota'] == 4 for a in alertas), False)
+
+
+@caso('CP-06-16', 118, 'HU06', 'Cajero intenta ver las alertas de mantenimiento',
+      'HTTP 403 "No tienes permiso para esta acción"')
+def cp_06_16(ctx, r):
+    r.http(_cajero_logueado(ctx).get('/api/mantenimientos/alertas'), 403,
+           {'error': 'No tienes permiso para esta acción'})
+
+
+@caso('CP-07-14', 119, 'HU07', 'El arqueo separa el efectivo del Yape',
+      'Caja de S/ 100: venta de S/ 15 en efectivo y de S/ 20 con Yape -> por_metodo '
+      '{efectivo: 15, yape: 20}, saldo 115; al cerrar se mantiene el desglose')
+def cp_07_14(ctx, r):
+    id_real_plaza = _id_sucursal_por_nombre(ctx, 'Real Plaza')
+    lecturas = [{'id_flota': f, 'lectura_manual': 0} for f in _unidades_flota_de(ctx, id_real_plaza)]
+    cajero = _cajero_logueado(ctx)
+    abrir = ctx.api(cajero, '/api/caja/abrir', {'monto_inicial': 100, 'id_sucursal': id_real_plaza,
+                                               'lecturas': lecturas})
+    r.ver('Abrir (HTTP)', abrir.status_code, 201)
+    for precio, metodo in ((15, 'efectivo'), (20, 'yape')):
+        venta = ctx.api(cajero, '/api/ventas', {'items': [{'precio': precio, 'cantidad': 1}]}).get_json() or {}
+        pago = ctx.api(cajero, f"/api/ventas/{venta.get('id_venta')}/pago", {'metodo_pago': metodo})
+        r.ver(f'Pago {metodo} (HTTP)', pago.status_code, 200)
+    actual = cajero.get('/api/caja/actual').get_json() or {}
+    r.ver('Desglose por método', actual.get('por_metodo'), {'efectivo': 15.0, 'yape': 20.0})
+    r.ver('Saldo en caja (solo efectivo)', actual.get('saldo_actual'), 115.0)
+    cierre = ctx.api(cajero, '/api/caja/cerrar', {'lecturas': lecturas})
+    r.ver('Cerrar (HTTP)', cierre.status_code, 200)
+    r.ver('Desglose en el cierre', (cierre.get_json() or {}).get('por_metodo'), {'efectivo': 15.0, 'yape': 20.0})
+
+
+@caso('CP-08-03', 120, 'HU08', 'Exportar el reporte semanal a PDF',
+      'HTTP 200, application/pdf, archivo reporte_ventas_<inicio>_<fin>.pdf que empieza con %PDF')
+def cp_08_03(ctx, r):
+    resp = ctx.cliente('admin').get('/api/admin/reportes/ventas/pdf?rango=semanal')
+    r.ver('HTTP', resp.status_code, 200)
+    r.ver('Tipo', resp.mimetype, 'application/pdf')
+    r.ver('Firma del archivo', resp.data[:4], b'%PDF')
+    disposicion = resp.headers.get('Content-Disposition', '')
+    r.cumple('Nombre del archivo', 'reporte_ventas_' in disposicion, disposicion,
+             'attachment; filename="reporte_ventas_...pdf"')
+
+
+@caso('CP-08-04', 121, 'HU08', 'Exportar a PDF con una fecha inválida',
+      'HTTP 400 "referencia debe tener el formato AAAA-MM-DD"')
+def cp_08_04(ctx, r):
+    r.http(ctx.cliente('admin').get('/api/admin/reportes/ventas/pdf?rango=diario&referencia=23-11-2026'),
+           400, {'error': 'referencia debe tener el formato AAAA-MM-DD'})
+
+
+@caso('CP-08-05', 122, 'HU08', 'Cajero intenta exportar el reporte a PDF',
+      'HTTP 403 "No tienes permiso para esta acción"')
+def cp_08_05(ctx, r):
+    r.http(_cajero_logueado(ctx).get('/api/admin/reportes/ventas/pdf'), 403,
+           {'error': 'No tienes permiso para esta acción'})

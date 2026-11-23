@@ -3,10 +3,13 @@ efectivo) y cuadre diario (dinero + minutos de Hoyos Rubio)."""
 
 from datetime import datetime
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, Response, jsonify, render_template, request, session
 
 from app.controllers.decoradores import rol_requerido
+from app.database import db
+from app.models.Sucursal import Sucursal
 from app.servicios_cuadre import cuadre_diario
+from app.servicios_reporte_pdf import generar_pdf_reporte
 from app.servicios_reportes import ErrorReporte, generar_reporte
 from app.tiempo import hoy
 
@@ -52,6 +55,29 @@ def api_reporte_ventas():
         return jsonify(error=str(e)), 400
 
     return jsonify(reporte)
+
+
+@reportes_bp.route('/api/admin/reportes/ventas/pdf')
+@rol_requerido('administrador')
+def api_reporte_ventas_pdf():
+    """CA08.4: mismo reporte y mismos filtros que /api/admin/reportes/ventas, en PDF."""
+    rango = request.args.get('rango', 'semanal')
+    id_sucursal = request.args.get('id_sucursal', type=int)
+    try:
+        referencia = _fecha(request.args['referencia'], 'referencia') if request.args.get('referencia') else None
+        desde = _fecha(request.args['desde'], 'desde') if request.args.get('desde') else None
+        hasta = _fecha(request.args['hasta'], 'hasta') if request.args.get('hasta') else None
+        reporte = generar_reporte(id_sucursal=id_sucursal, rango=rango,
+                                  referencia=referencia, desde=desde, hasta=hasta)
+    except ErrorReporte as e:
+        return jsonify(error=str(e)), 400
+
+    sucursal = db.session.get(Sucursal, id_sucursal) if id_sucursal else None
+    sede = sucursal.nombre if sucursal else None
+    contenido = generar_pdf_reporte(reporte, rango, sede, session.get('nombre') or session.get('correo'))
+    nombre = f"reporte_ventas_{reporte['inicio']}_{reporte['fin']}.pdf"
+    return Response(contenido, mimetype='application/pdf',
+                    headers={'Content-Disposition': f'attachment; filename="{nombre}"'})
 
 
 @reportes_bp.route('/api/admin/cuadre')

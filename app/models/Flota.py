@@ -19,6 +19,11 @@ class Flota(db.Model):
     duracion_alquiler_minutos = db.Column(db.Integer, default=12)
     contador_minutos = db.Column(db.Integer, default=0)    # contador de minutos de uso (dinosaurios)
 
+    # Mantenimiento preventivo (HU06, CA06.3): límite de uso entre mantenimientos.
+    # Si limite_uso es NULL se usa el valor por defecto de su tipo.
+    limite_uso = db.Column(db.Integer)
+    contador_ultimo_mantenimiento = db.Column(db.Integer)  # contador al cerrar el último mantenimiento
+
     id_sucursal = db.Column(
         db.Integer, db.ForeignKey('sucursales.id_sucursal'), nullable=False
     )
@@ -40,6 +45,22 @@ class Flota(db.Model):
         (la auto-migración de esquema.py no rellena datos, solo agrega columnas)."""
         valor = self.contador_minutos if self.tipo == 'dinosaurio' else self.ciclos_uso
         return valor or 0
+
+    # Límite de uso por defecto entre mantenimientos: minutos para los
+    # dinosaurios y encendidos (ciclos) para carros, motos y otros.
+    LIMITE_USO_POR_TIPO = {'dinosaurio': 600, 'carro': 300, 'moto': 300, 'otros': 300}
+
+    @property
+    def limite_uso_efectivo(self):
+        return self.limite_uso or self.LIMITE_USO_POR_TIPO.get(self.tipo, 300)
+
+    @property
+    def uso_desde_mantenimiento(self):
+        return max(self.contador_actual - (self.contador_ultimo_mantenimiento or 0), 0)
+
+    @property
+    def unidad_contador(self):
+        return 'minutos' if self.tipo == 'dinosaurio' else 'ciclos'
 
 
 class Dinosaurio(Flota):

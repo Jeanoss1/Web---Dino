@@ -184,6 +184,8 @@ def finalizar_mantenimiento(id_mantenimiento):
     mantenimiento.estado = 'finalizado'
     mantenimiento.fecha_fin = ahora()
     mantenimiento.flota.estado = 'disponible'
+    # El conteo de uso para la próxima alerta preventiva empieza de nuevo
+    mantenimiento.flota.contador_ultimo_mantenimiento = mantenimiento.flota.contador_actual
 
     db.session.commit()
 
@@ -212,3 +214,39 @@ def historial_flota(id_flota):
         _mant_a_dict(m)
         for m in flota.mantenimientos
     ])
+
+
+# Se avisa desde el 90 % del límite para programar el mantenimiento a tiempo
+UMBRAL_PROXIMO = 0.9
+
+
+@mantenimiento_bp.route('/api/mantenimientos/alertas')
+@rol_requerido(*SOLO_ADMIN)
+def alertas_preventivas():
+    """CA06.3: unidades que llegaron (o están por llegar) a su límite de uso
+    desde el último mantenimiento: minutos en dinosaurios y ciclos en carros,
+    motos y otros. No incluye las que ya están en mantenimiento."""
+    alertas = []
+    for u in Flota.query.filter(Flota.estado != 'mantenimiento').order_by(Flota.id_flota).all():
+        uso, limite = u.uso_desde_mantenimiento, u.limite_uso_efectivo
+        if uso < limite * UMBRAL_PROXIMO:
+            continue
+        alertas.append({
+            'id_flota': u.id_flota,
+            'unidad': u.nombre,
+            'tipo': u.tipo,
+            'sede': u.sucursal.nombre if u.sucursal else None,
+            'uso': uso,
+            'limite': limite,
+            'unidad_medida': u.unidad_contador,
+            'porcentaje': round(uso * 100 / limite, 1),
+            'nivel': 'limite' if uso >= limite else 'proximo',
+            'mensaje': (
+                f'{u.nombre} llegó a su límite de uso ({uso} de {limite} {u.unidad_contador}): '
+                'programa un mantenimiento preventivo'
+                if uso >= limite else
+                f'{u.nombre} está cerca de su límite de uso ({uso} de {limite} {u.unidad_contador})'
+            ),
+        })
+    alertas.sort(key=lambda a: -a['porcentaje'])
+    return jsonify(alertas)

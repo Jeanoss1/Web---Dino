@@ -13,6 +13,7 @@ from app.models.DetalleReserva import DetalleReserva
 from app.models.Reserva import Reserva
 from app.servicios_comprobante import (guardar_captura, rechazar_comprobante,
                                        servir_captura, validar_captura)
+from app.servicios_ticket import emitir_ticket_reserva
 
 comprobante_bp = Blueprint('comprobante', __name__)
 
@@ -74,6 +75,10 @@ def _reserva_a_dict(r, con_cliente=False):
         'total': float(r.total or 0),
         'detalles': _detalles(r),
         'comprobante': _comprobante_a_dict(ultimo) if ultimo else None,
+        'ticket': (
+            {'codigo': r.ticket.codigo, 'estado': r.ticket.estado, 'url': f'/tickets/{r.ticket.codigo}'}
+            if r.ticket else None
+        ),
     }
     if con_cliente:
         datos['cliente'] = {
@@ -199,6 +204,7 @@ def aceptar_reserva(id_reserva):
     comprobante.id_validador = session['id_usuario']
     comprobante.fecha_validacion = ahora()
     reserva.estado = 'confirmada'
+    emitir_ticket_reserva(reserva)   # CA03.3: ticket con código único
     db.session.commit()
     return jsonify(_reserva_a_dict(reserva, con_cliente=True))
 

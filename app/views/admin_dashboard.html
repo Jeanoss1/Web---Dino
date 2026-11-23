@@ -14,6 +14,14 @@
     </div>
   </div>
 
+  <section id="alertas-mant" class="hidden bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-sm" aria-live="polite">
+    <h2 class="font-title-md text-title-md font-bold text-on-surface flex items-center gap-space-xs">
+      <span class="material-symbols-outlined text-[22px] text-error" aria-hidden="true">build_circle</span>
+      Mantenimiento preventivo
+    </h2>
+    <ul id="lista-alertas-mant" class="space-y-space-xs font-body-md text-body-md"></ul>
+  </section>
+
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-md">
     {% for item in [
       ('store', 'Sedes, zonas y paquetes', 'Activar/desactivar sedes, flota y tarifas por tiempo.', '/admin/sedes'),
@@ -33,4 +41,22 @@
     {% endfor %}
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// CA06.3: unidades que llegaron o están por llegar a su límite de uso
+(async () => {
+  const res = await fetch('/api/mantenimientos/alertas', { credentials: 'same-origin' });
+  if (!res.ok) return;
+  const alertas = await res.json();
+  if (!alertas.length) return;
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  document.getElementById('lista-alertas-mant').innerHTML = alertas.map(a => `
+    <li class="p-space-sm rounded-lg ${a.nivel === 'limite' ? 'bg-error-container text-on-error-container' : 'bg-surface-container text-on-surface'}">
+      <b>${a.nivel === 'limite' ? 'Límite alcanzado' : 'Próximo a mantenimiento'}:</b> ${esc(a.mensaje)}${a.sede ? ' · ' + esc(a.sede) : ''}
+    </li>`).join('');
+  document.getElementById('alertas-mant').classList.remove('hidden');
+})();
+</script>
 {% endblock %}

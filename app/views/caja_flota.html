@@ -76,6 +76,19 @@
     </section>
   </div>
 
+  <!-- ===================== VALIDAR TICKET DE RESERVA (HU05) ===================== -->
+  <section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
+    <h2 class="font-title-md text-title-md font-bold text-on-surface">Validar ticket de reserva</h2>
+    <form id="form-ticket" class="flex flex-wrap items-end gap-space-sm">
+      <label class="font-label-md text-label-md text-on-surface-variant">Código del ticket
+        <input id="codigo-ticket" type="text" autocomplete="off" placeholder="T260917-A1B2C3"
+               class="mt-1 block w-56 rounded-md border-outline-variant text-sm uppercase">
+      </label>
+      <button type="submit" class="rounded-full bg-primary text-on-primary px-space-md py-space-sm font-label-lg text-label-lg shadow-md">Validar</button>
+    </form>
+    <div id="resultado-ticket" class="font-body-md text-body-md" aria-live="polite"></div>
+  </section>
+
   <!-- ===================== CAJA Y LECTURAS MANUALES ===================== -->
   <section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
     <h2 class="font-title-md text-title-md font-bold text-on-surface">Caja y lecturas de contador</h2>
@@ -281,7 +294,11 @@ async function cargarCaja() {
     return;
   }
   cajaActual = await res.json();
-  $('estado-caja').innerHTML = `Caja #${cajaActual.id_caja} abierta · saldo actual ${soles(cajaActual.saldo_actual)}`;
+  const pm = cajaActual.por_metodo || {};
+  const otros = Object.entries(pm).filter(([m]) => m !== 'efectivo')
+    .map(([m, v]) => `${m.charAt(0).toUpperCase() + m.slice(1)} ${soles(v)}`).join(' · ');
+  $('estado-caja').innerHTML = `Caja #${cajaActual.id_caja} abierta · efectivo en caja ${soles(cajaActual.saldo_actual)}`
+    + `<br>Cobrado en efectivo ${soles(pm.efectivo || 0)}${otros ? ' · ' + otros : ''}`;
   $('bloque-abrir').classList.add('hidden');
   $('bloque-cierre').classList.remove('hidden');
 
@@ -326,6 +343,47 @@ $('btn-cerrar-caja').addEventListener('click', async () => {
   if (!res.ok) { alerta(json.error || 'No se pudo cerrar la caja'); return; }
   alerta(`Caja cerrada. Saldo final: ${soles(json.saldo_actual)}`, 'ok');
   cargarCaja();
+});
+
+// ---------- Validar y usar ticket de reserva (HU05: CA05.4 y CA05.5) ----------
+async function postJson(url, cuerpo) {
+  const res = await fetch(url, {
+    method: 'POST', credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(cuerpo || {}),
+  });
+  return { res, json: await res.json().catch(() => ({})) };
+}
+
+function pintarTicket(t, puedeUsar) {
+  const filas = (t.unidades || []).map(u =>
+    `<li>${esc(u.unidad)} · ${esc(u.fecha)} · ${esc(u.inicio)}–${esc(u.fin)}</li>`).join('');
+  $('resultado-ticket').innerHTML = `
+    <div class="p-space-sm rounded-lg bg-surface-container space-y-1">
+      <p><b>${esc(t.codigo)}</b> · ${esc(t.cliente)} (DNI ${esc(t.dni)}) · ${soles(t.total)}</p>
+      <ul class="list-disc pl-6">${filas}</ul>
+      ${puedeUsar ? `<button type="button" id="btn-usar-ticket"
+          class="mt-1 rounded-full bg-primary text-on-primary px-space-md py-space-sm font-label-lg text-label-lg">Asignar unidades y marcar como usado</button>` : ''}
+    </div>`;
+  if (puedeUsar) {
+    $('btn-usar-ticket').addEventListener('click', async () => {
+      const { res, json } = await postJson(`/api/caja/tickets/${encodeURIComponent(t.codigo)}/usar`);
+      if (!res.ok) { alerta(json.error || 'No se pudo usar el ticket'); return; }
+      alerta(`Ticket ${json.codigo} usado. Unidades asignadas a ${json.cliente}.`, 'ok');
+      pintarTicket(json, false);
+    });
+  }
+}
+
+$('form-ticket').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const codigo = $('codigo-ticket').value.trim();
+  const { res, json } = await postJson('/api/caja/tickets/validar', { codigo });
+  if (!res.ok) {
+    $('resultado-ticket').innerHTML = `<p class="text-error font-bold">${esc(json.error || 'Ticket no válido')}</p>`;
+    return;
+  }
+  pintarTicket(json, true);
 });
 
 (async () => {
